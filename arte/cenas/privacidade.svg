@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 104" width="720" height="104">
+<g id="base"><circle cx="50" cy="24" r="1.4" fill="#F4D3A0" opacity=".7" transform="translate(360 0)"/><circle cx="130" cy="40" r="1.4" fill="#F4D3A0" opacity=".7" transform="translate(360 0)"/><circle cx="210" cy="20" r="1.4" fill="#F4D3A0" opacity=".7" transform="translate(360 0)"/><path d="M0 104V88q90-20 190-6t170-10 130-6 120-10 110 6v42z" fill="#1B1338"/><path d="M0 104V96q120-12 250-4t220-8 250-4v20z" fill="#2E2260"/><path d="M256 50s12-20.5 34-20.5S324 50 324 50s-12 20.5-34 20.5S256 50 256 50z" fill="none" stroke="#2BB37A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" transform="translate(360 0)"/></g>
+<g id="vivo"><circle cx="290" cy="50" r="10" fill="#2BB37A" transform="translate(360 0)"/></g>
+<g id="frente"><path d="M264 76L316 24" fill="none" stroke="#241A4A" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" transform="translate(360 0)"/><path d="M264 76L316 24" fill="none" stroke="#F4D3A0" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" transform="translate(360 0)"/></g>
+</svg>

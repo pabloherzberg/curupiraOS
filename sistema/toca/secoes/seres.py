@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QAbstractButton, QGridLayout, QHBoxLayout, QSizePo
 
 import sistema
 from visual import (BORDA, BRASA, TINTA, TINTA_SUAVE, VERDE, VERDE_ESCURO, LadrilhoSer, Secao,
-                    cabecalho, rotulo, tempo_relativo)
+                    Faixa, rotulo, tempo_relativo)
 
 # (chave, nome, papel, descrição, seção onde se controla) - textos do mockup Main.dc.html
 SERES = [
@@ -90,7 +90,7 @@ class SecaoSeres(Secao):
     def __init__(self):
         super().__init__()
         lay = QVBoxLayout(self); lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(14)
-        lay.addWidget(cabecalho("Seres da mata",
+        lay.addWidget(Faixa("seres", "Seres da mata",
                                 "Cada peça do computador é um ser encantado. Clique num ser para cuidar dele."))
         grade = QGridLayout(); grade.setHorizontalSpacing(10); grade.setVerticalSpacing(10)
         self.cartoes: dict[str, CartaoSer] = {}

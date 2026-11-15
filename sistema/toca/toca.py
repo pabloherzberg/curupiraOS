@@ -31,8 +31,8 @@ from secoes.energia import SecaoEnergia  # noqa: E402
 from secoes.privacidade import SecaoPrivacidade  # noqa: E402
 from secoes.rede import SecaoRede  # noqa: E402
 from secoes.seres import SecaoSeres  # noqa: E402
-from visual import (AREIA, BRASA, ICONES, SECOES, TINTA_SUAVE, VERDE_ESCURO, Avatar, Tarefa, arte,  # noqa: E402
-                    icone, rotulo)
+from visual import (AREIA, BRASA, ICONES, SECOES, TINTA_SUAVE, VERDE_ESCURO, Avatar, Paisagem, Tarefa,  # noqa: E402
+                    arte, icone, rotulo)
 
 VERSAO = "0.3"
 CLASSES = {
@@ -123,6 +123,11 @@ class Toca(QWidget):
             self.pilha.addWidget(secao if ident in COM_ROLAGEM_PROPRIA else com_rolagem(secao))
         n.addStretch()
         n.addWidget(rotulo(f"Curupira OS · Toca {VERSAO}", 11, cor="#8A968F"))
+        n.addSpacing(Paisagem.ALTURA - 20)
+        # a mata no pé da barra lateral, na cor do perfil de energia em uso
+        self.nav = nav
+        self.paisagem = Paisagem(nav)
+        self.paisagem.lower()
         raiz.addWidget(nav)
         raiz.addWidget(conteudo, 1)
 
@@ -132,6 +137,25 @@ class Toca(QWidget):
         self.relogio = QTimer(self)
         self.relogio.timeout.connect(self.atualiza)
         self.relogio.start(self.secoes[self.atual].intervalo)
+        # o perfil muda pouco: a paisagem relê de vez em quando, e na hora quando uma seção traz o dado
+        self.relogio_perfil = QTimer(self)
+        self.relogio_perfil.timeout.connect(self.le_perfil)
+        self.relogio_perfil.start(20000)
+        self.le_perfil()
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self.paisagem.setGeometry(0, self.nav.height() - Paisagem.ALTURA, self.nav.width(), Paisagem.ALTURA)
+
+    def showEvent(self, e):
+        super().showEvent(e)
+        self.paisagem.setGeometry(0, self.nav.height() - Paisagem.ALTURA, self.nav.width(), Paisagem.ALTURA)
+
+    def le_perfil(self):
+        def chegou(d):
+            if isinstance(d, dict):
+                self.paisagem.define(str(d.get("perfil") or ""))
+        self.pool.start(Tarefa(sistema.energia, chegou))
 
     # -- navegação
     def vai_para(self, ident: str):
@@ -165,6 +189,8 @@ class Toca(QWidget):
             self.avisa(f"Erro ao ler o sistema: {dados}", True)
             return
         self.secoes[ident].mostra(dados)
+        if isinstance(dados, dict) and isinstance(dados.get("energia"), dict):
+            self.paisagem.define(str(dados["energia"].get("perfil") or ""))
 
     def avisa(self, texto: str, erro: bool = False):
         self.mensagem.setText(texto)

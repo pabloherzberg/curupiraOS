@@ -12,7 +12,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QMessageBox, QScrollArea, QVBoxLayout, QWidget
 
 import sistema
-from visual import (BORDA, ICONES, TINTA_SUAVE, Cartao, LadrilhoSer, Secao, Tarefa, botao, cabecalho,
+from visual import (BORDA, ICONES, TINTA_SUAVE, Cartao, LadrilhoSer, Secao, Tarefa, botao, Faixa,
                     rotulo, tempo_relativo)
 
 LIMITE_LISTA = 40
@@ -88,7 +88,7 @@ class SecaoCuca(Secao):
         super().__init__()
         self.ocupado = False
         lay = QVBoxLayout(self); lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(12)
-        lay.addWidget(cabecalho("Cuca · snapshots", "Guarda o passado. Quebrou algo? Ela volta no tempo."))
+        lay.addWidget(Faixa("snapshots", "Cuca · snapshots", "Guarda o passado. Quebrou algo? Ela volta no tempo."))
 
         topo = Cartao(areia=True)
         tl = QHBoxLayout(topo); tl.setContentsMargins(14, 12, 14, 12); tl.setSpacing(14)

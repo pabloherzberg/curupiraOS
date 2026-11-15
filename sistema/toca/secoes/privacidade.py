@@ -6,14 +6,14 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QVBoxLayout
 
 import sistema
-from visual import BRASA, TINTA_SUAVE, VERDE_ESCURO, Cartao, LinhaSer, Secao, cabecalho, rotulo
+from visual import BRASA, TINTA_SUAVE, VERDE_ESCURO, Cartao, LinhaSer, Secao, Faixa, rotulo
 
 
 class SecaoPrivacidade(Secao):
     def __init__(self):
         super().__init__()
         lay = QVBoxLayout(self); lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(12)
-        lay.addWidget(cabecalho("Privacidade", "A Caipora some sem deixar rastro. Ligue o que você quer esconder."))
+        lay.addWidget(Faixa("privacidade", "Privacidade", "A Caipora some sem deixar rastro. Ligue o que você quer esconder."))
 
         self.camera = LinhaSer("Cortar a câmera", "camera")
         self.microfone = LinhaSer("Silenciar o microfone", "microfone")
@@ -57,6 +57,7 @@ class SecaoPrivacidade(Secao):
             self.camera.define(cam, "cortada: nenhum programa consegue usá-la, nem depois de reiniciar" if cam
                                else "liberada: programas podem pedir a câmera")
         mic = d.get("microfone_mudo")
+        self.ser_no_canto("caipora" if cam or mic else None)
         self.microfone.define(mic, "sem microfone" if mic is None else
                               "mudo: os programas recebem silêncio" if mic else "aberto")
         mac = d.get("mac_aleatorio")

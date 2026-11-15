@@ -95,6 +95,10 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   rápido, os seres ganharam arte própria; na Toca eles se mexem quando acordados (chama do Boitatá, olho do
   Mapinguari girando, ponteiros da Cuca para trás) e ficam apagados quando dormem. A animação para com a janela
   em segundo plano e respeita as animações desligadas no Plasma.
+  Arte na Toca (as três propostas juntas, cada uma com um papel): paisagem no pé da barra lateral na cor do
+  perfil, com as pegadas ao contrário; faixa cor da noite abrindo Seres, Rede, Privacidade, Cuca e Aparência;
+  e o ser acordado grande no canto de baixo (Energia: Saci, Boitatá ou Mapinguari; Rede: Boto ou Iara;
+  Privacidade: Caipora).
   Feito numa sessão na nuvem: desenhos conferidos com o QtSvg e a Toca por captura; **falta ver no Plasma de
   verdade** a doca, o cartão rápido, a bandeja e os menus (os nomes de ícone vieram do Breeze 5.115).
 
@@ -109,4 +113,4 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
 5. Gerar uma ISO própria pelo GitHub Actions.
 6. Ícones: conferir no notebook (doca, bandeja, menus, cartão rápido); depois, menu de apps próprio no lugar do
    Kickoff (widget QML como a doca: busca, apps em ladrilhos, Cordel, botões de sessão). Mais arte na Toca:
-   ícones das seções, ilustração no topo de cada seção, o Cordel reagindo ao perfil.
+   ícones das seções, o Cordel reagindo ao perfil, transição entre seções.

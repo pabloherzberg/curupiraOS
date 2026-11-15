@@ -9,7 +9,7 @@ from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QAbstractButton, QHBoxLayout, QVBoxLayout
 
 import sistema
-from visual import (BORDA, ICONES, TINTA, TINTA_SUAVE, VERDE, Cartao, Secao, Segmentado, arte, botao, cabecalho,
+from visual import (BORDA, ICONES, TINTA, TINTA_SUAVE, VERDE, Cartao, Secao, Segmentado, arte, botao, Faixa,
                     fonte, pixmap_svg, rotulo)
 
 
@@ -73,7 +73,7 @@ class SecaoAparencia(Secao):
     def __init__(self):
         super().__init__()
         lay = QVBoxLayout(self); lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(12)
-        lay.addWidget(cabecalho("Aparência", "As cores do entardecer da Curupira no seu Plasma."))
+        lay.addWidget(Faixa("aparencia", "Aparência", "As cores do entardecer da Curupira no seu Plasma."))
 
         # claro ou escuro
         tema = Cartao(areia=True)

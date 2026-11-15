@@ -309,12 +309,12 @@ class _Compasso(QObject):
 
     def __init__(self):
         super().__init__()
-        self.ladrilhos: list["LadrilhoSer"] = []
+        self.ladrilhos: list[QWidget] = []
         self.ligado = animacoes_ligadas()
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.bate)
 
-    def entra(self, ladrilho: "LadrilhoSer"):
+    def entra(self, ladrilho: QWidget):
         self.ladrilhos.append(ladrilho)
         ladrilho.destroyed.connect(lambda _=None, l=ladrilho: l in self.ladrilhos and self.ladrilhos.remove(l))
         if self.ligado and not self.timer.isActive():
@@ -331,6 +331,47 @@ class _Compasso(QObject):
 _COMPASSO: _Compasso | None = None
 
 
+def entra_no_compasso(peca: QWidget):
+    """Põe no relógio das animações uma peça que tenha mexendo() -> bool."""
+    global _COMPASSO
+    if _COMPASSO is None:
+        _COMPASSO = _Compasso()
+    _COMPASSO.entra(peca)
+
+
+CAMADAS = ("ladrilho", "base", "vivo", "frente")
+
+
+def camadas_svg(caminho: Path, largura: int, altura: int) -> dict[str, QPixmap]:
+    """Separa uma arte em camadas pelos grupos id="ladrilho|base|vivo|frente" (sem grupos dentro deles)."""
+    texto = caminho.read_text(encoding="utf-8")
+    camadas = {}
+    for nome in CAMADAS:
+        outros = "|".join(n for n in CAMADAS if n != nome)
+        so_esta = re.sub(rf'<g id="(?:{outros})">.*?</g>', "", texto, flags=re.S)
+        camadas[nome] = pixmap_svg(QByteArray(so_esta.encode()), largura, altura)
+    return camadas
+
+
+def movimenta(p: QPainter, movimento: tuple | None, e: float = 1.0, opacidade: float = 1.0):
+    """Aplica ao pintor o movimento de agora: (tipo, x, y do centro, período em s[, amplitude])."""
+    if not movimento or _COMPASSO is None or not _COMPASSO.ligado:
+        return
+    tipo, cx, cy, periodo = movimento[:4]
+    amplitude = movimento[4] if len(movimento) > 4 else 2.4
+    onda = math.sin(2 * math.pi * time.monotonic() / abs(periodo))
+    if tipo == "pulsar":
+        p.translate(cx * e, cy * e); p.scale(1 + 0.09 * onda, 1 + 0.12 * onda); p.translate(-cx * e, -cy * e)
+    elif tipo == "girar":
+        p.translate(cx * e, cy * e); p.rotate(360 * (time.monotonic() % abs(periodo)) / periodo); p.translate(-cx * e, -cy * e)
+    elif tipo == "balancar":
+        p.translate(amplitude * e * onda, 0)
+    elif tipo == "piscar":
+        p.setOpacity(opacidade * (0.62 + 0.38 * onda))
+    elif tipo == "passos":
+        p.setOpacity(opacidade * (0.35 if onda < 0 else 1.0))
+
+
 class LadrilhoSer(QWidget):
     """Ladrilho cor da noite com a arte de um ser (arte/icones/seres). Acordado, o ser se mexe; dormindo, fica
     apagado e parado. Passar o mouse num ser dormindo (espiar) faz ele se mexer um pouco."""
@@ -342,18 +383,9 @@ class LadrilhoSer(QWidget):
         self.acordado = True
         self.espiando = False
         self.setFixedSize(tamanho, tamanho)
-        self.camadas: dict[str, QPixmap] = {}
         caminho = arte(f"icones/seres/{self.chave}.svg")
-        if caminho:
-            texto = caminho.read_text(encoding="utf-8")
-            for nome in ("ladrilho", "base", "vivo", "frente"):
-                outros = "|".join(n for n in ("ladrilho", "base", "vivo", "frente") if n != nome)
-                so_esta = re.sub(rf'<g id="(?:{outros})">.*?</g>', "", texto, flags=re.S)
-                self.camadas[nome] = pixmap_svg(QByteArray(so_esta.encode()), tamanho, tamanho)
-        global _COMPASSO
-        if _COMPASSO is None:
-            _COMPASSO = _Compasso()
-        _COMPASSO.entra(self)
+        self.camadas = camadas_svg(caminho, tamanho, tamanho) if caminho else {}
+        entra_no_compasso(self)
 
     def acorda(self, acordado: bool):
         if acordado != self.acordado:
@@ -377,25 +409,193 @@ class LadrilhoSer(QWidget):
         apagado = 1.0 if self.acordado else 0.7 if self.espiando else 0.5
         p.setOpacity(apagado)
         p.drawPixmap(0, 0, self.camadas["base"])
-        movimento, cx, cy, periodo = MOVIMENTOS.get(self.chave, ("", 32, 32, 1.0))
-        e = self.tam / 64
         p.save()
-        if self.mexendo() and _COMPASSO is not None and _COMPASSO.ligado and movimento:
-            onda = math.sin(2 * math.pi * time.monotonic() / abs(periodo))
-            if movimento == "pulsar":
-                p.translate(cx * e, cy * e); p.scale(1 + 0.09 * onda, 1 + 0.12 * onda); p.translate(-cx * e, -cy * e)
-            elif movimento == "girar":
-                giro = 360 * (time.monotonic() % abs(periodo)) / periodo
-                p.translate(cx * e, cy * e); p.rotate(giro); p.translate(-cx * e, -cy * e)
-            elif movimento == "balancar":
-                p.translate(2.4 * e * onda, 0)
-            elif movimento == "piscar":
-                p.setOpacity(apagado * (0.62 + 0.38 * onda))
-            elif movimento == "passos":
-                p.setOpacity(apagado * (0.35 if onda < 0 else 1.0))
+        if self.mexendo():
+            movimenta(p, MOVIMENTOS.get(self.chave), self.tam / 64, apagado)
         p.drawPixmap(0, 0, self.camadas["vivo"])
         p.restore()
         p.drawPixmap(0, 0, self.camadas["frente"])
+
+
+# As três artes da Toca, cada uma com um papel:
+#   Paisagem (pé da barra lateral)  -> o perfil de energia em uso
+#   Faixa (topo da seção)           -> a seção em que você está
+#   SerNoCanto (canto de baixo)     -> quem está acordado agora
+CENAS = {   # movimento do grupo "vivo" de arte/cenas/<seção>.svg (720×104, a cena fica na metade direita)
+    "seres": ("pulsar", 652, 92, 1.1),          # a chama do Boitatá
+    "rede": ("balancar", 360, 96, 3.0, 9),      # o rio da Iara
+    "privacidade": ("piscar", 650, 50, 2.4),    # o olho da Caipora
+    "snapshots": ("girar", 650, 52, -6.0),      # o ponteiro da Cuca, para trás
+    "aparencia": ("pulsar", 646, 82, 3.2),      # o sol do entardecer
+}
+
+
+class Faixa(QWidget):
+    """Abertura de uma seção: faixa cor da noite com o título e a cena do ser que cuida dela."""
+
+    ALTURA, LARGURA_CENA = 104, 720
+
+    def __init__(self, secao: str, titulo: str, subtitulo: str = ""):
+        super().__init__()
+        self.secao, self.titulo, self.subtitulo = secao, titulo, subtitulo
+        self.setFixedHeight(self.ALTURA)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setAccessibleName(f"{titulo}. {subtitulo}")
+        caminho = arte(f"cenas/{secao}.svg")
+        self.camadas = camadas_svg(caminho, self.LARGURA_CENA, self.ALTURA) if caminho else {}
+        entra_no_compasso(self)
+
+    def mexendo(self) -> bool:
+        return bool(self.camadas)
+
+    def paintEvent(self, _):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        forma = QPainterPath()
+        forma.addRoundedRect(QRectF(self.rect()), 22, 22)
+        p.setClipPath(forma)
+        p.fillPath(forma, QColor(NOITE))
+        x = self.width() - self.LARGURA_CENA
+        if self.camadas:
+            p.drawPixmap(x, 0, self.camadas["base"])
+            p.save()
+            p.translate(x, 0)
+            movimenta(p, CENAS.get(self.secao))
+            p.drawPixmap(0, 0, self.camadas["vivo"])
+            p.restore()
+            p.drawPixmap(x, 0, self.camadas["frente"])
+        p.setPen(QColor("#FFD08A"))
+        p.setFont(fonte(26, QFont.Weight.ExtraBold, titulo=True))
+        p.drawText(QRectF(22, 14, self.width() - 44, 36), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, self.titulo)
+        p.setPen(QColor("#E6D9FF"))
+        p.setFont(fonte(13))
+        p.drawText(QRectF(22, 52, max(180, self.width() - 300), 40),
+                   Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop | Qt.TextFlag.TextWordWrap, self.subtitulo)
+
+
+class SerNoCanto(QWidget):
+    """O ser que está acordado aparece grande no canto de baixo da seção, por trás dos cartões.
+    Sem ninguém acordado (ou sem espaço livre), o canto fica vazio."""
+
+    LADO = 190
+
+    def __init__(self, pai: QWidget):
+        super().__init__(pai)
+        self.chave = ""
+        self.camadas: dict[str, QPixmap] = {}
+        self.setFixedSize(self.LADO, self.LADO)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.hide()
+        entra_no_compasso(self)
+
+    def define(self, chave: str | None):
+        chave = ALIAS_SERES.get(chave or "", chave or "")
+        if chave != self.chave:
+            self.chave = chave
+            caminho = arte(f"icones/seres/{chave}.svg") if chave else None
+            self.camadas = camadas_svg(caminho, self.LADO, self.LADO) if caminho else {}
+        self.acomoda()
+
+    def acomoda(self):
+        """Fica no canto de baixo à direita; some se os cartões chegam até ali."""
+        pai = self.parentWidget()
+        if pai is None:
+            return
+        fundo = max((f.geometry().bottom() for f in pai.findChildren(QWidget, options=Qt.FindChildOption.FindDirectChildrenOnly)
+                     if f is not self and f.isVisibleTo(pai)), default=0)
+        self.move(pai.width() - self.LADO + 18, pai.height() - self.LADO + 26)
+        self.setVisible(bool(self.camadas) and pai.height() - fundo >= self.LADO - 50)
+        self.lower()
+
+    def mexendo(self) -> bool:
+        return bool(self.camadas)
+
+    def paintEvent(self, _):
+        if not self.camadas:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        p.setOpacity(0.92)
+        p.drawPixmap(0, 0, self.camadas["base"])
+        p.save()
+        movimenta(p, MOVIMENTOS.get(self.chave), self.LADO / 64, 0.92)
+        p.drawPixmap(0, 0, self.camadas["vivo"])
+        p.restore()
+        p.drawPixmap(0, 0, self.camadas["frente"])
+
+
+# morros (do fundo para a frente), astro e se é noite, por perfil
+PAISAGENS = {
+    "pororoca": ("#FFB58F", "#FF7A45", "#C2410C", "#FFD08A", False),
+    "correnteza": ("#A8E3C7", "#2BB37A", "#128A5C", "#FFD08A", False),
+    "remanso": ("#A9C8EE", "#2468B8", "#17467F", "#FFFFFF", False),
+    "sereno": ("#8E73C2", "#5B3A8E", "#3A2D6B", "#F4D3A0", True),
+    "": ("#EADFCB", "#DCCFB6", "#CBBB9E", "#F4D3A0", False),
+}
+
+
+class Paisagem(QWidget):
+    """Pé da barra lateral: a mata na cor do perfil de energia, com as pegadas ao contrário do Curupira."""
+
+    ALTURA = 150
+
+    def __init__(self, pai: QWidget):
+        super().__init__(pai)
+        self.perfil = ""
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        entra_no_compasso(self)
+
+    def define(self, perfil: str):
+        perfil = perfil if perfil in PAISAGENS else ""
+        if perfil != self.perfil:
+            self.perfil = perfil
+            self.update()
+
+    def mexendo(self) -> bool:
+        return True
+
+    @staticmethod
+    def _morro(w: float, h: float, pontos: list[tuple[float, float]]) -> QPainterPath:
+        """Curva suave por pontos dados em fração da largura e da altura, fechada embaixo."""
+        c = QPainterPath()
+        c.moveTo(0, h)
+        c.lineTo(0, pontos[0][1] * h)
+        for (x0, y0), (x1, y1) in zip(pontos, pontos[1:]):
+            meio = (x0 + x1) / 2 * w
+            c.cubicTo(meio, y0 * h, meio, y1 * h, x1 * w, y1 * h)
+        c.lineTo(w, h)
+        c.closeSubpath()
+        return c
+
+    def paintEvent(self, _):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        w, h = self.width(), self.height()
+        c1, c2, c3, astro, noite = PAISAGENS[self.perfil]
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor(astro))
+        p.drawEllipse(QRectF(w * 0.62, h * 0.18, 44, 44))
+        p.fillPath(self._morro(w, h, [(0, 0.62), (0.3, 0.5), (0.62, 0.66), (0.85, 0.36), (1, 0.52)]), QColor(c1))
+        p.fillPath(self._morro(w, h, [(0, 0.76), (0.35, 0.62), (0.7, 0.78), (1, 0.66)]), QColor(c2))
+        p.fillPath(self._morro(w, h, [(0, 0.9), (0.4, 0.8), (0.75, 0.9), (1, 0.84)]), QColor(c3))
+        ligado = _COMPASSO is not None and _COMPASSO.ligado
+        agora = time.monotonic() if ligado else 0.0
+        if noite:   # vaga-lumes
+            for i, (x, y) in enumerate([(0.16, 0.56), (0.52, 0.5), (0.9, 0.3)]):
+                p.setOpacity(0.25 + 0.75 * (0.5 + 0.5 * math.sin(agora * 2.2 + i * 2.1)))
+                p.setBrush(QColor("#2BB37A"))
+                p.drawEllipse(QRectF(w * x, h * y, 5, 5))
+        passo = int(agora / 0.7) % 2 if ligado else 0
+        for i, (x, y) in enumerate([(0.22, 0.86), (0.33, 0.72)]):   # pegadas: o calcanhar vai na frente
+            p.setOpacity(1.0 if i == passo or not ligado else 0.3)
+            p.setBrush(QColor("#F4D3A0"))
+            cx, cy = w * x, h * y
+            p.drawEllipse(QRectF(cx - 4.5, cy - 7, 9, 14))
+            for dx, r in ((-4, 1.6), (0, 1.9), (4, 1.6)):
+                p.drawEllipse(QRectF(cx + dx - r, cy - 11 - r + abs(dx) * 0.3, 2 * r, 2 * r))
+        p.setOpacity(1.0)
 
 
 class Avatar(QWidget):
@@ -536,6 +736,17 @@ class Secao(QWidget):
 
     def mostra(self, dados):
         pass
+
+    def ser_no_canto(self, chave: str | None):
+        """Mostra no canto de baixo o ser que está acordado nesta seção (None: ninguém)."""
+        if not hasattr(self, "_canto"):
+            self._canto = SerNoCanto(self)
+        self._canto.define(chave)
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        if hasattr(self, "_canto"):
+            self._canto.acomoda()
 
 
 def cabecalho(titulo: str, subtitulo: str = "") -> QWidget:

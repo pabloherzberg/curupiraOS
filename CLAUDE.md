@@ -56,6 +56,7 @@ Ao trocar ou criar uma arte, edite o SVG em `arte/`, rode `bash tema/gerar-tudo.
 | `arte/cordel-figura.svg` | figura de corpo inteiro (instalada com a Toca) | — |
 | `arte/icones/apps/*.svg` (64 px) | ícones dos apps do KDE no tema de ícones "Curupira" (`tema/icones/Curupira/`) | `gerar-icones.py` (tabela `APPS`: arte → nomes de ícone) |
 | `arte/icones/simbolos/*.svg` (22 px, uma cor) | bandeja do sistema e ações dos menus, no mesmo tema | `gerar-icones.py` (tabelas `ESTADO` e `ACOES`) |
+| `arte/cenas/*.svg` (720×104) | cena da faixa que abre cada seção da Toca (uma por seção, menos a Energia) | a Toca usa o SVG direto |
 | `arte/icones/seres/*.svg` (64 px) | ladrilhos dos seres na Toca (animados) e no cartão rápido do widget | a Toca usa o SVG direto; `gerar-icones.py` copia para o widget |
 | paleta (em `gerar-cores.py`) | esquemas Curupira e Curupira Noite, cores do Konsole | `gerar-cores.py` |
 | raio/sombra (em `gerar-painel.py`) | fundo arredondado da doca | `gerar-painel.py` |
@@ -70,7 +71,13 @@ os de terceiros ficam com o original (a doca só põe o ladrilho atrás). Os sí
 em 22 px e a tinta `#232629`, que o gerador troca pela cor do texto do tema.
 Cada ser em `arte/icones/seres/` tem quatro grupos **sem grupos dentro**: `ladrilho`, `base` (parado), `vivo`
 (o que a Toca anima quando o ser está acordado) e `frente` (passa por cima). O movimento de cada um está em
-`MOVIMENTOS`, no `sistema/toca/visual.py`.
+`MOVIMENTOS`, no `sistema/toca/visual.py`. As cenas de `arte/cenas/` usam os mesmos grupos (sem `ladrilho`) e a
+tabela `CENAS`.
+
+**As três artes da Toca**, cada uma com um papel (não misture os papéis ao criar arte nova):
+a **paisagem** no pé da barra lateral mostra o perfil de energia (`Paisagem`, desenhada em código, cores em
+`PAISAGENS`); a **faixa** cor da noite abre a seção (`Faixa`); o **ser no canto** de baixo é quem está acordado
+agora e some quando ninguém está ou quando os cartões chegam até ali (`SerNoCanto`, via `Secao.ser_no_canto`).
 
 ## Testar e ver o resultado
 

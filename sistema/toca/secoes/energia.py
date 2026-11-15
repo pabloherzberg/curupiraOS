@@ -176,6 +176,7 @@ class SecaoEnergia(Secao):
         dormindo = d.get("boitata_dormindo", True)
         self.boi_seg.seleciona("off" if dormindo else "on")
         self.boi_ladrilho.acorda(not dormindo)
+        self.ser_no_canto("saci" if d.get("turbo") else "boitata" if not dormindo else "mapinguari" if d.get("hd") else None)
         self.boi_nota.setText("desligada de vez: máxima economia" if dormindo else "acordada: gasta energia mesmo parada")
         self.boi_nota.setStyleSheet(f"color: {VERDE_ESCURO if dormindo else BRASA}; background: transparent;")
 

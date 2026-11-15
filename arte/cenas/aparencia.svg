@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 104" width="720" height="104">
+<g id="base"><circle cx="40" cy="18" r="1.4" fill="#F4D3A0" opacity=".7" transform="translate(360 0)"/><circle cx="120" cy="34" r="1.4" fill="#F4D3A0" opacity=".7" transform="translate(360 0)"/><circle cx="200" cy="14" r="1.4" fill="#F4D3A0" opacity=".7" transform="translate(360 0)"/></g>
+<g id="vivo"><circle cx="286" cy="58" r="24" fill="#FFD08A" transform="translate(360 0)"/></g>
+<g id="frente"><path d="M0 104V84q180-30 360-12t360-18v50z" fill="#D2507A"/><path d="M0 104V92q180-20 360-8t360-10v30z" fill="#FF7A45"/><path d="M0 104v-6q180-10 360-4t360-6v16z" fill="#2BB37A"/></g>
+</svg>

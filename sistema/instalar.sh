@@ -42,6 +42,10 @@ install -m644 "$ARTE/cordel-busto.svg" "$ARTE/cordel-figura.svg" "$ARTE/brasa-fu
 rm -rf "$TOCA/arte/icones"
 install -dm755 "$TOCA/arte/icones/seres"
 install -m644 "$ARTE"/icones/seres/*.svg "$TOCA/arte/icones/seres/"
+# as cenas das faixas que abrem cada seção
+rm -rf "$TOCA/arte/cenas"
+install -dm755 "$TOCA/arte/cenas"
+install -m644 "$ARTE"/cenas/*.svg "$TOCA/arte/cenas/"
 
 # Cuca: o snapper fica só para o root. A Toca lê pelo "curupira cuca" (só leitura e guardar)
 # e volta no tempo pelo curupira-voltar, que pede senha. (A v0.2 liberava o grupo wheel no

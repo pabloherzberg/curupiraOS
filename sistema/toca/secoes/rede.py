@@ -6,7 +6,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout
 
 import sistema
-from visual import (ICONES, TINTA_SUAVE, VERDE_ESCURO, BRASA, Cartao, LinhaInfo, Secao, botao, cabecalho, linha_ser,
+from visual import (ICONES, TINTA_SUAVE, VERDE_ESCURO, BRASA, Cartao, LinhaInfo, Secao, botao, Faixa, linha_ser,
                     rotulo)
 
 
@@ -14,7 +14,7 @@ class SecaoRede(Secao):
     def __init__(self):
         super().__init__()
         lay = QVBoxLayout(self); lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(14)
-        lay.addWidget(cabecalho("Rede e Boto", "A Iara cuida das ondas; o Boto, disfarçado, monta redes de laboratório."))
+        lay.addWidget(Faixa("rede", "Rede e Boto", "A Iara cuida das ondas; o Boto, disfarçado, monta redes de laboratório."))
 
         # Iara: rádios
         radios = QGridLayout(); radios.setHorizontalSpacing(10)
@@ -94,6 +94,7 @@ class SecaoRede(Secao):
 
     def mostra(self, d: dict):
         w, bt = d.get("wifi"), d.get("bluetooth")
+        self.ser_no_canto("boto" if d.get("lab") else "iara" if w or bt else None)
         self.wifi.define(w, "sem Wi-Fi" if w is None else
                          (f"conectada em {d['wifi_rede']}" if d.get("wifi_rede") else "ligada, sem rede") if w else "em silêncio")
         self.bluetooth.define(bt, "sem Bluetooth" if bt is None else "ligado" if bt else "desligado")
