@@ -1,0 +1,15 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [ { "Name": "Curupira OS" } ],
+        "Category": "Windows and Tasks",
+        "Description": "A doca da Curupira OS: apps fixados e abertos, com animação ao surgir e efeito de lupa",
+        "Icon": "user-desktop",
+        "Id": "io.github.pabloherzberg.doca",
+        "License": "GPL-3.0+",
+        "Name": "Doca Curupira",
+        "Version": "0.1",
+        "Website": "https://github.com/pabloherzberg/curupiraOS"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

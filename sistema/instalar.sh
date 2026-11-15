@@ -54,6 +54,10 @@ install -Dm644 "$AQUI/toca/io.github.pabloherzberg.Toca.desktop" \
                "$RAIZ/usr/local/share/applications/io.github.pabloherzberg.Toca.desktop"
 install -Dm644 "$ARTE/cordel-busto.svg" \
                "$RAIZ/usr/local/share/icons/hicolor/scalable/apps/io.github.pabloherzberg.Toca.svg"
+DOCA="$RAIZ/usr/share/plasma/plasmoids/io.github.pabloherzberg.doca"
+rm -rf "$DOCA"
+cp -r "$AQUI/doca" "$DOCA"
+chmod -R u=rwX,go=rX "$DOCA"
 PLASMOIDE="$RAIZ/usr/share/plasma/plasmoids/io.github.pabloherzberg.curupira"
 rm -rf "$PLASMOIDE"
 install -Dm644 "$AQUI/plasmoide/metadata.json" "$PLASMOIDE/metadata.json"
@@ -78,6 +82,31 @@ chmod -R u=rwX,go=rX "$SDDM_TEMA"
 install -dm755 "$RAIZ/etc/sddm.conf.d"
 printf '%s\n' "# Curupira OS: tela de login. Para voltar ao padrão, apague este arquivo." \
   "[Theme]" "Current=curupira" > "$RAIZ/etc/sddm.conf.d/10-curupira.conf"
+
+# Tema global do Plasma (aparece em Configurações → Tema global) com a tela de abertura.
+# A tela de abertura usa as mesmas imagens da tela de boot e vira o padrão do sistema; quem
+# escolher outra nas Configurações grava a sua em ~/.config/ksplashrc e ela prevalece.
+LNF_ID="io.github.pabloherzberg.curupira"
+LNF="$RAIZ/usr/share/plasma/look-and-feel/$LNF_ID"
+rm -rf "$LNF"
+cp -r "$TEMA/plasma/$LNF_ID" "$LNF"
+install -dm755 "$LNF/contents/splash/images"
+install -m644 "$TEMA"/plymouth/curupira/retrato.png "$TEMA"/plymouth/curupira/pegada?.png "$LNF/contents/splash/images/"
+install -m644 "$AQUI/toca/fontes/Nunito[wght].ttf" "$LNF/contents/splash/images/Nunito.ttf"
+chmod -R u=rwX,go=rX "$LNF"
+for tam in 32 48 64 128 256; do
+  install -Dm644 "$TEMA/icones/${tam}x${tam}/curupira-menu.png" \
+                 "$RAIZ/usr/local/share/icons/hicolor/${tam}x${tam}/apps/curupira-menu.png"
+done
+install -Dm755 "$TEMA/aplicar-doca.sh" "$RAIZ/usr/local/bin/curupira-doca"
+install -Dm644 "$TEMA/restaurar-doca.desktop" "$RAIZ/usr/local/share/applications/io.github.pabloherzberg.RestaurarDoca.desktop"
+install -dm755 "$RAIZ/etc/xdg"
+# Numa instalação nova, o tema Curupira (com a doca) é o padrão de quem ainda não tem configuração.
+if [[ -n "$RAIZ" ]]; then
+  printf '%s\n' "[KDE]" "LookAndFeelPackage=$LNF_ID" >> "$RAIZ/etc/xdg/kdeglobals"
+fi
+printf '%s\n' "# Curupira OS: tela de abertura do Plasma" "[KSplash]" "Engine=KSplashQML" "Theme=$LNF_ID" \
+  > "$RAIZ/etc/xdg/ksplashrc"
 
 # Modo de recuperação: o mkinitcpio do Arch deixou de gerar a imagem "fallback" por padrão,
 # e a entrada da v0.1 apontava para ela. Sem a imagem, a recuperação usa a padrão.

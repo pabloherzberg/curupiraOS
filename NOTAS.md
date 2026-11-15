@@ -57,6 +57,23 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   com DISPLAY/XAUTHORITY do Xwayland usa o renderizador X11 (o tema vem de /etc/plymouth/plymouthd.conf).
 - A entrada de recuperação da v0.1 apontava para initramfs-linux-fallback.img, que o mkinitcpio do Arch não gera
   mais (PRESETS=('default')); agora usa initramfs-linux.img.
+- Tema global do Plasma "Curupira" (`tema/plasma/io.github.pabloherzberg.curupira/`): tela de abertura (KSplash)
+  com o retrato e as pegadas da tela de boot, uma pegada por etapa do Plasma; padrão em /etc/xdg/ksplashrc.
+  Layout com a doca do `mockup/Desktop.dc.html` (painel flutuante, centralizado, do tamanho do conteúdo: menu
+  com o Cordel, 7 apps fixados, widget Curupira, bandeja, relógio com data). `curupira-doca` aplica na sessão
+  e guarda o painel em ~/.config/curupira-painel-anterior. O ícone do menu é PNG (`tema/gerar-icones.py`): o
+  QtSvg não recorta (clip-path) nem aceita <svg> aninhado. Depois de instalar ícones novos, limpar
+  ~/.cache/icon-cache.kcache, senão o Plasma lembra do ícone "não encontrado".
+- Doca v2: painel em "desviar das janelas" (panelVisibility=2): tela cheia e maximizadas usam a tela toda e a
+  doca volta ao tocar a borda de baixo. Widget próprio `sistema/doca` (io.github.pabloherzberg.doca, TasksModel
+  do Plasma) no lugar do icontasks. Ao surgir (mouse entra depois de 0,9 s fora, a janela do painel reaparece, ou o
+  ícone nasce logo após o surgimento), cada ícone, do centro para as pontas, nasce pequeno e girado embaixo, sobe
+  com balanço elástico, solta uma faísca de brasa (anel dourado) e no fim passa uma onda da esquerda para a
+  direita. Mouse em cima: só aquele ícone "respira" (1,16 ↔ 0,92). Pulo ao abrir, ponto/traço de aberto, menu
+  Nova janela/Fixar/Fechar. Para ver a entrada em câmera lenta, multiplique as durações numa cópia em
+  ~/.local/share/plasma/plasmoids (e apague depois: ela tem prioridade sobre a do sistema).
+  Relógio com fonte fixa (11 pt, negrito, data embaixo: dateDisplayFormat=2). `curupira-doca` só guarda o painel
+  na primeira vez.
 - Incidente de 15/11/2026: uma linha "curupira cuca lista" sem "#" no cabeçalho fez o curupira chamar a si
   mesmo; o widget e o timer recomeçavam a cadeia e a memória esgotou (~14 mil processos root). Corrigido e
   coberto por teste em `ferramentas/testar-curupira.sh`.
@@ -66,7 +83,8 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
 ## A fazer
 1. Cuca: terminar o teste do curupira-voltar; depois, boot direto num snapshot (exige um subvolume
    @snapshots fora do @).
-2. Conferir a tela de boot num boot de verdade; tema global do Plasma com tela de abertura (KSplash).
+2. Conferir tela de boot, login e abertura num boot de verdade. Doca: raio maior e ícones em ladrilhos
+   (estilo próprio do Plasma); o popup do widget Curupira mais perto do cartão rápido do mockup.
 3. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
    `/etc/udev/rules.d/00-curupira-boitata.rules` e `/etc/modprobe.d/curupira-boitata.conf` a religa).
    O módulo nouveau ainda carrega apesar da blacklist (provavelmente pelo hook kms do initramfs).

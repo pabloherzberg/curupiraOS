@@ -9,8 +9,8 @@ from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QAbstractButton, QHBoxLayout, QVBoxLayout
 
 import sistema
-from visual import (BORDA, ICONES, TINTA, TINTA_SUAVE, VERDE, Cartao, Secao, Segmentado, arte, cabecalho, fonte,
-                    pixmap_svg, rotulo)
+from visual import (BORDA, ICONES, TINTA, TINTA_SUAVE, VERDE, Cartao, Secao, Segmentado, arte, botao, cabecalho,
+                    fonte, pixmap_svg, rotulo)
 
 
 class Amostra(QAbstractButton):
@@ -124,6 +124,18 @@ class SecaoAparencia(Secao):
         mini.addStretch()
         pl.addLayout(mini)
         lay.addWidget(papel)
+
+        # doca: volta ao layout da Curupira se os widgets se bagunçarem
+        doca = Cartao(areia=True)
+        dl = QHBoxLayout(doca); dl.setContentsMargins(16, 12, 14, 12)
+        dt = QVBoxLayout(); dt.setSpacing(0)
+        dt.addWidget(rotulo("Doca", 15, QFont.Weight.ExtraBold))
+        dt.addWidget(rotulo("Bagunçou os painéis ou os widgets? Volta tudo ao layout da Curupira.", 12, cor=TINTA_SUAVE))
+        dl.addLayout(dt, 1)
+        b_doca = botao("Restaurar a doca")
+        b_doca.clicked.connect(lambda: self.executar.emit(["curupira-doca"], "Doca restaurada.", None))
+        dl.addWidget(b_doca)
+        lay.addWidget(doca)
 
         lay.addWidget(rotulo("A tela de boot e a de login também usam o tema Curupira.", 12, cor=TINTA_SUAVE))
         lay.addStretch()

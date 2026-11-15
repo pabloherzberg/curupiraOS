@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Restaurar a doca
+GenericName=Doca da Curupira OS
+Comment=Volta o painel e a área de trabalho ao layout da Curupira (doca do mockup)
+Exec=curupira-doca
+Icon=curupira-menu
+Categories=Settings;
+Keywords=doca;painel;widgets;restaurar;curupira;

@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [ { "Name": "Curupira OS" } ],
+        "Category": "",
+        "Description": "Tema da Curupira OS: cores do entardecer, o Curupira de cabelo de fogo e as pegadas ao contrário",
+        "Id": "io.github.pabloherzberg.curupira",
+        "License": "CC-BY-SA-4.0",
+        "Name": "Curupira",
+        "Version": "0.1",
+        "Website": "https://github.com/pabloherzberg/curupiraOS"
+    },
+    "X-Plasma-APIVersion": "2"
+}

@@ -100,7 +100,13 @@ de perfil com um clique.
 | Perfil do Konsole (JetBrains Mono, cores da paleta) | `tema/konsole/` → `/usr/local/share/konsole` | Konsole → Configurações → perfil Curupira |
 | Papéis de parede Brasa e Entardecer | `tema/papeis/` → `/usr/local/share/wallpapers` | Toca → Aparência, ou clique direito na área de trabalho |
 | Tela de login | `tema/sddm/curupira/` → `/usr/share/sddm/themes/curupira` | ativa pelo instalador (`/etc/sddm.conf.d/10-curupira.conf`) |
+| Tela de abertura do Plasma | `tema/plasma/io.github.pabloherzberg.curupira/` (tema global "Curupira") | padrão do sistema em `/etc/xdg/ksplashrc` |
+| Doca (painel do mockup) | layout do tema global + widget `sistema/doca` | `curupira-doca` troca o painel atual (guarda uma cópia; `--desfazer` volta) |
 | Tela de boot (Plymouth) | `tema/plymouth/curupira/` → `/usr/share/plymouth/themes/curupira` | ativa pelo instalador: hook `plymouth` e `splash` no boot |
+
+A doca some quando uma janela em tela cheia ou maximizada encosta nela e volta subindo quando o mouse toca a
+borda de baixo. Os apps ficam no widget Doca Curupira: quando a doca surge, cada ícone sobe girando, solta uma
+faísca de brasa e no fim passa uma onda; o ícone sob o mouse "respira"; pulam ao abrir; clique do meio abre outra janela, botão direito fixa, tira ou fecha.
 
 As cores saem de `tema/gerar-cores.py`, os papéis de parede de `tema/gerar-papeis.py` e as imagens da tela de
 boot de `tema/gerar-boot.py`. Se a tela de boot der problema, escolha "modo de recuperação" no menu do boot
@@ -123,4 +129,4 @@ sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
 ## Próximos passos
 
 - Demais seções da Toca do Curupira.
-- Tema global do Plasma (tela de abertura).
+- Doca: raio maior e ícones em ladrilhos coloridos como no mockup (pede um estilo próprio do Plasma).
