@@ -1,0 +1,29 @@
+# Gerado por tema/gerar-icones.py a partir de arte/icones/. Não edite à mão.
+[Icon Theme]
+Name=Curupira
+Comment=Ícones da Curupira OS: apps do KDE, bandeja e menus. O resto vem do Breeze.
+Inherits=breeze,hicolor
+Example=system-file-manager
+FollowsColorScheme=true
+Directories=apps/scalable,status/scalable,actions/scalable
+
+[apps/scalable]
+Size=64
+MinSize=16
+MaxSize=512
+Type=Scalable
+Context=Applications
+
+[status/scalable]
+Size=22
+MinSize=16
+MaxSize=64
+Type=Scalable
+Context=Status
+
+[actions/scalable]
+Size=22
+MinSize=16
+MaxSize=64
+Type=Scalable
+Context=Actions

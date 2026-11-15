@@ -54,6 +54,9 @@ Ao trocar ou criar uma arte, edite o SVG em `arte/`, rode `bash tema/gerar-tudo.
 | `arte/01-brasa.svg` (800×1000) | tela de boot (Plymouth) e de abertura (KSplash): retrato + 5 pegadas (`<g class="step">`) | `gerar-boot.py` |
 | `arte/cordel-busto.svg` | ícone do menu da doca (PNG), avatar do login, avatar da Toca e do widget | `gerar-icones.py` (a Toca e o widget usam o SVG direto) |
 | `arte/cordel-figura.svg` | figura de corpo inteiro (instalada com a Toca) | — |
+| `arte/icones/apps/*.svg` (64 px) | ícones dos apps do KDE no tema de ícones "Curupira" (`tema/icones/Curupira/`) | `gerar-icones.py` (tabela `APPS`: arte → nomes de ícone) |
+| `arte/icones/simbolos/*.svg` (22 px, uma cor) | bandeja do sistema e ações dos menus, no mesmo tema | `gerar-icones.py` (tabelas `ESTADO` e `ACOES`) |
+| `arte/icones/seres/*.svg` (64 px) | ladrilhos dos seres na Toca (animados) e no cartão rápido do widget | a Toca usa o SVG direto; `gerar-icones.py` copia para o widget |
 | paleta (em `gerar-cores.py`) | esquemas Curupira e Curupira Noite, cores do Konsole | `gerar-cores.py` |
 | raio/sombra (em `gerar-painel.py`) | fundo arredondado da doca | `gerar-painel.py` |
 
@@ -61,10 +64,19 @@ Limites do motor de SVG do Qt (QtSvg), que o Plasma usa para ícones: **não apl
 `<svg>` dentro de `<svg>`** e ignora animações CSS. Por isso o ícone do menu sai em PNG. O Plymouth não lê SVG.
 Para novas artes de interface, prefira formas simples, degradês e cores sólidas da paleta.
 
+**Ícones (direção "Brasa na noite", escolhida em 15/11/2026):** ladrilho cor da noite (`#241A4A`, fio `#3A2D6B`,
+raio 18 em 64) e o desenho em formas cheias de brasa, urucum, mata e areia. Só os apps do sistema ganham ícone;
+os de terceiros ficam com o original (a doca só põe o ladrilho atrás). Os símbolos de uma cor usam traço de 1,8
+em 22 px e a tinta `#232629`, que o gerador troca pela cor do texto do tema.
+Cada ser em `arte/icones/seres/` tem quatro grupos **sem grupos dentro**: `ladrilho`, `base` (parado), `vivo`
+(o que a Toca anima quando o ser está acordado) e `frente` (passa por cima). O movimento de cada um está em
+`MOVIMENTOS`, no `sistema/toca/visual.py`.
+
 ## Testar e ver o resultado
 
 - `bash ferramentas/testar-curupira.sh`: testes do `curupira` sem root (simula `/sys`). Rode sempre que mexer nele.
 - `python3 sistema/toca/toca.py --captura-todas /tmp/telas/`: um PNG de cada seção da Toca, sem abrir janela.
+- Ícone novo aparece? `kiconfinder6 system-file-manager` deve apontar para `/usr/local/share/icons/Curupira/`.
 - Widget avulso: `plasmawindowed io.github.pabloherzberg.doca` (ou `.curupira`).
 - Login sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
 - Abertura: `ksplashqml --test --window <pasta do tema global com splash/images preenchida>`.

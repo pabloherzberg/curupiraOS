@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+<g id="ladrilho"><rect x="2" y="2" width="60" height="60" rx="18" fill="#241A4A" stroke="#3A2D6B" stroke-width="1.5"/></g>
+<g id="base"><circle cx="32" cy="32" r="19" fill="#5B4A8E"/><circle cx="32" cy="32" r="11.5" fill="#F4D3A0"/></g>
+<g id="vivo"><path d="M32 20.5a11.5 11.5 0 0 1 11.5 11.5" fill="none" stroke="#FF7A45" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="32" r="5.6" fill="#241A4A"/><circle cx="34.3" cy="29.7" r="1.8" fill="#FBF4E8"/></g>
+<g id="frente"></g>
+</svg>

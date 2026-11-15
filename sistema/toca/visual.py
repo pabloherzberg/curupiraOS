@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import math
 import os
+import re
+import time
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QObject, QRectF, QRunnable, QSize, Qt, QThreadPool, Signal
+from PySide6.QtCore import QByteArray, QObject, QRectF, QRunnable, QSize, Qt, QThreadPool, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QLinearGradient, QPainter, QPainterPath, QPixmap
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import (QAbstractButton, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy,
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy,
                                QVBoxLayout, QWidget)
 
 AQUI = Path(__file__).resolve().parent
@@ -268,6 +271,133 @@ class Ladrilho(QLabel):
         p.drawPixmap(int(off), int(off), self.pm)
 
 
+# Como cada ser se mexe quando está acordado: (movimento, x, y do centro na arte de 64 px, período em s).
+# O que se mexe é o grupo id="vivo" de arte/icones/seres/<ser>.svg; "base" fica parado e "frente" passa por cima.
+MOVIMENTOS = {
+    "curupira": ("passos", 32, 32, 1.4),      # as pegadas se alternam
+    "boitata": ("pulsar", 32, 48, 1.1),       # a chama respira a partir do pé
+    "mapinguari": ("girar", 32, 32, 2.6),     # o olho é o disco: gira
+    "iara": ("balancar", 32, 32, 2.2),        # a onda vai e volta
+    "bluetooth": ("piscar", 32, 32, 1.6),
+    "saci": ("balancar", 32, 32, 0.9),        # redemoinho apressado
+    "caipora": ("piscar", 32, 32, 2.4),
+    "boto": ("pulsar", 32, 30, 1.8),
+    "cuca": ("girar", 32, 32, -6.0),          # os ponteiros andam para trás
+    "camera": ("piscar", 32, 32, 2.0),
+    "microfone": ("piscar", 32, 32, 1.2),
+    "mascara": ("piscar", 32, 32, 3.0),
+}
+ALIAS_SERES = {"wifi": "iara"}
+
+
+def animacoes_ligadas() -> bool:
+    """Respeita quem desligou as animações no Plasma (Configurações → velocidade das animações no mínimo)."""
+    if os.environ.get("CURUPIRA_SEM_ANIMACAO"):
+        return False
+    try:
+        for linha in (Path.home() / ".config" / "kdeglobals").read_text(encoding="utf-8", errors="ignore").splitlines():
+            if linha.startswith("AnimationDurationFactor="):
+                return float(linha.split("=", 1)[1]) > 0
+    except (OSError, ValueError):
+        pass
+    return True
+
+
+class _Compasso(QObject):
+    """Um relógio só para todos os ladrilhos. Só bate rápido com a janela da Toca em uso e algum ser acordado
+    à vista: parada ou em segundo plano, a Toca não acorda o processador à toa."""
+
+    def __init__(self):
+        super().__init__()
+        self.ladrilhos: list["LadrilhoSer"] = []
+        self.ligado = animacoes_ligadas()
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.bate)
+
+    def entra(self, ladrilho: "LadrilhoSer"):
+        self.ladrilhos.append(ladrilho)
+        ladrilho.destroyed.connect(lambda _=None, l=ladrilho: l in self.ladrilhos and self.ladrilhos.remove(l))
+        if self.ligado and not self.timer.isActive():
+            self.timer.start(40)
+
+    def bate(self):
+        em_uso = QApplication.activeWindow() is not None
+        vivos = [l for l in self.ladrilhos if l.mexendo() and l.isVisible()] if em_uso else []
+        self.timer.setInterval(40 if vivos else 700)
+        for l in vivos:
+            l.update()
+
+
+_COMPASSO: _Compasso | None = None
+
+
+class LadrilhoSer(QWidget):
+    """Ladrilho cor da noite com a arte de um ser (arte/icones/seres). Acordado, o ser se mexe; dormindo, fica
+    apagado e parado. Passar o mouse num ser dormindo (espiar) faz ele se mexer um pouco."""
+
+    def __init__(self, chave: str, tamanho: int = 36):
+        super().__init__()
+        self.chave = ALIAS_SERES.get(chave, chave)
+        self.tam = tamanho
+        self.acordado = True
+        self.espiando = False
+        self.setFixedSize(tamanho, tamanho)
+        self.camadas: dict[str, QPixmap] = {}
+        caminho = arte(f"icones/seres/{self.chave}.svg")
+        if caminho:
+            texto = caminho.read_text(encoding="utf-8")
+            for nome in ("ladrilho", "base", "vivo", "frente"):
+                outros = "|".join(n for n in ("ladrilho", "base", "vivo", "frente") if n != nome)
+                so_esta = re.sub(rf'<g id="(?:{outros})">.*?</g>', "", texto, flags=re.S)
+                self.camadas[nome] = pixmap_svg(QByteArray(so_esta.encode()), tamanho, tamanho)
+        global _COMPASSO
+        if _COMPASSO is None:
+            _COMPASSO = _Compasso()
+        _COMPASSO.entra(self)
+
+    def acorda(self, acordado: bool):
+        if acordado != self.acordado:
+            self.acordado = acordado
+            self.update()
+
+    def espia(self, espiando: bool):
+        self.espiando = espiando
+        self.update()
+
+    def mexendo(self) -> bool:
+        return self.acordado or self.espiando
+
+    def paintEvent(self, _):
+        if not self.camadas:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        p.drawPixmap(0, 0, self.camadas["ladrilho"])
+        apagado = 1.0 if self.acordado else 0.7 if self.espiando else 0.5
+        p.setOpacity(apagado)
+        p.drawPixmap(0, 0, self.camadas["base"])
+        movimento, cx, cy, periodo = MOVIMENTOS.get(self.chave, ("", 32, 32, 1.0))
+        e = self.tam / 64
+        p.save()
+        if self.mexendo() and _COMPASSO is not None and _COMPASSO.ligado and movimento:
+            onda = math.sin(2 * math.pi * time.monotonic() / abs(periodo))
+            if movimento == "pulsar":
+                p.translate(cx * e, cy * e); p.scale(1 + 0.09 * onda, 1 + 0.12 * onda); p.translate(-cx * e, -cy * e)
+            elif movimento == "girar":
+                giro = 360 * (time.monotonic() % abs(periodo)) / periodo
+                p.translate(cx * e, cy * e); p.rotate(giro); p.translate(-cx * e, -cy * e)
+            elif movimento == "balancar":
+                p.translate(2.4 * e * onda, 0)
+            elif movimento == "piscar":
+                p.setOpacity(apagado * (0.62 + 0.38 * onda))
+            elif movimento == "passos":
+                p.setOpacity(apagado * (0.35 if onda < 0 else 1.0))
+        p.drawPixmap(0, 0, self.camadas["vivo"])
+        p.restore()
+        p.drawPixmap(0, 0, self.camadas["frente"])
+
+
 class Avatar(QWidget):
     """Retrato do Cordel dentro de um quadrado arredondado com degradê."""
 
@@ -302,7 +432,7 @@ def rotulo(texto: str, tamanho: float, peso=QFont.Weight.Normal, cor: str = TINT
 class LinhaSer(QFrame):
     """Linha de um ser da mata: ladrilho, nome, situação e interruptor."""
 
-    def __init__(self, nome: str, icone_svg: str, c1: str, c2: str):
+    def __init__(self, nome: str, chave: str):
         super().__init__()
         self.setObjectName("linhaSer")
         self.setStyleSheet(f"#linhaSer {{ border: 1px solid {BORDA}; border-radius: 16px; background: #FFFFFF; }}")
@@ -310,7 +440,8 @@ class LinhaSer(QFrame):
         lay = QHBoxLayout(self)
         lay.setContentsMargins(12, 8, 12, 8)
         lay.setSpacing(12)
-        lay.addWidget(Ladrilho(icone_svg, c1, c2))
+        self.ladrilho = LadrilhoSer(chave)
+        lay.addWidget(self.ladrilho)
         textos = QVBoxLayout(); textos.setSpacing(0)
         self.nome = rotulo(nome, 14, QFont.Weight.ExtraBold)
         self.situacao = rotulo("", 12, cor=TINTA_SUAVE)
@@ -324,6 +455,7 @@ class LinhaSer(QFrame):
         self.chave.setChecked(bool(ligado))
         self.chave.blockSignals(False)
         self.chave.setEnabled(habilitado and ligado is not None)
+        self.ladrilho.acorda(bool(ligado))
         self.situacao.setText(situacao)
 
 
@@ -470,8 +602,7 @@ class LinhaInfo(QWidget):
 
 
 def linha_ser(chave: str, nome: str) -> "LinhaSer":
-    c1, c2 = DEGRADES.get(chave, ("#C9C2B5", "#7A7366"))
-    return LinhaSer(nome, ICONES.get(chave, ICONES["seres"]), c1, c2)
+    return LinhaSer(nome, chave)
 
 
 def tempo_relativo(segundos: float) -> str:

@@ -38,6 +38,10 @@ install -m644 "$AQUI"/toca/secoes/*.py "$TOCA/secoes/"
 install -m644 "$AQUI"/toca/fontes/* "$TOCA/fontes/"
 install -m644 "$ARTE/cordel-busto.svg" "$ARTE/cordel-figura.svg" "$ARTE/brasa-fundo.svg" \
               "$ARTE/propostas/papel-de-parede-entardecer.svg" "$TOCA/arte/"
+# as artes dos seres, que a Toca anima (grupos base/vivo/frente)
+rm -rf "$TOCA/arte/icones"
+install -dm755 "$TOCA/arte/icones/seres"
+install -m644 "$ARTE"/icones/seres/*.svg "$TOCA/arte/icones/seres/"
 
 # Cuca: o snapper fica só para o root. A Toca lê pelo "curupira cuca" (só leitura e guardar)
 # e volta no tempo pelo curupira-voltar, que pede senha. (A v0.2 liberava o grupo wheel no
@@ -102,6 +106,12 @@ for tam in 32 48 64 128 256; do
   install -Dm644 "$TEMA/icones/${tam}x${tam}/curupira-menu.png" \
                  "$RAIZ/usr/local/share/icons/hicolor/${tam}x${tam}/apps/curupira-menu.png"
 done
+# Tema de ícones "Curupira": apps do KDE, bandeja e menus; o resto vem do Breeze.
+# Para voltar: Configurações → Cores e temas → Ícones → Breeze.
+ICONES_TEMA="$RAIZ/usr/local/share/icons/Curupira"
+rm -rf "$ICONES_TEMA"
+cp -r "$TEMA/icones/Curupira" "$ICONES_TEMA"
+chmod -R u=rwX,go=rX "$ICONES_TEMA"
 install -Dm755 "$TEMA/aplicar-doca.sh" "$RAIZ/usr/local/bin/curupira-doca"
 install -Dm644 "$TEMA/restaurar-doca.desktop" "$RAIZ/usr/local/share/applications/io.github.pabloherzberg.RestaurarDoca.desktop"
 install -dm755 "$RAIZ/etc/xdg"

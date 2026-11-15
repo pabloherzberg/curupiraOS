@@ -251,7 +251,7 @@ PlasmoidItem {
                         required property var modelData
                         readonly property bool clicavel: modelData.acao !== "" && modelData.existe
                         Layout.fillWidth: true
-                        implicitHeight: Kirigami.Units.gridUnit * 3.6
+                        implicitHeight: Kirigami.Units.gridUnit * 4.4
                         radius: Kirigami.Units.cornerRadius * 3
                         color: modelData.ligado ? modelData.cor : (ser.containsMouse && clicavel ? root.alfa(modelData.cor, 0.14) : neutro)
                         opacity: modelData.existe ? 1 : 0.5
@@ -262,12 +262,14 @@ PlasmoidItem {
                             anchors.fill: parent
                             anchors.margins: Kirigami.Units.largeSpacing
                             spacing: Kirigami.Units.smallSpacing / 2
-                            Kirigami.Icon {
-                                source: Qt.resolvedUrl("../images/" + modelData.icone + ".svg")
-                                isMask: true
-                                color: modelData.ligado ? "#FFFFFF" : Kirigami.Theme.textColor
-                                implicitWidth: Kirigami.Units.iconSizes.small
-                                implicitHeight: implicitWidth
+                            // a arte do ser (arte/icones/seres, copiada por tema/gerar-icones.py); dormindo, fica apagada
+                            Image {
+                                source: Qt.resolvedUrl("../images/ser-" + modelData.icone + ".svg")
+                                sourceSize: Qt.size(Kirigami.Units.iconSizes.medium * 2, Kirigami.Units.iconSizes.medium * 2)
+                                Layout.preferredWidth: Kirigami.Units.iconSizes.medium
+                                Layout.preferredHeight: Kirigami.Units.iconSizes.medium
+                                opacity: modelData.ligado ? 1 : 0.6
+                                Behavior on opacity { NumberAnimation { duration: 180 } }
                             }
                             PlasmaComponents.Label {
                                 text: modelData.nome

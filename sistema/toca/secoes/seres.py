@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor, QFont, QPainter
 from PySide6.QtWidgets import QAbstractButton, QGridLayout, QHBoxLayout, QSizePolicy, QVBoxLayout
 
 import sistema
-from visual import (BORDA, BRASA, DEGRADES, ICONES, TINTA, TINTA_SUAVE, VERDE, VERDE_ESCURO, Ladrilho, Secao,
+from visual import (BORDA, BRASA, TINTA, TINTA_SUAVE, VERDE, VERDE_ESCURO, LadrilhoSer, Secao,
                     cabecalho, rotulo, tempo_relativo)
 
 # (chave, nome, papel, descrição, seção onde se controla) - textos do mockup Main.dc.html
@@ -21,7 +21,6 @@ SERES = [
     ("boto", "Boto", "laboratório de rede", "O encantado disfarçado: redes isoladas, proxy e captura.", "rede"),
     ("cuca", "Cuca", "snapshots do sistema", "Guarda o passado. Quebrou algo? Ela volta no tempo.", "snapshots"),
 ]
-ICONE_DO_SER = {"iara": "wifi"}
 
 
 class CartaoSer(QAbstractButton):
@@ -31,10 +30,9 @@ class CartaoSer(QAbstractButton):
         super().__init__()
         self.chave, self.nome, self.papel, self.descricao = chave, nome, papel, descricao
         self.situacao, self.economiza = "…", True
-        c1, c2 = DEGRADES[chave]
-        self.ladrilho = Ladrilho(ICONES[ICONE_DO_SER.get(chave, chave)], c1, c2, 40, 22)
+        self.ladrilho = LadrilhoSer(chave, 52)
         self.ladrilho.setParent(self)
-        self.ladrilho.move(14, 14)
+        self.ladrilho.move(12, 12)
         self.ladrilho.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMinimumHeight(108)
@@ -45,8 +43,9 @@ class CartaoSer(QAbstractButton):
     def sizeHint(self) -> QSize:
         return QSize(300, 108)
 
-    def define(self, situacao: str, economiza: bool):
+    def define(self, situacao: str, economiza: bool, acordado: bool = True):
         self.situacao, self.economiza = situacao, economiza
+        self.ladrilho.acorda(acordado)
         self.setAccessibleDescription(f"{self.descricao} Agora: {situacao}")
         self.update()
 
@@ -57,7 +56,7 @@ class CartaoSer(QAbstractButton):
         p.setPen(QColor(VERDE if self.hasFocus() else BORDA))
         p.setBrush(QColor("#FFFDF9" if self.underMouse() else "#FFFFFF"))
         p.drawRoundedRect(r, 16, 16)
-        x = 66
+        x = 76
         w = r.width() - x - 14
         p.setPen(QColor(TINTA))
         from visual import fonte
@@ -79,10 +78,10 @@ class CartaoSer(QAbstractButton):
                    p.fontMetrics().elidedText(self.situacao, Qt.TextElideMode.ElideRight, int(w - 14)))
 
     def enterEvent(self, e):
-        self.update(); super().enterEvent(e)
+        self.ladrilho.espia(True); self.update(); super().enterEvent(e)
 
     def leaveEvent(self, e):
-        self.update(); super().leaveEvent(e)
+        self.ladrilho.espia(False); self.update(); super().leaveEvent(e)
 
 
 class SecaoSeres(Secao):
@@ -117,20 +116,20 @@ class SecaoSeres(Secao):
         self.cartoes["curupira"].define(f"perfil {perfil} · troca automática {'ligada' if en.get('auto') else 'desligada'}",
                                         en.get("perfil") != "pororoca")
         dormindo = d.get("boitata_dormindo", True)
-        self.cartoes["boitata"].define("dormindo" if dormindo else "acordada, gastando energia", dormindo)
+        self.cartoes["boitata"].define("dormindo" if dormindo else "acordada, gastando energia", dormindo, not dormindo)
         hd = d.get("hd")
-        self.cartoes["mapinguari"].define("sem HD em /data" if hd is None else "acordado" if hd else "hibernando", not hd)
+        self.cartoes["mapinguari"].define("sem HD em /data" if hd is None else "acordado" if hd else "hibernando", not hd, bool(hd))
         w, bt = d.get("wifi"), d.get("bluetooth")
         partes = ["Wi-Fi " + (f"em {d['wifi_rede']}" if w and d.get("wifi_rede") else "ligado" if w else "desligado")]
         partes.append("Bluetooth " + ("ligado" if bt else "desligado"))
-        self.cartoes["iara"].define(" · ".join(partes), not bt)
+        self.cartoes["iara"].define(" · ".join(partes), not bt, bool(w or bt))
         t = d.get("turbo")
-        self.cartoes["saci"].define("girando (turbo ligado)" if t else "calmo (turbo desligado)", not t)
+        self.cartoes["saci"].define("girando (turbo ligado)" if t else "calmo (turbo desligado)", not t, bool(t))
         cam, mic = en.get("camera_cortada"), d.get("microfone_mudo")
         txt = ("câmera cortada" if cam else "câmera liberada") + " · " + ("microfone mudo" if mic else "microfone aberto")
-        self.cartoes["caipora"].define(txt, bool(cam and mic))
+        self.cartoes["caipora"].define(txt, bool(cam and mic), bool(cam or mic))
         lab = d.get("lab")
-        self.cartoes["boto"].define(f'rede "{sistema.REDE_LAB}" ativa' if lab else "laboratório parado", True)
+        self.cartoes["boto"].define(f'rede "{sistema.REDE_LAB}" ativa' if lab else "laboratório parado", True, bool(lab))
         snaps = d.get("snapshots", {})
         if snaps.get("_erro"):
             self.cartoes["cuca"].define(snaps["_erro"], True)

@@ -87,6 +87,16 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   coberto por teste em `ferramentas/testar-curupira.sh`.
 - Widget do painel (`sistema/plasmoide/`, QML do Plasma 6): ícone na cor do perfil, lista de perfis, botão para a Toca.
 - Fontes Baloo 2 e Nunito (OFL) vão junto em `sistema/toca/fontes/`.
+- Ícones "Brasa na noite" (15/11/2026, escolhida entre três propostas: ladrilho de traço, xilogravura e esta):
+  tema de ícones "Curupira" (`tema/icones/Curupira`, gerado de `arte/icones/`, herda do Breeze) com 17 apps do
+  KDE, a bandeja (Wi-Fi, cabo, som, microfone, bateria, Bluetooth, avisos) e as ações dos menus (janela, fixar,
+  sessão, busca etc.). Apps de terceiros ficam com o ícone original. A doca passou a ter todos os ladrilhos na
+  cor da noite. `curupira-doca` aplica o tema de ícones (e `--desfazer` volta ao Breeze). Na Toca e no cartão
+  rápido, os seres ganharam arte própria; na Toca eles se mexem quando acordados (chama do Boitatá, olho do
+  Mapinguari girando, ponteiros da Cuca para trás) e ficam apagados quando dormem. A animação para com a janela
+  em segundo plano e respeita as animações desligadas no Plasma.
+  Feito numa sessão na nuvem: desenhos conferidos com o QtSvg e a Toca por captura; **falta ver no Plasma de
+  verdade** a doca, o cartão rápido, a bandeja e os menus (os nomes de ícone vieram do Breeze 5.115).
 
 ## A fazer
 1. Cuca: terminar o teste do curupira-voltar; depois, boot direto num snapshot (exige um subvolume
@@ -97,3 +107,6 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
    O módulo nouveau ainda carrega apesar da blacklist (provavelmente pelo hook kms do initramfs).
 4. Criptografia de disco (LUKS) como opção do instalador.
 5. Gerar uma ISO própria pelo GitHub Actions.
+6. Ícones: conferir no notebook (doca, bandeja, menus, cartão rápido); depois, menu de apps próprio no lugar do
+   Kickoff (widget QML como a doca: busca, apps em ladrilhos, Cordel, botões de sessão). Mais arte na Toca:
+   ícones das seções, ilustração no topo de cada seção, o Cordel reagindo ao perfil.

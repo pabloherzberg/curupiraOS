@@ -83,34 +83,19 @@ PlasmoidItem {
     readonly property int maiorAtraso: Math.ceil(meio) * atrasoPorPasso
 
     // ---------------------------------------------------------------- ladrilhos
-    // degradês do mockup/Desktop.dc.html
-    readonly property var degrades: [
-        ["#6FB6F2", "#2468B8"],   // rio
-        ["#3A4A44", "#141E1A"],   // carvão
-        ["#FFB25C", "#E2531F"],   // brasa
-        ["#A98BD9", "#5B3A8E"],   // noite
-        ["#F5A3D0", "#8E3A9E"],   // boto
-        ["#F2D27A", "#B07A1E"],   // areia
-        ["#7FE3B0", "#128A5C"]    // mata
+    // Todo app fica num ladrilho cor da noite. Os apps do sistema têm ícone próprio no tema de ícones
+    // "Curupira" (arte/icones/apps), que já vem com o ladrilho: esses aparecem inteiros. Os de terceiros
+    // mantêm o ícone original, menor, sobre o mesmo ladrilho.
+    readonly property color noite: "#241A4A"
+    readonly property color fioDaNoite: "#3A2D6B"
+    readonly property var doSistema: [
+        "org.kde.dolphin", "org.kde.konsole", "org.kde.kate", "org.kde.kwrite", "systemsettings",
+        "org.kde.spectacle", "org.kde.ark", "org.kde.discover", "org.kde.gwenview", "org.kde.okular",
+        "org.kde.kcalc", "org.kde.plasma-systemmonitor", "org.kde.partitionmanager", "org.kde.kinfocenter",
+        "org.kde.elisa", "org.kde.filelight", "org.kde.khelpcenter", "org.kde.kwalletmanager5"
     ]
-    // apps conhecidos: cor e símbolo; os outros ganham uma cor fixa pelo nome e o ícone original
-    readonly property var apps: ({
-        "org.kde.dolphin":             { cor: 0, simbolo: "system-file-manager-symbolic" },
-        "org.kde.konsole":             { cor: 1, simbolo: "utilities-terminal-symbolic" },
-        "firefox":                     { cor: 2, simbolo: "internet-web-browser-symbolic" },
-        "org.kde.kate":                { cor: 3, simbolo: "document-edit-symbolic" },
-        "org.wireshark.Wireshark":     { cor: 4, simbolo: "view-statistics-symbolic" },
-        "com.anthropic.Claude":        { cor: 5, simbolo: "" },
-        "io.github.pabloherzberg.Toca": { cor: 6, simbolo: "" },
-        "systemsettings":              { cor: 1, simbolo: "preferences-system-symbolic" },
-        "org.kde.kwrite":              { cor: 3, simbolo: "document-edit-symbolic" }
-    })
-    function visualDoApp(id) {
-        const conhecido = apps[id] || apps[id.replace(/\.desktop$/, "")]
-        if (conhecido) return { cores: degrades[conhecido.cor], simbolo: conhecido.simbolo }
-        let h = 0
-        for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973
-        return { cores: degrades[h % degrades.length], simbolo: "" }
+    function temLadrilhoProprio(id) {
+        return doSistema.indexOf(id.replace(/\.desktop$/, "")) >= 0
     }
 
     // ---------------------------------------------------------------- ações
@@ -251,8 +236,8 @@ PlasmoidItem {
                     }
                 }
 
-                // ladrilho do mockup: quadrado arredondado em degradê com o símbolo branco do app
-                readonly property var visual: root.visualDoApp(String(delegado.dados.AppId || ""))
+                // ladrilho cor da noite; o ícone do tema Curupira já traz o seu
+                readonly property bool proprio: root.temLadrilhoProprio(String(delegado.dados.AppId || ""))
                 Item {
                     id: ladrilho
                     width: root.icone
@@ -264,30 +249,18 @@ PlasmoidItem {
                     rotation: delegado.entradaGiro
 
                     Rectangle {
+                        visible: !delegado.proprio
                         anchors.fill: parent
-                        radius: width * 0.31
-                        gradient: Gradient {
-                            GradientStop { position: 0; color: delegado.visual.cores[0] }
-                            GradientStop { position: 1; color: delegado.visual.cores[1] }
-                        }
-                        // brilho suave no topo, para dar volume
-                        Rectangle {
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 1 }
-                            height: parent.height * 0.5
-                            radius: parent.radius
-                            gradient: Gradient {
-                                GradientStop { position: 0; color: Qt.rgba(1, 1, 1, 0.22) }
-                                GradientStop { position: 1; color: Qt.rgba(1, 1, 1, 0) }
-                            }
-                        }
+                        anchors.margins: parent.width * 0.03    // o mesmo respiro da arte (ladrilho de 60 em 64)
+                        radius: width * 0.3
+                        color: root.noite
+                        border.color: root.fioDaNoite
+                        border.width: 1
                     }
                     Kirigami.Icon {
                         anchors.centerIn: parent
-                        // símbolo branco quando o app tem um; senão, o ícone original menor sobre o ladrilho
-                        source: delegado.visual.simbolo !== "" ? delegado.visual.simbolo : delegado.dados.decoration
-                        isMask: delegado.visual.simbolo !== ""
-                        color: "#FFFFFF"
-                        width: parent.width * (delegado.visual.simbolo !== "" ? 0.56 : 0.68)
+                        source: delegado.dados.decoration
+                        width: parent.width * (delegado.proprio ? 1 : 0.62)
                         height: width
                     }
                 }

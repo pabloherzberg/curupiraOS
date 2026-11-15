@@ -7,7 +7,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QVBoxLayout
 
 import sistema
-from visual import (AREIA, BRASA, ICONES, NOITE, ORDEM_PERFIS, VERDE_ESCURO, Avatar, CartaoPerfil, Ladrilho,
+from visual import (AREIA, BRASA, NOITE, ORDEM_PERFIS, VERDE_ESCURO, Avatar, CartaoPerfil, LadrilhoSer,
                     Medidor, Secao, Segmentado, linha_ser, rotulo)
 
 
@@ -56,7 +56,8 @@ class SecaoEnergia(Secao):
         boi = QFrame(); boi.setObjectName("boitata")
         boi.setStyleSheet(f"#boitata {{ background: {AREIA}; border-radius: 16px; }}")
         b = QHBoxLayout(boi); b.setContentsMargins(14, 12, 14, 12); b.setSpacing(14)
-        b.addWidget(Ladrilho(ICONES["boitata"], "#FF8A4A", "#C2261A", 40, 22))
+        self.boi_ladrilho = LadrilhoSer("boitata", 44)
+        b.addWidget(self.boi_ladrilho)
         bt = QVBoxLayout(); bt.setSpacing(0)
         bt.addWidget(rotulo("Boitatá · placa NVIDIA", 15, QFont.Weight.ExtraBold))
         self.boi_nota = rotulo("", 12, cor=VERDE_ESCURO)
@@ -174,6 +175,7 @@ class SecaoEnergia(Secao):
 
         dormindo = d.get("boitata_dormindo", True)
         self.boi_seg.seleciona("off" if dormindo else "on")
+        self.boi_ladrilho.acorda(not dormindo)
         self.boi_nota.setText("desligada de vez: máxima economia" if dormindo else "acordada: gasta energia mesmo parada")
         self.boi_nota.setStyleSheet(f"color: {VERDE_ESCURO if dormindo else BRASA}; background: transparent;")
 

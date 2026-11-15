@@ -12,7 +12,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QMessageBox, QScrollArea, QVBoxLayout, QWidget
 
 import sistema
-from visual import (BORDA, DEGRADES, ICONES, TINTA_SUAVE, Cartao, Ladrilho, Secao, Tarefa, botao, cabecalho,
+from visual import (BORDA, ICONES, TINTA_SUAVE, Cartao, LadrilhoSer, Secao, Tarefa, botao, cabecalho,
                     rotulo, tempo_relativo)
 
 LIMITE_LISTA = 40
@@ -92,7 +92,7 @@ class SecaoCuca(Secao):
 
         topo = Cartao(areia=True)
         tl = QHBoxLayout(topo); tl.setContentsMargins(14, 12, 14, 12); tl.setSpacing(14)
-        tl.addWidget(Ladrilho(ICONES["cuca"], *DEGRADES["cuca"], 40, 22))
+        tl.addWidget(LadrilhoSer("cuca", 44))
         tt = QVBoxLayout(); tt.setSpacing(0)
         self.resumo = rotulo("…", 15, QFont.Weight.ExtraBold)
         self.detalhe = rotulo("Automáticos a cada hora, e um antes e um depois de cada instalação de pacote.", 12,

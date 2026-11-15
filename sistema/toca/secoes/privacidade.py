@@ -6,7 +6,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QVBoxLayout
 
 import sistema
-from visual import BRASA, ICONES, TINTA_SUAVE, VERDE_ESCURO, Cartao, LinhaSer, Secao, cabecalho, rotulo
+from visual import BRASA, TINTA_SUAVE, VERDE_ESCURO, Cartao, LinhaSer, Secao, cabecalho, rotulo
 
 
 class SecaoPrivacidade(Secao):
@@ -15,9 +15,9 @@ class SecaoPrivacidade(Secao):
         lay = QVBoxLayout(self); lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(12)
         lay.addWidget(cabecalho("Privacidade", "A Caipora some sem deixar rastro. Ligue o que você quer esconder."))
 
-        self.camera = LinhaSer("Cortar a câmera", ICONES["camera"], "#7FE3B0", "#128A5C")
-        self.microfone = LinhaSer("Silenciar o microfone", ICONES["microfone"], "#7FE3B0", "#128A5C")
-        self.mac = LinhaSer("MAC diferente em cada rede", ICONES["mascara"], "#7FE3B0", "#128A5C")
+        self.camera = LinhaSer("Cortar a câmera", "camera")
+        self.microfone = LinhaSer("Silenciar o microfone", "microfone")
+        self.mac = LinhaSer("MAC diferente em cada rede", "mascara")
         for linha in (self.camera, self.microfone, self.mac):
             lay.addWidget(linha)
         cur = sistema.comando_curupira()

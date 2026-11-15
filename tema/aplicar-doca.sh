@@ -11,10 +11,20 @@ LAYOUT=/usr/share/plasma/look-and-feel/io.github.pabloherzberg.curupira/contents
 COPIA="$HOME/.config/curupira-painel-anterior"
 ARQUIVOS=(plasma-org.kde.plasma.desktop-appletsrc plasmashellrc)
 
+# troca o tema de ícones do jeito que as Configurações trocam (avisa os apps abertos); sem a ferramenta, só grava
+icones() {
+  if [[ -x /usr/lib/plasma-changeicons ]]; then
+    /usr/lib/plasma-changeicons "$1" >/dev/null 2>&1 || true
+  else
+    kwriteconfig6 --file kdeglobals --group Icons --key Theme "$1" || true
+  fi
+}
+
 if [[ "${1:-}" == "--desfazer" ]]; then
   [[ -d "$COPIA" ]] || { echo "Não há painel guardado em $COPIA." >&2; exit 1; }
   for a in "${ARQUIVOS[@]}"; do [[ -f "$COPIA/$a" ]] && cp -f "$COPIA/$a" "$HOME/.config/$a"; done
   plasma-apply-desktoptheme default >/dev/null 2>&1 || true
+  icones breeze
   systemctl --user restart plasma-plasmashell
   echo "Painel anterior de volta."
   exit 0
@@ -28,6 +38,10 @@ fi
 # estilo do Plasma "Curupira": o fundo arredondado da doca (o resto continua Breeze)
 if [[ -d /usr/share/plasma/desktoptheme/curupira ]]; then
   plasma-apply-desktoptheme curupira >/dev/null 2>&1 || true
+fi
+# ícones "Curupira": apps do KDE, bandeja e menus (o resto continua Breeze)
+if [[ -f /usr/local/share/icons/Curupira/index.theme ]]; then
+  icones Curupira
 fi
 qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$(cat "$LAYOUT")"
 echo "Doca aplicada. Para voltar ao painel anterior: bash $0 --desfazer"
