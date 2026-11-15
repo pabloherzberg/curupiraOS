@@ -107,6 +107,19 @@ roda mac fixo >/dev/null
 confere "MAC fixo apaga a configuração" no "$([[ -e "$T/NetworkManager/conf.d/90-curupira-caipora.conf" ]] && echo sim || echo no)"
 confere "verbo errado falha" 1 "$(roda camera quebrar >/dev/null 2>&1; echo $?)"
 
+echo "Widget (json e brilho)"
+campo() { roda json | python3 -c "import json,sys; v=json.load(sys.stdin)$1; print(str(v).lower() if isinstance(v,bool) else v)"; }
+brilho 1500
+roda brilho 50 >/dev/null
+confere "brilho 50% grava metade do máximo" 750 "$(cat "$T/sys/class/backlight/intel_backlight/brightness")"
+confere "json mostra o brilho" 50 "$(campo '["brilho"]')"
+roda brilho 1 >/dev/null
+confere "brilho nunca fica abaixo de 5%" 75 "$(cat "$T/sys/class/backlight/intel_backlight/brightness")"
+confere "brilho com texto falha" 1 "$(roda brilho muito >/dev/null 2>&1; echo $?)"
+confere "json tem o usuário" 1 "$(roda json | grep -c '"usuario":"')"
+tomada 1; roda auto ligar >/dev/null; tomada 0; bateria 60 Discharging; roda evento tomada >/dev/null
+confere "json guarda o último aviso automático" "Perfil Remanso" "$(campo '["ultimo_evento"]["titulo"]')"
+
 echo
 if (( falhas )); then echo "$falhas de $total testes falharam."; exit 1; fi
 echo "Todos os $total testes passaram."

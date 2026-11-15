@@ -13,6 +13,7 @@
 #   curupira mac aleatorio|fixo
 #                            Caipora: o Wi-Fi e o cabo usam um MAC diferente em cada rede
 #   curupira json            estado em JSON (para a Toca do Curupira e o widget)
+#   curupira brilho N        brilho da tela em N% (5 a 100)
 #   curupira cuca lista|mudancas A B|guardar
 #                            Cuca: lista os snapshots (JSON do snapper), conta o que mudou
 #                            entre dois (B=0 é o sistema atual) e guarda um agora.
@@ -245,6 +246,7 @@ aplica_auto() {
   local p="$1" motivo="$2"
   [[ "$(le_estado perfil)" == "$p" ]] && { registra "$motivo; já estava em $p"; return 0; }
   aplica "$p" "$motivo"
+  grava_estado ultimo-evento "$(date +%s)|Perfil $(nome_bonito "$p")|$motivo."
   notifica "Perfil $(nome_bonito "$p")" "$motivo."
 }
 
@@ -413,6 +415,55 @@ bateria_wh() {
       'BEGIN{ if (e!="") printf "%.1f\n", e/1e6; else if (c!="" && v!="") printf "%.1f\n", c*v/1e12; else print "null" }'
 }
 
+# ---------------------------------------------------------------- seres, som e tela (para o widget)
+bool() { "$@" && echo true || echo false; }
+texto_json() { local t="${1//\\/\\\\}"; t="${t//\"/\\\"}"; printf '%s' "$t"; }
+
+rfkill_bloqueado() {   # rfkill_bloqueado wlan|bluetooth  -> verdadeiro se bloqueado (ou sem o rádio)
+  local d achou=1
+  for d in "$SYS"/class/rfkill/rfkill*; do
+    [[ -r "$d/type" && "$(<"$d/type")" == "$1" ]] || continue
+    achou=0
+    [[ "$(cat "$d/soft" 2>/dev/null)" == 1 || "$(cat "$d/hard" 2>/dev/null)" == 1 ]] || return 1
+  done
+  return 0
+  (( achou ))
+}
+tem_radio() { local d; for d in "$SYS"/class/rfkill/rfkill*; do [[ -r "$d/type" && "$(<"$d/type")" == "$1" ]] && return 0; done; return 1; }
+
+rede_wifi() {
+  [[ -n "$TESTE" ]] && return 0
+  command -v nmcli >/dev/null || return 0
+  timeout 2 nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | awk -F: '$NF=="802-11-wireless"{sub(/:802-11-wireless$/,""); print; exit}'
+}
+
+turbo_ligado() { [[ "$(cat "$SYS/devices/system/cpu/intel_pstate/no_turbo" 2>/dev/null)" == 0 ]]; }
+hd_acordado() { [[ -z "$TESTE" ]] && findmnt -no FSTYPE /data 2>/dev/null | grep -qv '^autofs$'; }
+boitata_dormindo() { [[ -e "${TESTE:+$TESTE}/etc/udev/rules.d/00-curupira-boitata.rules" ]]; }
+
+wp_volume() {   # wp_volume @DEFAULT_AUDIO_SINK@ -> "40 false" (porcentagem e mudo)
+  [[ -n "$TESTE" ]] && { echo "null false"; return 0; }
+  local s; s="$(timeout 2 wpctl get-volume "$1" 2>/dev/null)" || { echo "null false"; return 0; }
+  awk -v s="$s" 'BEGIN{ split(s, a, " "); printf "%d %s\n", a[2] * 100 + 0.5, (s ~ /MUTED/ ? "true" : "false") }'
+}
+
+brilho_pct() {   # só lê: basta o arquivo estar legível (backlight() exige escrita)
+  local b d
+  for d in "$SYS"/class/backlight/*; do [[ -r "$d/brightness" ]] && { b="$d"; break; }; done
+  [[ -n "$b" ]] || { echo null; return 0; }
+  echo $(( $(<"$b/brightness") * 100 / $(<"$b/max_brightness") ))
+}
+
+define_brilho() {
+  local pct="$1" b max
+  [[ "$pct" =~ ^[0-9]+$ ]] || morre "Use: curupira brilho N (5 a 100)"
+  (( pct < 5 )) && pct=5; (( pct > 100 )) && pct=100
+  b="$(backlight)"; [[ -n "$b" ]] || morre "Não achei o controle de brilho da tela."
+  max="$(<"$b/max_brightness")"
+  echo $(( max * pct / 100 )) > "$b/brightness"
+  apaga_estado brilho-antes; apaga_estado brilho-definido   # a pessoa escolheu: o Sereno não devolve depois
+}
+
 # Estado para a Toca do Curupira e o widget do painel (uma linha de JSON).
 json() {
   local p d st sep="" q
@@ -422,8 +473,24 @@ json() {
     "$VERSAO" "$p" "$(fonte)" "$(bateria_pct)" "$st" "$(bateria_watts)" "$(bateria_wh)"
   printf '"auto":%s,"limite_critico":%s,"perfil_tomada":"%s","perfil_bateria":"%s","perfil_critico":"%s",' \
     "$(auto_ligada && echo true || echo false)" "$LIMITE_CRITICO" "$PERFIL_TOMADA" "$PERFIL_BATERIA" "$PERFIL_CRITICO"
-  printf '"camera_cortada":%s,"mac_aleatorio":%s,"perfis":[' \
+  printf '"camera_cortada":%s,"mac_aleatorio":%s,' \
     "$(camera_cortada && echo true || echo false)" "$(mac_aleatorio && echo true || echo false)"
+  local vol mic ev quando titulo msg
+  read -r vol _ <<<"$(wp_volume @DEFAULT_AUDIO_SINK@)"
+  read -r _ mic <<<"$(wp_volume @DEFAULT_AUDIO_SOURCE@)"
+  printf '"usuario":"%s","wifi":%s,"tem_wifi":%s,"rede":"%s","bluetooth":%s,"tem_bluetooth":%s,' \
+    "$(texto_json "${SUDO_USER:-${USER:-$(id -un)}}")" "$(bool eval '! rfkill_bloqueado wlan')" "$(bool tem_radio wlan)" \
+    "$(texto_json "$(rede_wifi)")" "$(bool eval '! rfkill_bloqueado bluetooth')" "$(bool tem_radio bluetooth)"
+  printf '"turbo":%s,"hd_acordado":%s,"boitata_dormindo":%s,"volume":%s,"microfone_mudo":%s,"brilho":%s,' \
+    "$(bool turbo_ligado)" "$(bool hd_acordado)" "$(bool boitata_dormindo)" "${vol:-null}" "${mic:-false}" "$(brilho_pct)"
+  ev="$(le_estado ultimo-evento)"
+  if [[ -n "$ev" ]]; then
+    IFS='|' read -r quando titulo msg <<<"$ev"
+    printf '"ultimo_evento":{"quando":%s,"titulo":"%s","texto":"%s"},' "${quando:-0}" "$(texto_json "$titulo")" "$(texto_json "$msg")"
+  else
+    printf '"ultimo_evento":null,'
+  fi
+  printf '"perfis":['
   for q in $(lista_perfis); do
     printf '%s{"id":"%s","nome":"%s","descricao":"%s"}' "$sep" "$q" "$(nome_bonito "$q")" "$(campo_perfil "$q" DESCRICAO)"
     sep=","
@@ -452,6 +519,7 @@ curupira $VERSAO: perfis de energia da Curupira OS
   curupira camera cortar|liberar
   curupira mac aleatorio|fixo
   curupira cuca lista|mudancas A B|guardar
+  curupira brilho N           brilho da tela em N%
 
 Perfis:
 $(perfis)
@@ -468,6 +536,9 @@ case "$comando" in
   estado|status)        estado ;;
   perfis|lista)         perfis ;;
   json)                 json ;;
+  brilho)
+    [[ -n "${2:-}" ]] || { echo "Brilho: $(brilho_pct)%"; exit 0; }
+    precisa_root "$@"; trava; define_brilho "$2"; diz "Brilho em $2%." ;;
   camera|câmera)
     [[ -n "${2:-}" ]] || { camera_cortada && echo "Câmera cortada." || echo "Câmera liberada."; exit 0; }
     precisa_root "$@"; trava; camera "$(normaliza "$2")" ;;

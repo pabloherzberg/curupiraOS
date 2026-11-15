@@ -22,7 +22,7 @@ PlasmoidItem {
 
     readonly property real altura: Math.max(32, height)
     // o ícone base deixa folga para a respiração e a entrada não saírem da doca
-    readonly property real icone: Math.round(altura * 0.66)
+    readonly property real icone: Math.round(altura * 0.74)
     readonly property real passo: icone + Math.round(altura * 0.14)
 
     Layout.minimumWidth: lista.count * passo + Math.round(altura * 0.14)
@@ -81,6 +81,37 @@ PlasmoidItem {
     readonly property real meio: (lista.count - 1) / 2
     readonly property int atrasoPorPasso: 75
     readonly property int maiorAtraso: Math.ceil(meio) * atrasoPorPasso
+
+    // ---------------------------------------------------------------- ladrilhos
+    // degradês do mockup/Desktop.dc.html
+    readonly property var degrades: [
+        ["#6FB6F2", "#2468B8"],   // rio
+        ["#3A4A44", "#141E1A"],   // carvão
+        ["#FFB25C", "#E2531F"],   // brasa
+        ["#A98BD9", "#5B3A8E"],   // noite
+        ["#F5A3D0", "#8E3A9E"],   // boto
+        ["#F2D27A", "#B07A1E"],   // areia
+        ["#7FE3B0", "#128A5C"]    // mata
+    ]
+    // apps conhecidos: cor e símbolo; os outros ganham uma cor fixa pelo nome e o ícone original
+    readonly property var apps: ({
+        "org.kde.dolphin":             { cor: 0, simbolo: "system-file-manager-symbolic" },
+        "org.kde.konsole":             { cor: 1, simbolo: "utilities-terminal-symbolic" },
+        "firefox":                     { cor: 2, simbolo: "internet-web-browser-symbolic" },
+        "org.kde.kate":                { cor: 3, simbolo: "document-edit-symbolic" },
+        "org.wireshark.Wireshark":     { cor: 4, simbolo: "view-statistics-symbolic" },
+        "com.anthropic.Claude":        { cor: 5, simbolo: "" },
+        "io.github.pabloherzberg.Toca": { cor: 6, simbolo: "" },
+        "systemsettings":              { cor: 1, simbolo: "preferences-system-symbolic" },
+        "org.kde.kwrite":              { cor: 3, simbolo: "document-edit-symbolic" }
+    })
+    function visualDoApp(id) {
+        const conhecido = apps[id] || apps[id.replace(/\.desktop$/, "")]
+        if (conhecido) return { cores: degrades[conhecido.cor], simbolo: conhecido.simbolo }
+        let h = 0
+        for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973
+        return { cores: degrades[h % degrades.length], simbolo: "" }
+    }
 
     // ---------------------------------------------------------------- ações
     function ativa(indice, dados, delegado) {
@@ -220,9 +251,10 @@ PlasmoidItem {
                     }
                 }
 
-                Kirigami.Icon {
-                    id: imagem
-                    source: delegado.dados.decoration
+                // ladrilho do mockup: quadrado arredondado em degradê com o símbolo branco do app
+                readonly property var visual: root.visualDoApp(String(delegado.dados.AppId || ""))
+                Item {
+                    id: ladrilho
                     width: root.icone
                     height: root.icone
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -230,7 +262,34 @@ PlasmoidItem {
                     opacity: delegado.entradaOpac * (delegado.dados.IsMinimized ? 0.7 : 1)
                     scale: delegado.entradaEscala * delegado.pulso
                     rotation: delegado.entradaGiro
-                    active: delegado.sobMouse
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: width * 0.31
+                        gradient: Gradient {
+                            GradientStop { position: 0; color: delegado.visual.cores[0] }
+                            GradientStop { position: 1; color: delegado.visual.cores[1] }
+                        }
+                        // brilho suave no topo, para dar volume
+                        Rectangle {
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 1 }
+                            height: parent.height * 0.5
+                            radius: parent.radius
+                            gradient: Gradient {
+                                GradientStop { position: 0; color: Qt.rgba(1, 1, 1, 0.22) }
+                                GradientStop { position: 1; color: Qt.rgba(1, 1, 1, 0) }
+                            }
+                        }
+                    }
+                    Kirigami.Icon {
+                        anchors.centerIn: parent
+                        // símbolo branco quando o app tem um; senão, o ícone original menor sobre o ladrilho
+                        source: delegado.visual.simbolo !== "" ? delegado.visual.simbolo : delegado.dados.decoration
+                        isMask: delegado.visual.simbolo !== ""
+                        color: "#FFFFFF"
+                        width: parent.width * (delegado.visual.simbolo !== "" ? 0.56 : 0.68)
+                        height: width
+                    }
                 }
 
                 // ponto de "aberto" (traço no app em uso), como no mockup

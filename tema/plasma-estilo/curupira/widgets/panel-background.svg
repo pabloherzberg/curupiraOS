@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="320" viewBox="0 0 700 320">
+<!-- Curupira OS: fundo da doca. Gerado por tema/gerar-painel.py; não edite à mão. -->
+<defs>
+<style type="text/css" id="current-color-scheme">.ColorScheme-ViewBackground { color:#ffffff; }</style>
+<radialGradient id="g-sombra-topleft" gradientUnits="userSpaceOnUse" cx="42" cy="42" r="42"><stop offset="0.429" stop-color="#140A28" stop-opacity="0.34"/><stop offset="0.721" stop-color="#140A28" stop-opacity="0.14"/><stop offset="1" stop-color="#140A28" stop-opacity="0"/></radialGradient>
+<radialGradient id="g-sombra-topright" gradientUnits="userSpaceOnUse" cx="0" cy="42" r="42"><stop offset="0.429" stop-color="#140A28" stop-opacity="0.34"/><stop offset="0.721" stop-color="#140A28" stop-opacity="0.14"/><stop offset="1" stop-color="#140A28" stop-opacity="0"/></radialGradient>
+<radialGradient id="g-sombra-bottomleft" gradientUnits="userSpaceOnUse" cx="42" cy="0" r="42"><stop offset="0.429" stop-color="#140A28" stop-opacity="0.34"/><stop offset="0.721" stop-color="#140A28" stop-opacity="0.14"/><stop offset="1" stop-color="#140A28" stop-opacity="0"/></radialGradient>
+<radialGradient id="g-sombra-bottomright" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="42"><stop offset="0.429" stop-color="#140A28" stop-opacity="0.34"/><stop offset="0.721" stop-color="#140A28" stop-opacity="0.14"/><stop offset="1" stop-color="#140A28" stop-opacity="0"/></radialGradient>
+<linearGradient id="g-sombra-top" x1="0" y1="1" x2="0" y2="0"><stop offset="0.429" stop-color="#140A28" stop-opacity="0.34"/><stop offset="0.721" stop-color="#140A28" stop-opacity="0.14"/><stop offset="1" stop-color="#140A28" stop-opacity="0"/></linearGradient>
+<linearGradient id="g-sombra-bottom" x1="0" y1="0" x2="0" y2="1"><stop offset="0.429" stop-color="#140A28" stop-opacity="0.34"/><stop offset="0.721" stop-color="#140A28" stop-opacity="0.14"/><stop offset="1" stop-color="#140A28" stop-opacity="0"/></linearGradient>
+<linearGradient id="g-sombra-left" x1="1" y1="0" x2="0" y2="0"><stop offset="0.429" stop-color="#140A28" stop-opacity="0.34"/><stop offset="0.721" stop-color="#140A28" stop-opacity="0.14"/><stop offset="1" stop-color="#140A28" stop-opacity="0"/></linearGradient>
+<linearGradient id="g-sombra-right" x1="0" y1="0" x2="1" y2="0"><stop offset="0.429" stop-color="#140A28" stop-opacity="0.34"/><stop offset="0.721" stop-color="#140A28" stop-opacity="0.14"/><stop offset="1" stop-color="#140A28" stop-opacity="0"/></linearGradient>
+</defs>
+<path id="topleft" class="ColorScheme-ViewBackground" style="fill:currentColor" d="M24,24 L0,24 A24,24 0 0 1 24,0 Z"/>
+<rect id="top" x="24" y="0" width="4" height="24" class="ColorScheme-ViewBackground" style="fill:currentColor"/>
+<path id="topright" class="ColorScheme-ViewBackground" style="fill:currentColor" d="M28,24 L28,0 A24,24 0 0 1 52,24 Z"/>
+<rect id="left" x="0" y="24" width="24" height="4" class="ColorScheme-ViewBackground" style="fill:currentColor"/>
+<rect id="center" x="24" y="24" width="4" height="4" class="ColorScheme-ViewBackground" style="fill:currentColor"/>
+<rect id="right" x="28" y="24" width="24" height="4" class="ColorScheme-ViewBackground" style="fill:currentColor"/>
+<path id="bottomleft" class="ColorScheme-ViewBackground" style="fill:currentColor" d="M24,28 L24,52 A24,24 0 0 1 0,28 Z"/>
+<rect id="bottom" x="24" y="28" width="4" height="24" class="ColorScheme-ViewBackground" style="fill:currentColor"/>
+<path id="bottomright" class="ColorScheme-ViewBackground" style="fill:currentColor" d="M28,28 L52,28 A24,24 0 0 1 28,52 Z"/>
+<path id="mask-topleft" class="ColorScheme-ViewBackground" style="fill:currentColor" d="M24,144 L0,144 A24,24 0 0 1 24,120 Z"/>
+<rect id="mask-top" x="24" y="120" width="4" height="24" class="ColorScheme-ViewBackground" style="fill:currentColor"/>
+<path id="mask-topright" class="ColorScheme-ViewBackground" style="fill:currentColor" d="M28,144 L28,120 A24,24 0 0 1 52,144 Z"/>
+<rect id="mask-left" x="0" y="144" width="24" height="4" class="ColorScheme-ViewBackground" style="fill:currentColor"/>
+<rect id="mask-center" x="24" y="144" width="4" height="4" class="ColorScheme-ViewBackground" style="fill:currentColor"/>
+<rect id="mask-right" x="28" y="144" width="24" height="4" class="ColorScheme-ViewBackground" style="fill:currentColor"/>
+<path id="mask-bottomleft" class="ColorScheme-ViewBackground" style="fill:currentColor" d="M24,148 L24,172 A24,24 0 0 1 0,148 Z"/>
+<rect id="mask-bottom" x="24" y="148" width="4" height="24" class="ColorScheme-ViewBackground" style="fill:currentColor"/>
+<path id="mask-bottomright" class="ColorScheme-ViewBackground" style="fill:currentColor" d="M28,148 L52,148 A24,24 0 0 1 28,172 Z"/>
+<g transform="translate(400,0)"><rect id="shadow-topleft" width="42" height="42" style="fill:url(#g-sombra-topleft)"/></g>
+<g transform="translate(446,0)"><rect id="shadow-topright" width="42" height="42" style="fill:url(#g-sombra-topright)"/></g>
+<g transform="translate(400,46)"><rect id="shadow-bottomleft" width="42" height="42" style="fill:url(#g-sombra-bottomleft)"/></g>
+<g transform="translate(446,46)"><rect id="shadow-bottomright" width="42" height="42" style="fill:url(#g-sombra-bottomright)"/></g>
+<rect id="shadow-top" x="442" y="0" width="4" height="42" style="fill:url(#g-sombra-top)"/>
+<rect id="shadow-bottom" x="442" y="46" width="4" height="42" style="fill:url(#g-sombra-bottom)"/>
+<rect id="shadow-left" x="400" y="42" width="42" height="4" style="fill:url(#g-sombra-left)"/>
+<rect id="shadow-right" x="446" y="42" width="42" height="4" style="fill:url(#g-sombra-right)"/>
+<rect id="shadow-center" x="442" y="42" width="4" height="4" style="fill:none"/>
+<rect id="shadow-hint-top-margin" x="600" y="0" width="4" height="18" style="fill:none"/>
+<rect id="shadow-hint-bottom-margin" x="600" y="30" width="4" height="24" style="fill:none"/>
+<rect id="shadow-hint-left-margin" x="600" y="60" width="18" height="4" style="fill:none"/>
+<rect id="shadow-hint-right-margin" x="600" y="90" width="18" height="4" style="fill:none"/>
+<rect id="hint-top-margin" x="0" y="260" width="4" height="4" style="fill:none"/>
+<rect id="hint-bottom-margin" x="0" y="270" width="4" height="4" style="fill:none"/>
+<rect id="hint-left-margin" x="0" y="280" width="4" height="4" style="fill:none"/>
+<rect id="hint-right-margin" x="0" y="290" width="4" height="4" style="fill:none"/>
+</svg>

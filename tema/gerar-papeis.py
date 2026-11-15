@@ -65,6 +65,11 @@ def main():
         }
         (pasta / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=4) + "\n")
         print(f"{ident}: {', '.join(f'{w}x{h}' for w, h in TAMANHOS)}")
+    # a tela de login (SDDM) usa o Brasa em Full HD como fundo
+    import shutil
+    shutil.copyfile(AQUI / "papeis" / "Curupira-Brasa" / "contents" / "images" / "1920x1080.png",
+                    AQUI / "sddm" / "curupira" / "fundo.png")
+    print("tema/sddm/curupira/fundo.png atualizado")
 
 
 if __name__ == "__main__":

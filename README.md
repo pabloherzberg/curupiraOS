@@ -108,6 +108,11 @@ A doca some quando uma janela em tela cheia ou maximizada encosta nela e volta s
 borda de baixo. Os apps ficam no widget Doca Curupira: quando a doca surge, cada ícone sobe girando, solta uma
 faísca de brasa e no fim passa uma onda; o ícone sob o mouse "respira"; pulam ao abrir; clique do meio abre outra janela, botão direito fixa, tira ou fecha.
 
+O fundo arredondado da doca vem do estilo do Plasma "Curupira" (`tema/gerar-painel.py`), que só troca o fundo do
+painel e acompanha o esquema de cores. Os apps aparecem em ladrilhos coloridos com o símbolo branco. O widget
+Curupira abre o cartão rápido do mockup: perfil, os seis seres (clique para ligar ou desligar), volume, brilho
+e o último aviso automático.
+
 As cores saem de `tema/gerar-cores.py`, os papéis de parede de `tema/gerar-papeis.py` e as imagens da tela de
 boot de `tema/gerar-boot.py`. Se a tela de boot der problema, escolha "modo de recuperação" no menu do boot
 (segure Espaço ao ligar): ela inicia sem o Plymouth. Para ver a tela de login
@@ -126,7 +131,12 @@ sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
 | Boto | laboratório de rede |
 | Cuca | snapshots do sistema |
 
+## Trabalhando no projeto com o Claude
+
+O arquivo [`CLAUDE.md`](CLAUDE.md) tem o mapa do repositório, a identidade visual, de onde vem cada arte,
+como testar e os cuidados. O Claude Code lê esse arquivo sozinho ao abrir o projeto. Para trocar uma arte:
+edite o SVG em `arte/`, rode `bash tema/gerar-tudo.sh` e `sudo bash sistema/instalar.sh`.
+
 ## Próximos passos
 
 - Demais seções da Toca do Curupira.
-- Doca: raio maior e ícones em ladrilhos coloridos como no mockup (pede um estilo próprio do Plasma).

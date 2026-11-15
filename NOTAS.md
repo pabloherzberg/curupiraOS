@@ -74,6 +74,14 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   ~/.local/share/plasma/plasmoids (e apague depois: ela tem prioridade sobre a do sistema).
   Relógio com fonte fixa (11 pt, negrito, data embaixo: dateDisplayFormat=2). `curupira-doca` só guarda o painel
   na primeira vez.
+- Acabamento da doca: estilo do Plasma "Curupira" (`tema/plasma-estilo/curupira`, gerado por `gerar-painel.py`) só
+  com o panel-background: raio 24, sombra roxa, cor por ColorScheme-ViewBackground (branco no claro, noite no
+  escuro); o resto vem do Breeze. Doca com 70 px. Apps em ladrilhos (degradês do mockup, símbolo branco do Breeze
+  com isMask; app desconhecido ganha cor pelo AppId e o ícone original). Cartão rápido do widget Curupira como no
+  mockup; `curupira json` ganhou usuário, Wi-Fi/rede, Bluetooth (rfkill), turbo, HD, Boitatá, volume, microfone,
+  brilho e o último aviso automático; `curupira brilho N` (polkit, sem senha).
+- `tema/gerar-tudo.sh` regenera todas as imagens a partir de `arte/` e da paleta (inclusive as cópias do login).
+  Instruções para continuar em outra conversa do Claude: `CLAUDE.md`.
 - Incidente de 15/11/2026: uma linha "curupira cuca lista" sem "#" no cabeçalho fez o curupira chamar a si
   mesmo; o widget e o timer recomeçavam a cadeia e a memória esgotou (~14 mil processos root). Corrigido e
   coberto por teste em `ferramentas/testar-curupira.sh`.
@@ -83,8 +91,7 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
 ## A fazer
 1. Cuca: terminar o teste do curupira-voltar; depois, boot direto num snapshot (exige um subvolume
    @snapshots fora do @).
-2. Conferir tela de boot, login e abertura num boot de verdade. Doca: raio maior e ícones em ladrilhos
-   (estilo próprio do Plasma); o popup do widget Curupira mais perto do cartão rápido do mockup.
+2. Conferir tela de boot, login e abertura num boot de verdade.
 3. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
    `/etc/udev/rules.d/00-curupira-boitata.rules` e `/etc/modprobe.d/curupira-boitata.conf` a religa).
    O módulo nouveau ainda carrega apesar da blacklist (provavelmente pelo hook kms do initramfs).

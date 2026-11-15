@@ -21,7 +21,7 @@ doca.location = "bottom";
 doca.floating = true;
 doca.alignment = "center";
 doca.lengthMode = "fit";
-doca.height = 64;
+doca.height = 70;            // mockup: 70 px
 // some quando uma janela (tela cheia ou maximizada) encosta nela; volta subindo ao tocar a borda de baixo
 doca.hiding = "dodgewindows";
 

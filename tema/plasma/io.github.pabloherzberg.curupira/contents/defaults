@@ -8,7 +8,7 @@ widgetStyle=Breeze
 Theme=breeze
 
 [plasmarc][Theme]
-name=default
+name=curupira
 
 [kcminputrc][Mouse]
 cursorTheme=breeze_cursors

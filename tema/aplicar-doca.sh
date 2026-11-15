@@ -14,6 +14,7 @@ ARQUIVOS=(plasma-org.kde.plasma.desktop-appletsrc plasmashellrc)
 if [[ "${1:-}" == "--desfazer" ]]; then
   [[ -d "$COPIA" ]] || { echo "Não há painel guardado em $COPIA." >&2; exit 1; }
   for a in "${ARQUIVOS[@]}"; do [[ -f "$COPIA/$a" ]] && cp -f "$COPIA/$a" "$HOME/.config/$a"; done
+  plasma-apply-desktoptheme default >/dev/null 2>&1 || true
   systemctl --user restart plasma-plasmashell
   echo "Painel anterior de volta."
   exit 0
@@ -23,6 +24,10 @@ fi
 if [[ ! -d "$COPIA" ]]; then
   mkdir -p "$COPIA"
   for a in "${ARQUIVOS[@]}"; do [[ -f "$HOME/.config/$a" ]] && cp -f "$HOME/.config/$a" "$COPIA/$a"; done
+fi
+# estilo do Plasma "Curupira": o fundo arredondado da doca (o resto continua Breeze)
+if [[ -d /usr/share/plasma/desktoptheme/curupira ]]; then
+  plasma-apply-desktoptheme curupira >/dev/null 2>&1 || true
 fi
 qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$(cat "$LAYOUT")"
 echo "Doca aplicada. Para voltar ao painel anterior: bash $0 --desfazer"

@@ -45,6 +45,10 @@ def main():
         pasta.mkdir(parents=True, exist_ok=True)
         icone(lado).save(str(pasta / "curupira-menu.png"))
     print("curupira-menu.png:", ", ".join(f"{t}x{t}" for t in TAMANHOS))
+    # o avatar da tela de login (SDDM) é o mesmo Cordel
+    import shutil
+    shutil.copyfile(CORDEL, AQUI / "sddm" / "curupira" / "avatar.svg")
+    print("tema/sddm/curupira/avatar.svg atualizado")
 
 
 if __name__ == "__main__":
