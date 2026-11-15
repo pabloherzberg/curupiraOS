@@ -31,9 +31,15 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   `/etc/tlp.d/20-curupira-perfil.conf`. Tomada via udev, bateria via timer de 1 min, polkit libera o grupo wheel.
   Testado no notebook: Sereno deixa EPP `power`, sem turbo, CPU em 50% e brilho em 30%. Tirar e pôr o
   carregador troca Remanso/Correnteza com aviso na tela. Falta ver o Sereno disparar sozinho em 15%.
+- Toca do Curupira v0.1 (`sistema/toca/toca.py`, PySide6): seção Energia segue o mockup `mockup/Central.dc.html`
+  com dados reais (`curupira json`: watts, Wh, perfil). Wi-Fi via nmcli, Bluetooth via rfkill+bluetoothctl,
+  HD pelo automount de /data. Boitatá, Caipora e Boto aparecem desabilitados ("em breve").
+  `--captura arquivo.png` desenha a janela sem tela (bom para conferir mudanças).
+- Widget do painel (`sistema/plasmoide/`, QML do Plasma 6): ícone na cor do perfil, lista de perfis, botão para a Toca.
+- Fontes Baloo 2 e Nunito (OFL) vão junto em `sistema/toca/fontes/`.
 
 ## A fazer
-1. "Toca do Curupira": central de controle em Qt/Python e widget do painel.
+1. Toca: seções Seres da mata, Rede e Boto, Privacidade (Caipora), Cuca (snapshots) e Aparência.
 2. Tema do Plasma, do SDDM, do Plymouth e do Konsole com as artes acima.
 3. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
    `/etc/udev/rules.d/00-curupira-boitata.rules` e `/etc/modprobe.d/curupira-boitata.conf` a religa).

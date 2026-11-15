@@ -317,6 +317,38 @@ estado() {
   printf '  Processador : %s, %s, até %s%%\n' "$epp" "$turbo" "$maxp"
 }
 
+# Consumo em watts (só faz sentido descarregando) e capacidade real da bateria em Wh.
+bateria_watts() {
+  local d; d="$(bateria_dir)"; [[ -n "$d" ]] || { echo null; return 0; }
+  awk -v p="$(cat "$d/power_now" 2>/dev/null)" -v i="$(cat "$d/current_now" 2>/dev/null)" \
+      -v v="$(cat "$d/voltage_now" 2>/dev/null)" \
+      'BEGIN{ if (p!="") w=p/1e6; else if (i!="" && v!="") w=i*v/1e12; else {print "null"; exit}
+              printf "%.2f\n", (w<0?-w:w) }'
+}
+
+bateria_wh() {
+  local d; d="$(bateria_dir)"; [[ -n "$d" ]] || { echo null; return 0; }
+  awk -v e="$(cat "$d/energy_full" 2>/dev/null)" -v c="$(cat "$d/charge_full" 2>/dev/null)" \
+      -v v="$(cat "$d/voltage_min_design" 2>/dev/null)" \
+      'BEGIN{ if (e!="") printf "%.1f\n", e/1e6; else if (c!="" && v!="") printf "%.1f\n", c*v/1e12; else print "null" }'
+}
+
+# Estado para a Toca do Curupira e o widget do painel (uma linha de JSON).
+json() {
+  local p d st sep="" q
+  p="$(le_estado perfil)"; existe_perfil "${p:-x}" || p=""
+  d="$(bateria_dir)"; st="$(cat "$d/status" 2>/dev/null || true)"
+  printf '{"versao":"%s","perfil":"%s","fonte":"%s","bateria":%s,"status":"%s","watts":%s,"capacidade_wh":%s,' \
+    "$VERSAO" "$p" "$(fonte)" "$(bateria_pct)" "$st" "$(bateria_watts)" "$(bateria_wh)"
+  printf '"auto":%s,"limite_critico":%s,"perfil_tomada":"%s","perfil_bateria":"%s","perfil_critico":"%s","perfis":[' \
+    "$(auto_ligada && echo true || echo false)" "$LIMITE_CRITICO" "$PERFIL_TOMADA" "$PERFIL_BATERIA" "$PERFIL_CRITICO"
+  for q in $(lista_perfis); do
+    printf '%s{"id":"%s","nome":"%s","descricao":"%s"}' "$sep" "$q" "$(nome_bonito "$q")" "$(campo_perfil "$q" DESCRICAO)"
+    sep=","
+  done
+  printf ']}\n'
+}
+
 perfis() {
   local p atual marca
   atual="$(le_estado perfil)"
@@ -350,6 +382,7 @@ comando="$(normaliza "${1:-estado}")"
 case "$comando" in
   estado|status)        estado ;;
   perfis|lista)         perfis ;;
+  json)                 json ;;
   ajuda|-h|--help|help) ajuda ;;
   versao|--version)     echo "curupira $VERSAO" ;;
   perfil)

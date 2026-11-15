@@ -144,7 +144,7 @@ BASE=(base base-devel linux linux-firmware intel-ucode btrfs-progs e2fsprogs dos
 DESKTOP=(plasma-desktop plasma-workspace kwin xorg-server sof-firmware terminus-font sddm sddm-kcm konsole dolphin kate ark spectacle gwenview okular
          plasma-nm plasma-pa powerdevil bluedevil kscreen kde-gtk-config breeze-gtk
          xdg-desktop-portal-kde pipewire pipewire-pulse wireplumber firefox
-         noto-fonts noto-fonts-emoji ttf-jetbrains-mono)
+         noto-fonts noto-fonts-emoji ttf-jetbrains-mono pyside6)
 VIDEO=(mesa vulkan-intel intel-media-driver)
 ENERGIA=(tlp tlp-rdw thermald zram-generator hdparm smartmontools powertop)
 SISTEMA=(snapper snap-pac bluez bluez-utils)

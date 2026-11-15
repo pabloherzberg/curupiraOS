@@ -1,0 +1,15 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [ { "Name": "Curupira OS" } ],
+        "Category": "System Information",
+        "Description": "Perfis de energia da Curupira OS: troca rápida e atalho para a Toca do Curupira",
+        "Icon": "battery-good",
+        "Id": "io.github.pabloherzberg.curupira",
+        "License": "GPL-3.0+",
+        "Name": "Curupira",
+        "Version": "0.1",
+        "Website": "https://github.com/pabloherzberg/curupiraOS"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

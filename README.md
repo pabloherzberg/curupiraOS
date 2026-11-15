@@ -75,6 +75,15 @@ manual vale até o próximo desses eventos. Os limites ficam em `/etc/curupira.c
 Num sistema já instalado: `sudo bash sistema/instalar.sh`. Para testar sem root:
 `bash ferramentas/testar-curupira.sh`.
 
+## Toca do Curupira
+
+Central de controle em Qt/Python (PySide6), no menu como **Toca do Curupira** ou pelo comando
+`toca-do-curupira`. A seção Energia mostra consumo, duração da bateria e os quatro perfis, e liga ou desliga
+Wi-Fi, Bluetooth e o HD. As outras seções chegam nas próximas versões.
+
+No painel, o widget **Curupira** (botão direito no painel → Adicionar widgets) mostra o perfil pela cor e troca
+de perfil com um clique.
+
 ## Seres da mata
 
 | Ser | Papel |
@@ -90,5 +99,5 @@ Num sistema já instalado: `sudo bash sistema/instalar.sh`. Para testar sem root
 
 ## Próximos passos
 
-- Central de controle "Toca do Curupira".
+- Demais seções da Toca do Curupira.
 - Tema do Plasma, da tela de login e do boot.

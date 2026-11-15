@@ -23,6 +23,22 @@ install -Dm644 "$AQUI/polkit/io.github.pabloherzberg.curupira.policy" \
 install -Dm644 "$AQUI/polkit/50-curupira.rules" "$RAIZ/etc/polkit-1/rules.d/50-curupira.rules"
 install -dm755 "$RAIZ/var/lib/curupira"
 
+echo "==> Instalando a Toca do Curupira e o widget do painel"
+ARTE="$AQUI/../arte"
+install -Dm755 "$AQUI/bin/toca-do-curupira" "$RAIZ/usr/local/bin/toca-do-curupira"
+install -Dm755 "$AQUI/toca/toca.py" "$RAIZ/usr/local/share/curupira/toca/toca.py"
+install -dm755 "$RAIZ/usr/local/share/curupira/toca/fontes" "$RAIZ/usr/local/share/curupira/toca/arte"
+install -m644 "$AQUI"/toca/fontes/* "$RAIZ/usr/local/share/curupira/toca/fontes/"
+install -m644 "$ARTE/cordel-busto.svg" "$ARTE/cordel-figura.svg" "$RAIZ/usr/local/share/curupira/toca/arte/"
+install -Dm644 "$AQUI/toca/io.github.pabloherzberg.Toca.desktop" \
+               "$RAIZ/usr/local/share/applications/io.github.pabloherzberg.Toca.desktop"
+install -Dm644 "$ARTE/cordel-busto.svg" \
+               "$RAIZ/usr/local/share/icons/hicolor/scalable/apps/io.github.pabloherzberg.Toca.svg"
+PLASMOIDE="$RAIZ/usr/share/plasma/plasmoids/io.github.pabloherzberg.curupira"
+rm -rf "$PLASMOIDE"
+install -Dm644 "$AQUI/plasmoide/metadata.json" "$PLASMOIDE/metadata.json"
+install -Dm644 "$AQUI/plasmoide/contents/ui/main.qml" "$PLASMOIDE/contents/ui/main.qml"
+
 if [[ ! -e "$RAIZ/etc/curupira.conf" ]]; then
   cat > "$RAIZ/etc/curupira.conf" <<'CONF'
 # Curupira: troca automática de perfil (veja "curupira ajuda").

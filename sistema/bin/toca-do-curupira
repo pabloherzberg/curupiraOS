@@ -1,0 +1,3 @@
+#!/bin/sh
+# Abre a Toca do Curupira (central de controle da Curupira OS).
+exec python3 /usr/local/share/curupira/toca/toca.py "$@"

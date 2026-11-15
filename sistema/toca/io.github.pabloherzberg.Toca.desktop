@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Toca do Curupira
+GenericName=Central de controle
+Comment=Perfis de energia e os seres da mata da Curupira OS
+Exec=toca-do-curupira
+Icon=io.github.pabloherzberg.Toca
+Categories=Settings;System;
+Keywords=energia;bateria;perfil;curupira;pororoca;correnteza;remanso;sereno;
+StartupWMClass=io.github.pabloherzberg.Toca
