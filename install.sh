@@ -146,7 +146,7 @@ DESKTOP=(plasma-desktop plasma-workspace kwin xorg-server sof-firmware terminus-
          xdg-desktop-portal-kde pipewire pipewire-pulse wireplumber firefox
          noto-fonts noto-fonts-emoji ttf-jetbrains-mono pyside6)
 VIDEO=(mesa vulkan-intel intel-media-driver)
-ENERGIA=(tlp tlp-rdw thermald zram-generator hdparm smartmontools powertop)
+ENERGIA=(tlp tlp-rdw thermald zram-generator hdparm smartmontools powertop plymouth)
 SISTEMA=(snapper snap-pac bluez bluez-utils)
 DEV=(python nodejs npm podman)
 REDE=(wireshark-qt nmap tcpdump mitmproxy iw bind traceroute)
@@ -221,7 +221,7 @@ snapper --no-dbus -c root create-config / || echo 'aviso: snapper será configur
 bootctl install >/dev/null
 printf 'default curupira.conf\ntimeout 2\nconsole-mode max\neditor no\n' > /boot/loader/loader.conf
 printf 'title   Curupira OS\nlinux   /vmlinuz-linux\ninitrd  /intel-ucode.img\ninitrd  /initramfs-linux.img\noptions root=UUID=$UUID_RAIZ rootflags=subvol=@ rw quiet loglevel=3 nowatchdog\n' > /boot/loader/entries/curupira.conf
-printf 'title   Curupira OS (modo de recuperação)\nlinux   /vmlinuz-linux\ninitrd  /intel-ucode.img\ninitrd  /initramfs-linux-fallback.img\noptions root=UUID=$UUID_RAIZ rootflags=subvol=@ rw\n' > /boot/loader/entries/curupira-recuperacao.conf
+printf 'title   Curupira OS (modo de recuperação)\nlinux   /vmlinuz-linux\ninitrd  /intel-ucode.img\ninitrd  /initramfs-linux.img\noptions root=UUID=$UUID_RAIZ rootflags=subvol=@ rw plymouth.enable=0\n' > /boot/loader/entries/curupira-recuperacao.conf
 
 for u in NetworkManager sddm tlp thermald bluetooth fstrim.timer systemd-timesyncd snapper-timeline.timer snapper-cleanup.timer; do
   systemctl enable "\$u" >/dev/null 2>&1 || echo "aviso: não consegui ativar \$u"

@@ -125,8 +125,7 @@ class SecaoAparencia(Secao):
         pl.addLayout(mini)
         lay.addWidget(papel)
 
-        lay.addWidget(rotulo("A tela de login já usa o tema Curupira. A tela de boot chega numa próxima versão.",
-                             12, cor=TINTA_SUAVE))
+        lay.addWidget(rotulo("A tela de boot e a de login também usam o tema Curupira.", 12, cor=TINTA_SUAVE))
         lay.addStretch()
 
     def _tema(self, escuro: bool):

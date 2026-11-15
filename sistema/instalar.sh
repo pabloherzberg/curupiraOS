@@ -79,6 +79,44 @@ install -dm755 "$RAIZ/etc/sddm.conf.d"
 printf '%s\n' "# Curupira OS: tela de login. Para voltar ao padrão, apague este arquivo." \
   "[Theme]" "Current=curupira" > "$RAIZ/etc/sddm.conf.d/10-curupira.conf"
 
+# Modo de recuperação: o mkinitcpio do Arch deixou de gerar a imagem "fallback" por padrão,
+# e a entrada da v0.1 apontava para ela. Sem a imagem, a recuperação usa a padrão.
+for entrada in "$RAIZ"/boot/loader/entries/*.conf; do
+  [[ -f "$entrada" ]] && grep -q 'initramfs-linux-fallback.img' "$entrada" || continue
+  [[ -f "$RAIZ/boot/initramfs-linux-fallback.img" ]] || sed -i 's|/initramfs-linux-fallback.img|/initramfs-linux.img|' "$entrada"
+done
+
+# Tela de boot (Plymouth). Só se o pacote estiver instalado. A entrada "modo de recuperação"
+# do boot ganha plymouth.enable=0: é sempre o caminho para iniciar sem a tela de boot.
+if [[ -d "$RAIZ/usr/share/plymouth/themes" ]]; then
+  echo "==> Instalando a tela de boot"
+  rm -rf "$RAIZ/usr/share/plymouth/themes/curupira"
+  cp -r "$TEMA/plymouth/curupira" "$RAIZ/usr/share/plymouth/themes/curupira"
+  chmod -R u=rwX,go=rX "$RAIZ/usr/share/plymouth/themes/curupira"
+  install -dm755 "$RAIZ/etc/plymouth"
+  printf '%s\n' "# Curupira OS: tema da tela de boot" "[Daemon]" "Theme=curupira" "ShowDelay=0" \
+    > "$RAIZ/etc/plymouth/plymouthd.conf"
+
+  RECOMPILAR=0
+  MKINIT="$RAIZ/etc/mkinitcpio.conf"
+  if [[ -f "$MKINIT" ]] && ! grep -qE '^HOOKS=\(.*\bplymouth\b' "$MKINIT"; then
+    sed -i -E '/^HOOKS=\(/ s/\b(systemd|udev)\b/\1 plymouth/' "$MKINIT"
+    grep -qE '^HOOKS=\(.*\bplymouth\b' "$MKINIT" && RECOMPILAR=1 || echo "aviso: não achei onde pôr o hook plymouth em $MKINIT"
+  fi
+  for entrada in "$RAIZ"/boot/loader/entries/*.conf; do
+    [[ -f "$entrada" ]] || continue
+    if grep -q 'recupera' "$entrada"; then
+      grep -q 'plymouth.enable=0' "$entrada" || sed -i -E '/^options / s/$/ plymouth.enable=0/' "$entrada"
+    else
+      grep -qE '^options .*\bsplash\b' "$entrada" || sed -i -E '/^options / s/$/ splash/' "$entrada"
+    fi
+  done
+  if (( RECOMPILAR )); then
+    echo "==> Recompilando o initramfs com a tela de boot (leva um minuto)"
+    if [[ -z "$RAIZ" ]]; then mkinitcpio -P >/dev/null; else arch-chroot "$RAIZ" mkinitcpio -P >/dev/null; fi
+  fi
+fi
+
 if [[ ! -e "$RAIZ/etc/curupira.conf" ]]; then
   cat > "$RAIZ/etc/curupira.conf" <<'CONF'
 # Curupira: troca automática de perfil (veja "curupira ajuda").

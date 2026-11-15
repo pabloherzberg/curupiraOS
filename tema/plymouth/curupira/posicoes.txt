@@ -1,0 +1,6 @@
+# pegada  centro_x  centro_y  (coordenadas de arte/01-brasa.svg, 800×1000)
+0 297 919
+1 349 937
+2 401 919
+3 453 937
+4 505 919

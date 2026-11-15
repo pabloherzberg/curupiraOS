@@ -100,8 +100,11 @@ de perfil com um clique.
 | Perfil do Konsole (JetBrains Mono, cores da paleta) | `tema/konsole/` → `/usr/local/share/konsole` | Konsole → Configurações → perfil Curupira |
 | Papéis de parede Brasa e Entardecer | `tema/papeis/` → `/usr/local/share/wallpapers` | Toca → Aparência, ou clique direito na área de trabalho |
 | Tela de login | `tema/sddm/curupira/` → `/usr/share/sddm/themes/curupira` | ativa pelo instalador (`/etc/sddm.conf.d/10-curupira.conf`) |
+| Tela de boot (Plymouth) | `tema/plymouth/curupira/` → `/usr/share/plymouth/themes/curupira` | ativa pelo instalador: hook `plymouth` e `splash` no boot |
 
-As cores saem de `tema/gerar-cores.py` e os papéis de parede de `tema/gerar-papeis.py`. Para ver a tela de login
+As cores saem de `tema/gerar-cores.py`, os papéis de parede de `tema/gerar-papeis.py` e as imagens da tela de
+boot de `tema/gerar-boot.py`. Se a tela de boot der problema, escolha "modo de recuperação" no menu do boot
+(segure Espaço ao ligar): ela inicia sem o Plymouth. Para ver a tela de login
 sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
 
 ## Seres da mata
@@ -120,4 +123,4 @@ sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
 ## Próximos passos
 
 - Demais seções da Toca do Curupira.
-- Tela de boot (Plymouth) e tema global do Plasma (tela de abertura).
+- Tema global do Plasma (tela de abertura).

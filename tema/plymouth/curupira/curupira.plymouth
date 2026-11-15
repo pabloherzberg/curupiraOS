@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Curupira
+Description=Tela de boot da Curupira OS: o Curupira de cabelo de fogo e as pegadas ao contrário
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/curupira
+ScriptFile=/usr/share/plymouth/themes/curupira/curupira.script

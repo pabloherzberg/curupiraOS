@@ -51,6 +51,12 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   `gerar-cores.py`; perfil do Konsole; papéis de parede Brasa e Entardecer em PNG (1366×768, 1920×1080,
   2560×1440) por `gerar-papeis.py`; tela de login SDDM em QML puro seguindo `mockup/Boot.dc.html`
   (avatar do Cordel quando não há foto; testada com `sddm-greeter-qt6 --test-mode`). A Toca troca os esquemas.
+- Tela de boot (Plymouth, `tema/plymouth/curupira/`): retrato de `arte/01-brasa.svg` com as laterais esmaecidas
+  e as cinco pegadas da arte acendendo em sequência (script do Plymouth). Hook `plymouth` depois de `systemd`,
+  `splash` na entrada normal e `plymouth.enable=0` na de recuperação. Prévia sem reiniciar: plymouthd como root
+  com DISPLAY/XAUTHORITY do Xwayland usa o renderizador X11 (o tema vem de /etc/plymouth/plymouthd.conf).
+- A entrada de recuperação da v0.1 apontava para initramfs-linux-fallback.img, que o mkinitcpio do Arch não gera
+  mais (PRESETS=('default')); agora usa initramfs-linux.img.
 - Incidente de 15/11/2026: uma linha "curupira cuca lista" sem "#" no cabeçalho fez o curupira chamar a si
   mesmo; o widget e o timer recomeçavam a cadeia e a memória esgotou (~14 mil processos root). Corrigido e
   coberto por teste em `ferramentas/testar-curupira.sh`.
@@ -60,8 +66,7 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
 ## A fazer
 1. Cuca: terminar o teste do curupira-voltar; depois, boot direto num snapshot (exige um subvolume
    @snapshots fora do @).
-2. Tema, parte 2: tela de boot (Plymouth: precisa do pacote, do hook no mkinitcpio e de "splash" no boot)
-   com `arte/01-brasa.svg` e as pegadas ao contrário; tema global do Plasma com tela de abertura.
+2. Conferir a tela de boot num boot de verdade; tema global do Plasma com tela de abertura (KSplash).
 3. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
    `/etc/udev/rules.d/00-curupira-boitata.rules` e `/etc/modprobe.d/curupira-boitata.conf` a religa).
    O módulo nouveau ainda carrega apesar da blacklist (provavelmente pelo hook kms do initramfs).

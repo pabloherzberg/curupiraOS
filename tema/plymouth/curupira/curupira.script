@@ -1,0 +1,112 @@
+# Curupira OS: tela de boot (Plymouth, módulo script).
+# O retrato de arte/01-brasa.svg ocupa a altura da tela; as cinco pegadas acendem uma
+# depois da outra enquanto o sistema carrega. As imagens saem de tema/gerar-boot.py.
+
+# fundo: as cores da borda da arte (#100b21 em cima, #0b0717 embaixo)
+Window.SetBackgroundTopColor(0.063, 0.043, 0.129);
+Window.SetBackgroundBottomColor(0.043, 0.027, 0.090);
+
+largura = Window.GetWidth();
+altura = Window.GetHeight();
+escala = altura / 1000;
+if (800 * escala > largura) {
+    escala = largura / 800;
+}
+rx = Window.GetX() + (largura - 800 * escala) / 2;
+ry = Window.GetY() + (altura - 1000 * escala) / 2;
+
+retrato_img = Image("retrato.png");
+retrato = Sprite(retrato_img.Scale(800 * escala, 1000 * escala));
+retrato.SetX(rx);
+retrato.SetY(ry);
+retrato.SetZ(0);
+
+# centro de cada pegada na arte (tema/plymouth/curupira/posicoes.txt)
+cx[0] = 297; cy[0] = 919;
+cx[1] = 349; cy[1] = 937;
+cx[2] = 401; cy[2] = 919;
+cx[3] = 453; cy[3] = 937;
+cx[4] = 505; cy[4] = 919;
+
+i = 0;
+while (i < 5) {
+    img = Image("pegada" + i + ".png");
+    pegada[i] = Sprite(img.Scale(88 * escala, 60 * escala));
+    pegada[i].SetX(rx + cx[i] * escala - 44 * escala);
+    pegada[i].SetY(ry + cy[i] * escala - 30 * escala);
+    pegada[i].SetZ(1);
+    pegada[i].SetOpacity(0);
+    i = i + 1;
+}
+
+# animação: ~50 quadros por segundo; uma pegada a cada 20 quadros, volta inteira em 150
+tempo = 0;
+fun atualiza() {
+    global.tempo = global.tempo + 1;
+    t = global.tempo % 150;
+    j = 0;
+    while (j < 5) {
+        d = t - j * 20;
+        if (d < 0) {
+            o = 0.12;
+        } else if (d < 8) {
+            o = 0.12 + 0.88 * d / 8;
+        } else if (d < 90) {
+            o = 1 - 0.88 * (d - 8) / 82;
+        } else {
+            o = 0.12;
+        }
+        global.pegada[j].SetOpacity(o);
+        j = j + 1;
+    }
+}
+Plymouth.SetRefreshFunction(atualiza);
+
+# mensagens do sistema (fsck e afins), em areia, embaixo
+mensagem = Sprite();
+mensagem.SetZ(2);
+fun mostra_mensagem(texto) {
+    img = Image.Text(texto, 0.95, 0.93, 0.89, 1, "Sans 12");
+    global.mensagem.SetImage(img);
+    global.mensagem.SetX(Window.GetX() + (Window.GetWidth() - img.GetWidth()) / 2);
+    global.mensagem.SetY(Window.GetY() + Window.GetHeight() - img.GetHeight() - 24);
+    global.mensagem.SetOpacity(1);
+}
+Plymouth.SetMessageFunction(mostra_mensagem);
+
+# senha (para quando houver disco criptografado): pergunta e bolinhas acima das pegadas
+pergunta = Sprite();
+bolinhas = Sprite();
+pergunta.SetZ(3);
+bolinhas.SetZ(3);
+fun mostra_senha(texto, quantas) {
+    if (texto == "") {
+        texto = "Senha do disco";
+    }
+    p = Image.Text(texto, 1, 0.82, 0.54, 1, "Sans 14");
+    global.pergunta.SetImage(p);
+    global.pergunta.SetX(Window.GetX() + (Window.GetWidth() - p.GetWidth()) / 2);
+    global.pergunta.SetY(ry + 860 * escala - p.GetHeight() - 30);
+    global.pergunta.SetOpacity(1);
+    pontos = "";
+    k = 0;
+    while (k < quantas) {
+        pontos = pontos + "● ";
+        k = k + 1;
+    }
+    if (pontos == "") {
+        pontos = " ";
+    }
+    b = Image.Text(pontos, 1, 1, 1, 1, "Sans 16");
+    global.bolinhas.SetImage(b);
+    global.bolinhas.SetX(Window.GetX() + (Window.GetWidth() - b.GetWidth()) / 2);
+    global.bolinhas.SetY(ry + 860 * escala - 20);
+    global.bolinhas.SetOpacity(1);
+}
+Plymouth.SetDisplayPasswordFunction(mostra_senha);
+
+fun modo_normal() {
+    global.pergunta.SetOpacity(0);
+    global.bolinhas.SetOpacity(0);
+}
+Plymouth.SetDisplayNormalFunction(modo_normal);
