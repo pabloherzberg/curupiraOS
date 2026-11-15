@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1366 768" width="1366" height="768" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241A4A"/>
+      <stop offset="0.35" stop-color="#6A2F7A"/>
+      <stop offset="0.62" stop-color="#D2507A"/>
+      <stop offset="0.82" stop-color="#FF8F55"/>
+      <stop offset="1" stop-color="#FFD08A"/>
+    </linearGradient>
+    <linearGradient id="sol" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF6C8"/>
+      <stop offset="0.5" stop-color="#FFC06A"/>
+      <stop offset="1" stop-color="#FF7A45"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFE3A0" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#FFB070" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8A4A86"/>
+      <stop offset="0.4" stop-color="#3B2C6A"/>
+      <stop offset="1" stop-color="#121B3C"/>
+    </linearGradient>
+    <linearGradient id="areia" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4D3A0"/>
+      <stop offset="1" stop-color="#C98E5E"/>
+    </linearGradient>
+    <linearGradient id="serra" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9A4C8A"/>
+      <stop offset="1" stop-color="#6A3A78"/>
+    </linearGradient>
+    <linearGradient id="mataLonge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3E5E7A"/>
+      <stop offset="1" stop-color="#2A3E5E"/>
+    </linearGradient>
+    <linearGradient id="folhaFrente" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1F6B55"/>
+      <stop offset="1" stop-color="#0A2B25"/>
+    </linearGradient>
+    <radialGradient id="vagalume" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#F3FFC4"/>
+      <stop offset="0.3" stop-color="#C6FF7A" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#9DFF6A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1366" height="470" fill="url(#ceu)"/>
+  <g fill="#FFFFFF">
+    <circle cx="120" cy="60" r="1.5" opacity="0.8"/><circle cx="260" cy="110" r="1" opacity="0.6"/>
+    <circle cx="400" cy="40" r="1.6" opacity="0.9"/><circle cx="530" cy="90" r="1" opacity="0.5"/>
+    <circle cx="880" cy="50" r="1.4" opacity="0.8"/><circle cx="990" cy="120" r="1" opacity="0.6"/>
+    <circle cx="1120" cy="70" r="1.7" opacity="0.9"/><circle cx="1250" cy="30" r="1.2" opacity="0.7"/>
+    <circle cx="760" cy="26" r="1" opacity="0.6"/><circle cx="640" cy="140" r="1" opacity="0.4"/>
+  </g>
+  <circle cx="683" cy="400" r="300" fill="url(#halo)"/>
+  <circle cx="683" cy="410" r="150" fill="url(#sol)"/>
+  <g fill="#E8667A">
+    <rect x="520" y="400" width="330" height="5"/>
+    <rect x="520" y="418" width="330" height="7"/>
+    <rect x="520" y="438" width="330" height="9"/>
+    <rect x="520" y="458" width="330" height="12"/>
+  </g>
+
+  <path d="M0 470 L0 380 C80 350 140 330 220 360 C300 300 380 310 450 370 C520 350 560 380 600 470 Z" fill="url(#serra)" opacity="0.85"/>
+  <path d="M1366 470 L1366 360 C1290 330 1220 320 1150 350 C1080 300 1000 310 940 370 C880 360 820 390 790 470 Z" fill="url(#serra)" opacity="0.85"/>
+  <path d="M0 470 L0 420 C40 400 70 410 100 395 C130 380 160 400 190 390 C220 378 250 400 290 392 C330 386 360 410 400 404 C440 400 470 430 520 470 Z" fill="url(#mataLonge)"/>
+  <path d="M1366 470 L1366 410 C1320 396 1290 404 1260 392 C1230 380 1200 398 1170 390 C1140 382 1110 402 1070 396 C1030 392 1000 420 950 470 Z" fill="url(#mataLonge)"/>
+
+  <rect y="470" width="1366" height="298" fill="url(#mar)"/>
+  <g fill="#FFC77A">
+    <rect x="603" y="478" width="160" height="4" rx="2" opacity="0.9"/>
+    <rect x="628" y="492" width="110" height="4" rx="2" opacity="0.8"/>
+    <rect x="590" y="508" width="186" height="3" rx="1.5" opacity="0.6"/>
+    <rect x="648" y="524" width="70" height="4" rx="2" opacity="0.7"/>
+    <rect x="618" y="542" width="130" height="3" rx="1.5" opacity="0.5"/>
+    <rect x="662" y="562" width="42" height="3" rx="1.5" opacity="0.5"/>
+  </g>
+  <g stroke="#7FF5D2" stroke-opacity="0.22" stroke-width="1">
+    <line x1="0" y1="560" x2="1366" y2="560"/>
+    <line x1="0" y1="610" x2="1366" y2="610"/>
+    <line x1="0" y1="680" x2="1366" y2="680"/>
+    <line x1="683" y1="470" x2="200" y2="768"/>
+    <line x1="683" y1="470" x2="440" y2="768"/>
+    <line x1="683" y1="470" x2="926" y2="768"/>
+    <line x1="683" y1="470" x2="1166" y2="768"/>
+  </g>
+
+  <path d="M760 768 C860 690 1020 640 1366 620 L1366 768 Z" fill="url(#areia)"/>
+  <path d="M800 768 C900 700 1040 660 1366 646" fill="none" stroke="#FFF2DA" stroke-width="3" opacity="0.7"/>
+
+  <!-- coqueiro direito -->
+  <path d="M1176 700 C1170 600 1150 520 1104 440" fill="none" stroke="#2A1A2E" stroke-width="16" stroke-linecap="round"/>
+  <g fill="#173530">
+    <path d="M1104 440 C1060 410 1000 410 960 446 C1010 434 1060 438 1104 452 Z"/>
+    <path d="M1104 440 C1070 390 1020 370 970 380 C1020 396 1066 418 1100 452 Z"/>
+    <path d="M1104 440 C1110 386 1150 356 1196 352 C1158 378 1126 410 1110 452 Z"/>
+    <path d="M1104 440 C1150 420 1210 426 1246 466 C1196 450 1146 446 1108 452 Z"/>
+    <path d="M1104 440 C1130 470 1140 516 1128 556 C1120 510 1110 476 1098 452 Z"/>
+    <path d="M1104 440 C1070 464 1046 506 1046 548 C1066 504 1086 474 1108 452 Z"/>
+  </g>
+  <circle cx="1100" cy="456" r="9" fill="#3A2420"/><circle cx="1114" cy="460" r="8" fill="#3A2420"/>
+
+  <!-- mata da frente esquerda -->
+  <path d="M0 768 L0 560 C60 540 120 580 160 620 C200 600 260 640 300 700 C330 720 360 750 380 768 Z" fill="#0C2722"/>
+  <g fill="url(#folhaFrente)">
+    <path d="M-20 640 C40 560 150 540 230 590 C160 600 80 630 -20 700 Z"/>
+    <path d="M40 768 C60 660 140 600 240 610 C170 650 110 700 100 768 Z"/>
+    <path d="M200 768 C220 700 280 660 350 670 C300 700 270 730 260 768 Z"/>
+    <path d="M-10 520 C30 460 110 450 160 490 C100 494 50 510 -10 560 Z"/>
+  </g>
+  <g fill="none" stroke="#3FBF8E" stroke-opacity="0.55" stroke-width="2" stroke-linecap="round">
+    <path d="M-10 668 C60 610 140 590 220 592"/>
+    <path d="M70 768 C90 690 150 640 230 614"/>
+    <path d="M230 768 C250 720 290 690 340 672"/>
+    <path d="M0 538 C40 500 100 488 150 492"/>
+  </g>
+  <!-- monstera -->
+  <path d="M300 768 C290 690 330 630 400 620 C460 614 500 660 500 720 C500 740 494 756 486 768 Z" fill="#0E3A30"/>
+  <g fill="#0C2722">
+    <path d="M330 700 L380 690 L372 702 Z"/>
+    <path d="M410 650 L436 700 L422 700 Z"/>
+    <path d="M460 690 L450 740 L442 730 Z"/>
+  </g>
+  <path d="M400 768 C404 720 408 670 400 622" fill="none" stroke="#3FBF8E" stroke-opacity="0.5" stroke-width="2"/>
+
+  <!-- vaga-lumes -->
+  <circle cx="180" cy="520" r="14" fill="url(#vagalume)"/><circle cx="180" cy="520" r="2.5" fill="#F7FFD8"/>
+  <circle cx="320" cy="600" r="12" fill="url(#vagalume)"/><circle cx="320" cy="600" r="2.2" fill="#F7FFD8"/>
+  <circle cx="90" cy="470" r="10" fill="url(#vagalume)"/><circle cx="90" cy="470" r="2" fill="#F7FFD8"/>
+  <circle cx="460" cy="560" r="16" fill="url(#vagalume)"/><circle cx="460" cy="560" r="2.8" fill="#F7FFD8"/>
+  <circle cx="1040" cy="520" r="11" fill="url(#vagalume)"/><circle cx="1040" cy="520" r="2" fill="#F7FFD8"/>
+  <circle cx="1230" cy="560" r="13" fill="url(#vagalume)"/><circle cx="1230" cy="560" r="2.4" fill="#F7FFD8"/>
+</svg>

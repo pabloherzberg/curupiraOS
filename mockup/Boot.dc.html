@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Curupira OS: tela de bloqueio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&amp;family=Nunito:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0F7A54}a:hover{color:#0A5A3E}
+input,button{font:inherit}
+input:focus-visible,button:focus-visible{outline:2px solid #12935F;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 1366px; height: 768px; position: relative; overflow: hidden; background: #241A4A; color: #1E2A24; font-family: Nunito, system-ui, sans-serif">
+  <img src="/_blob/6a774fddab14e7eda39260c47d3df26e" alt="" style="position: absolute; left: 0; top: 0; width: 1366px; height: 768px; object-fit: cover">
+
+  <div style="position: absolute; left: 0; top: 56px; width: 760px; display: flex; flex-direction: column; align-items: center; color: #FFFFFF">
+    <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 120px; line-height: 1; text-shadow: 0 4px 24px rgba(20,10,40,0.5)">14:32</span>
+    <span style="font-size: 22px; font-weight: 700; text-shadow: 0 2px 12px rgba(20,10,40,0.6)">sábado, 14 de novembro</span>
+  </div>
+
+  <form style="position: absolute; left: 200px; top: 300px; width: 360px; box-sizing: border-box; padding: 26px 28px 24px; background: #FFFFFF; border-radius: 26px; box-shadow: 0 24px 60px rgba(20,10,40,0.45); display: flex; flex-direction: column; align-items: center; gap: 14px">
+    <div style="position: relative; width: 104px; height: 104px; border-radius: 52px; overflow: hidden; background: linear-gradient(145deg, #FFD08A, #FF7A45); margin-top: -78px; box-shadow: 0 0 0 6px #FFFFFF">
+      <img src="/_blob/802c3d23ef6f62da6d0645b8a5611cec" alt="Foto de perfil: o Curupira" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%">
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+      <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 26px; line-height: 1.1">curupira</span>
+      <span style="font-size: 14px; color: #5B6A61">Peça licença para entrar na mata</span>
+    </div>
+    <div style="width: 100%; display: flex; flex-direction: column; gap: 6px">
+      <label for="senha" style="font-size: 13px; font-weight: 700; color: #3E4C44">Senha</label>
+      <div style="display: flex; gap: 8px">
+        <input id="senha" type="password" placeholder="sua oferenda" style="flex-grow: 1; min-width: 0; height: 46px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 2px solid #12935F; background: #FBF4E8; color: #1E2A24; font-size: 15px">
+        <button type="button" aria-label="Entrar" style="width: 46px; height: 46px; border-radius: 14px; border: 0; background: #12935F; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14 M13 6l6 6-6 6"></path></svg></button>
+      </div>
+    </div>
+    <span style="font-size: 13px; color: #5B6A61">Fora da tomada: perfil Remanso</span>
+  </form>
+
+  <div style="position: absolute; right: 20px; bottom: 20px; height: 52px; box-sizing: border-box; padding: 0 8px 0 16px; background: #FFFFFF; border-radius: 18px; box-shadow: 0 12px 30px rgba(20,10,40,0.4); display: flex; align-items: center; gap: 14px; color: #3E4C44">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a15 15 0 0 1 20 0 M5 12.5a10 10 0 0 1 14 0 M8.5 16a5 5 0 0 1 7 0 M12 19.5h.01"></path></svg>
+    <span style="display: flex; align-items: center; gap: 4px; font-weight: 700; font-size: 14px"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h15v8H3z M21 11v2 M6 11v2 M9 11v2 M12 11v2"></path></svg>74%</span>
+    <button type="button" aria-label="Desligar" style="width: 40px; height: 40px; border-radius: 13px; border: 0; background: #FFE1D6; display: flex; align-items: center; justify-content: center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#C2410C" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v9 M6.5 6.5a8 8 0 1 0 11 0"></path></svg></button>
+  </div>
+
+  <div style="position: absolute; left: 20px; bottom: 20px; height: 52px; box-sizing: border-box; padding: 0 16px; background: #FFFFFF; border-radius: 18px; box-shadow: 0 12px 30px rgba(20,10,40,0.4); display: flex; align-items: center; gap: 10px">
+    <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 18px">Curupira<span style="color: #FF7A45">OS</span></span>
+    <span style="font-size: 13px; color: #5B6A61">0.1 Pororoca</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1366,"height":768}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

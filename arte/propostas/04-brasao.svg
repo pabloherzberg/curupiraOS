@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 1000" width="800" height="1000">
+  <defs>
+    <path id="flameL" d="M400,40 C392,110 372,160 352,200 C340,160 318,118 262,92 C292,140 292,190 268,240 C238,200 196,170 128,168 C180,205 208,260 206,318 C166,300 112,296 52,318 C112,345 146,390 152,436 C112,446 74,470 36,512 C96,520 128,548 140,578 C108,608 90,650 84,708 C120,690 150,690 178,700 L300,700 L400,700 Z"/>
+    <g id="flame">
+      <use xlink:href="#flameL"/>
+      <use xlink:href="#flameL" transform="translate(800,0) scale(-1,1)"/>
+    </g>
+    <clipPath id="badge"><circle cx="400" cy="560" r="262"/></clipPath>
+    <path id="hairL" d="M400,240 C388,284 374,306 358,320 C350,286 326,262 284,246 C302,284 300,316 288,338 C262,318 232,312 196,320 C232,348 246,380 250,408 C224,416 204,432 184,460 C222,474 240,500 246,528 C228,548 214,566 200,596 C230,600 244,612 250,626 C240,660 226,690 206,724 C240,704 266,690 290,688 C290,708 284,730 272,754 C306,732 328,704 338,668 L400,640 Z"/>
+    <clipPath id="eyeL"><path d="M330,492 L346,482 Q366,476 388,486 L381,494 Q356,499 330,492 Z"/></clipPath>
+    <clipPath id="eyeR"><path d="M470,492 L454,482 Q434,476 412,486 L419,494 Q444,499 470,492 Z"/></clipPath>
+  </defs>
+
+  <rect width="800" height="1000" fill="#FBF4E8"/>
+
+  <g transform="translate(0,34)">
+  <!-- outer flame hair -->
+  <use xlink:href="#flame" stroke="#241A4A" stroke-width="18" stroke-linejoin="round" fill="#241A4A"/>
+  <use xlink:href="#flame" fill="#D2507A"/>
+  <use xlink:href="#flame" fill="#FF7A45" transform="translate(400,560) scale(.9) translate(-400,-560)"/>
+  <use xlink:href="#flame" fill="#FFC24A" transform="translate(400,560) scale(.79) translate(-400,-560)"/>
+
+  <!-- badge -->
+  <circle cx="400" cy="560" r="292" fill="#241A4A"/>
+  <circle cx="400" cy="560" r="262" fill="#0E5A3E"/>
+  <circle cx="400" cy="560" r="270" fill="none" stroke="#2BB37A" stroke-width="4"/>
+  <g fill="#2BB37A"><circle cx="674.3" cy="633.5" r="3.2"/><circle cx="659.4" cy="675.5" r="3.2"/><circle cx="638.2" cy="714.7" r="3.2"/><circle cx="611.1" cy="750.0" r="3.2"/><circle cx="578.7" cy="780.7" r="3.2"/><circle cx="542.0" cy="806.0" r="3.2"/><circle cx="501.8" cy="825.1" r="3.2"/><circle cx="284.5" cy="819.4" r="3.2"/><circle cx="245.3" cy="798.2" r="3.2"/><circle cx="210.0" cy="771.1" r="3.2"/><circle cx="179.3" cy="738.7" r="3.2"/><circle cx="154.0" cy="702.0" r="3.2"/><circle cx="134.9" cy="661.8" r="3.2"/><circle cx="122.2" cy="619.0" r="3.2"/></g>
+
+  <g clip-path="url(#badge)">
+    <!-- jungle leaves -->
+    <g fill="#2BB37A">
+      <path d="M130,660 C140,540 200,460 300,440 C262,520 222,590 130,660 Z"/>
+      <path d="M670,660 C660,540 600,460 500,440 C538,520 578,590 670,660 Z"/>
+    </g>
+    <g fill="#2BB37A" opacity=".5">
+      <path d="M140,470 C185,415 240,395 292,400 C252,438 200,465 140,470 Z"/>
+      <path d="M660,470 C615,415 560,395 508,400 C548,438 600,465 660,470 Z"/>
+    </g>
+    <g fill="none" stroke="#0E5A3E" stroke-width="5" stroke-linecap="round">
+      <path d="M140,650 C190,580 240,500 296,446"/>
+      <path d="M660,650 C610,580 560,500 504,446"/>
+    </g>
+    <!-- circuit traces -->
+    <g fill="none" stroke="#2BB37A" stroke-width="4" stroke-linecap="round" opacity=".6">
+      <path d="M170,560 L200,560 L222,538"/>
+      <path d="M630,560 L600,560 L578,538"/>
+      <path d="M200,350 L240,350 L262,328"/>
+      <path d="M600,350 L560,350 L538,328"/>
+    </g>
+    <g fill="#2BB37A" opacity=".6">
+      <circle cx="170" cy="560" r="6"/><circle cx="630" cy="560" r="6"/>
+      <circle cx="200" cy="350" r="6"/><circle cx="600" cy="350" r="6"/>
+    </g>
+
+    <!-- shoulders -->
+    <path d="M96,880 C116,780 196,730 296,712 C318,708 336,698 340,676 L460,676 C464,698 482,708 504,712 C604,730 684,780 704,880 Z" fill="#B06A40" stroke="#241A4A" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M460,676 C464,698 482,708 504,712 C604,730 684,780 704,880 L560,880 C560,820 540,770 470,740 Z" fill="#7A3E25" opacity=".55"/>
+    <!-- neck -->
+    <path d="M344,596 L340,690 C372,712 428,712 460,690 L456,596 Z" fill="#B06A40" stroke="#241A4A" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M344,596 L456,596 L458,640 C430,668 370,668 342,640 Z" fill="#7A3E25"/>
+    <path d="M430,650 L456,620 L460,690 C450,697 440,701 430,703 Z" fill="#7A3E25"/>
+    <!-- anatomy lines -->
+    <g fill="none" stroke="#7A3E25" stroke-width="6" stroke-linecap="round">
+      <path d="M296,738 C326,730 354,734 378,748"/>
+      <path d="M504,738 C474,730 446,734 422,748"/>
+      <path d="M215,770 C232,800 238,830 236,870"/>
+      <path d="M585,770 C568,800 562,830 564,870"/>
+      <path d="M280,820 C320,840 370,842 398,826"/>
+      <path d="M520,820 C480,840 430,842 402,826"/>
+    </g>
+    <!-- seed necklace -->
+    <path d="M322,708 C340,778 460,778 478,708" fill="none" stroke="#241A4A" stroke-width="4"/>
+    <g stroke="#241A4A" stroke-width="3">
+      <circle cx="325" cy="722" r="8" fill="#D2507A"/>
+      <circle cx="334" cy="740" r="8" fill="#241A4A"/>
+      <circle cx="347" cy="755" r="8" fill="#D2507A"/>
+      <circle cx="363" cy="765" r="8" fill="#241A4A"/>
+      <circle cx="380" cy="770" r="8" fill="#D2507A"/>
+      <circle cx="420" cy="770" r="8" fill="#D2507A"/>
+      <circle cx="437" cy="765" r="8" fill="#241A4A"/>
+      <circle cx="453" cy="755" r="8" fill="#D2507A"/>
+      <circle cx="466" cy="740" r="8" fill="#241A4A"/>
+      <circle cx="475" cy="722" r="8" fill="#D2507A"/>
+    </g>
+    <path d="M400,762 C422,778 422,808 400,828 C378,808 378,778 400,762 Z" fill="#2BB37A" stroke="#241A4A" stroke-width="4"/>
+    <path d="M400,770 L400,822 M400,790 L410,781 M400,804 L390,795" fill="none" stroke="#0E5A3E" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- back hair (breaks the ring at top) -->
+  <g stroke-linejoin="round">
+    <use xlink:href="#hairL" fill="#241A4A" stroke="#241A4A" stroke-width="16"/>
+    <use xlink:href="#hairL" transform="translate(800,0) scale(-1,1)" fill="#241A4A" stroke="#241A4A" stroke-width="16"/>
+    <use xlink:href="#hairL" fill="#FF7A45"/>
+    <use xlink:href="#hairL" transform="translate(800,0) scale(-1,1)" fill="#FF7A45"/>
+  </g>
+  <!-- hair strands -->
+  <g id="strandsL">
+    <g fill="#FFC24A">
+      <path d="M334,372 C326,330 312,294 292,262 C318,292 334,328 344,366 Z"/>
+      <path d="M296,410 C284,376 256,346 214,328 C254,358 276,384 288,414 Z"/>
+      <path d="M276,480 C262,462 236,456 200,462 C236,470 256,482 266,500 Z"/>
+      <path d="M380,330 C382,310 386,290 396,262 C392,292 392,312 392,334 Z"/>
+    </g>
+    <g fill="#D2507A">
+      <path d="M262,560 C258,600 242,640 218,708 C252,650 270,604 274,560 Z"/>
+      <path d="M296,640 C296,680 290,710 280,744 C300,712 308,680 306,640 Z"/>
+      <path d="M254,540 C240,560 226,576 212,592 C232,582 248,570 262,552 Z"/>
+    </g>
+    <g fill="none" stroke="#241A4A" stroke-width="5" stroke-linecap="round">
+      <path d="M288,338 C306,362 318,384 326,408"/>
+      <path d="M250,408 C270,424 284,440 294,460"/>
+      <path d="M246,528 C262,540 274,552 284,566"/>
+      <path d="M250,626 C264,640 276,652 286,668"/>
+      <path d="M358,320 C362,334 364,346 364,360"/>
+    </g>
+  </g>
+  <use xlink:href="#strandsL" transform="translate(800,0) scale(-1,1)"/>
+
+  <!-- ears -->
+  <g fill="#B06A40" stroke="#241A4A" stroke-width="6">
+    <path d="M308,472 C286,466 284,500 292,522 C298,538 308,542 315,540 Z"/>
+    <path d="M492,472 C514,466 516,500 508,522 C502,538 492,542 485,540 Z"/>
+  </g>
+
+  <!-- face -->
+  <path d="M400,378 C452,378 492,398 495,448 L498,500 C498,530 493,556 487,578 L472,614 L438,648 C426,657 374,657 362,648 L328,614 L313,578 C307,556 302,530 302,500 L305,448 C308,398 348,378 400,378 Z" fill="#B06A40" stroke="#241A4A" stroke-width="7" stroke-linejoin="round"/>
+  <!-- face shading -->
+  <g fill="#7A3E25">
+    <path d="M495,448 L498,500 C498,530 493,556 487,578 L472,614 L438,648 C428,655 416,656 406,656 C440,630 462,598 470,560 C476,528 476,490 470,452 C478,440 488,438 495,448 Z"/>
+    <path d="M312,546 C328,566 346,578 366,582 C346,586 328,580 316,566 Z"/>
+    <path d="M324,474 C340,470 372,472 392,482 L388,476 C370,466 340,464 324,474 Z"/>
+    <path d="M476,474 C460,470 428,472 408,482 L412,476 C430,466 460,464 476,474 Z"/>
+    <path d="M405,488 C411,516 417,540 422,560 L408,558 Z"/>
+    <path d="M382,616 C394,624 406,624 418,616 C414,630 386,630 382,616 Z"/>
+    <path d="M394,640 L400,648 L406,640 Z"/>
+  </g>
+
+  <!-- urucum paint -->
+  <g fill="#FF7A45" stroke="#241A4A" stroke-width="2" stroke-linejoin="round">
+    <path d="M309,516 L384,516 L380,526 L310,526 Z"/>
+    <path d="M491,516 L416,516 L420,526 L490,526 Z"/>
+    <path d="M326,534 L342,534 L334,550 Z"/>
+    <path d="M348,534 L364,534 L356,550 Z"/>
+    <path d="M436,534 L452,534 L444,550 Z"/>
+    <path d="M458,534 L474,534 L466,550 Z"/>
+  </g>
+
+  <!-- eyes -->
+  <path d="M330,492 L346,482 Q366,476 388,486 L381,494 Q356,499 330,492 Z" fill="#FBF4E8"/>
+  <path d="M470,492 L454,482 Q434,476 412,486 L419,494 Q444,499 470,492 Z" fill="#FBF4E8"/>
+  <g clip-path="url(#eyeL)"><circle cx="363" cy="489" r="9.5" fill="#241A4A"/><circle cx="366" cy="485" r="2.6" fill="#FFC24A"/></g>
+  <g clip-path="url(#eyeR)"><circle cx="437" cy="489" r="9.5" fill="#241A4A"/><circle cx="440" cy="485" r="2.6" fill="#FFC24A"/></g>
+  <g fill="none" stroke="#241A4A" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M326,493 L345,480 Q366,473 392,486" stroke-width="6"/>
+    <path d="M474,493 L455,480 Q434,473 408,486" stroke-width="6"/>
+    <path d="M338,496 Q358,500 380,495" stroke-width="3"/>
+    <path d="M462,496 Q442,500 420,495" stroke-width="3"/>
+  </g>
+  <!-- brows -->
+  <g fill="#241A4A">
+    <path d="M312,470 L328,452 L370,456 L396,472 L390,480 L362,468 L328,465 Z"/>
+    <path d="M488,470 L472,452 L430,456 L404,472 L410,480 L438,468 L472,465 Z"/>
+  </g>
+  <!-- nose -->
+  <path d="M376,558 C366,568 374,580 388,578 C394,583 406,583 412,578 C426,580 434,568 424,558" fill="none" stroke="#241A4A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- mouth -->
+  <path d="M366,605 C380,602 420,602 434,605" fill="none" stroke="#241A4A" stroke-width="5.5" stroke-linecap="round"/>
+
+  <!-- front hair (center part, swept locks) -->
+  <path id="frontL" d="M400,340 C350,342 310,376 303,432 C300,452 301,470 304,490 C310,468 318,452 330,442 C334,452 336,462 336,474 C346,446 360,428 380,420 C386,426 392,434 396,444 C393,412 395,376 400,340 Z" fill="#FF7A45"/>
+  <use xlink:href="#frontL" transform="translate(800,0) scale(-1,1)"/>
+  <path id="lineL" d="M304,490 C310,468 318,452 330,442 C334,452 336,462 336,474 C346,446 360,428 380,420 C386,426 392,434 396,444 C394,420 395,400 398,380" fill="none" stroke="#241A4A" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+  <use xlink:href="#lineL" transform="translate(800,0) scale(-1,1)"/>
+  <path d="M302,488 C298,450 302,420 316,394" fill="none" stroke="#241A4A" stroke-width="6" stroke-linecap="round"/>
+  <path d="M498,488 C502,450 498,420 484,394" fill="none" stroke="#241A4A" stroke-width="6" stroke-linecap="round"/>
+  <g fill="#FFC24A">
+    <path d="M388,362 C356,366 330,384 318,420 C336,392 358,378 390,372 Z"/>
+    <path d="M412,362 C444,366 470,384 482,420 C464,392 442,378 410,372 Z"/>
+  </g>
+
+  <!-- footprint plaque -->
+  <path d="M322,826 L478,826 C478,866 444,890 400,898 C356,890 322,866 322,826 Z" fill="#241A4A" stroke="#2BB37A" stroke-width="4"/>
+  <g fill="#FFC24A">
+    <g transform="translate(376,848)">
+      <path d="M0,-14 C9,-14 11,-4 9,6 C8,14 9,22 4,26 C-3,30 -10,24 -9,14 C-8,4 -10,-14 0,-14 Z"/>
+      <circle cx="-7" cy="32" r="4"/><circle cx="-1" cy="35" r="3.5"/><circle cx="5" cy="34" r="3"/><circle cx="10" cy="30" r="2.6"/>
+    </g>
+    <g transform="translate(424,848) scale(-1,1)">
+      <path d="M0,-14 C9,-14 11,-4 9,6 C8,14 9,22 4,26 C-3,30 -10,24 -9,14 C-8,4 -10,-14 0,-14 Z"/>
+      <circle cx="-7" cy="32" r="4"/><circle cx="-1" cy="35" r="3.5"/><circle cx="5" cy="34" r="3"/><circle cx="10" cy="30" r="2.6"/>
+    </g>
+  </g>
+  </g>
+</svg>

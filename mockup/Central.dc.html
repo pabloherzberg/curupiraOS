@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Toca do Curupira</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&amp;family=Nunito:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0F7A54}a:hover{color:#0A5A3E}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid #12935F;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 960px; height: 640px; display: flex; background: #FFFFFF; color: #1E2A24; font-family: Nunito, system-ui, sans-serif; overflow: hidden; border-radius: 20px">
+
+  <nav style="width: 228px; flex-shrink: 0; box-sizing: border-box; padding: 20px 14px; background: #FBF4E8; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 6px 16px 6px">
+      <div style="position: relative; width: 48px; height: 48px; border-radius: 16px; overflow: hidden; background: linear-gradient(145deg, #FFD08A, #FF7A45); flex-shrink: 0">
+        <img src="/_blob/802c3d23ef6f62da6d0645b8a5611cec" alt="" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%">
+      </div>
+      <div style="display: flex; flex-direction: column"><span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 19px; line-height: 1.1">Toca do Curupira</span><span style="font-size: 12px; color: #5B6A61">central de controle</span></div>
+    </div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
+      <button type="button" aria-current="{{n.current}}" onClick="{{n.pick}}" style="min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 0; border-radius: 12px; background: {{n.bg}}; color: {{n.fg}}; font-weight: 700; font-size: 14px; text-align: left">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg>{{n.label}}
+      </button>
+    </sc-for>
+  </nav>
+
+  <main style="flex-grow: 1; min-width: 0; box-sizing: border-box; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px">
+    <sc-if value="{{isEnergia}}" hint-placeholder-val="{{true}}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div style="height: 112px; border-radius: 20px; background: #241A4A; color: #FFFFFF; display: flex; align-items: center; gap: 20px; padding: 0 22px; position: relative; overflow: hidden">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+            <span style="font-size: 13px; color: #E6D9FF; font-weight: 600">Consumo agora</span>
+            <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 40px; line-height: 1">{{wattsTxt}}</span>
+            <div style="width: 300px; height: 8px; border-radius: 4px; background: #3E3270; margin-top: 8px"><div style="height: 8px; border-radius: 4px; width: {{meter}}; background: {{meterColor}}"></div></div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding-right: 120px">
+            <span style="font-size: 13px; color: #E6D9FF; font-weight: 600">Bateria cheia dura</span>
+            <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 34px; line-height: 1; color: #FFD08A">≈ {{hoursTxt}}</span>
+          </div>
+          <img src="/_blob/802c3d23ef6f62da6d0645b8a5611cec" alt="" style="position: absolute; right: 12px; top: 8px; width: 96px; height: 96px; border-radius: 18px">
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+          <sc-for list="{{profiles}}" as="p" hint-placeholder-count="4">
+            <button type="button" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}" style="min-height: 76px; padding: 10px 12px; border-radius: 16px; border: 2px solid {{p.border}}; background: {{p.bg}}; text-align: left; display: flex; flex-direction: column; gap: 4px; color: #1E2A24">
+              <span style="width: 26px; height: 26px; border-radius: 9px; background: {{p.color}}"></span>
+              <span style="font-weight: 800; font-size: 15px">{{p.label}}</span>
+              <span style="font-size: 12px; color: #5B6A61">{{p.sub}}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 16px; background: #FBF4E8">
+          <div style="width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; background: linear-gradient(145deg, #FF8A4A, #C2261A); display: flex; align-items: center; justify-content: center"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 4 5 6 5 10a5 5 0 0 1-10 0c0-2 1-4 2-5 0 2 1 3 2 3 0-3 0-5 1-8z"></path></svg></div>
+          <div style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0">
+            <span style="font-weight: 800; font-size: 15px">Boitatá · placa NVIDIA</span>
+            <span style="font-size: 12px; color: {{gpuNoteColor}}">{{gpuNote}}</span>
+          </div>
+          <div style="display: flex; padding: 3px; border-radius: 12px; background: #EDE4D4; gap: 2px">
+            <sc-for list="{{gpuOpts}}" as="g" hint-placeholder-count="3">
+              <button type="button" aria-pressed="{{g.pressed}}" onClick="{{g.pick}}" style="min-height: 38px; padding: 0 12px; border: 0; border-radius: 10px; background: {{g.bg}}; color: {{g.fg}}; font-weight: 700; font-size: 13px">{{g.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+            <div style="min-height: 58px; display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 16px; border: 1px solid #EFE6D6">
+              <div style="width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0; background: {{r.tile}}; display: flex; align-items: center; justify-content: center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{r.icon}}"></path></svg></div>
+              <div style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0">
+                <span style="font-weight: 800; font-size: 14px">{{r.name}}</span>
+                <span style="font-size: 12px; color: #5B6A61">{{r.status}}</span>
+              </div>
+              <button type="button" role="switch" aria-checked="{{r.pressed}}" aria-label="{{r.aria}}" onClick="{{r.toggle}}" style="flex-shrink: 0; width: 50px; height: 30px; border-radius: 15px; border: 0; background: {{r.trackBg}}; position: relative; padding: 0">
+                <span style="position: absolute; top: 4px; left: {{r.knob}}; width: 22px; height: 22px; border-radius: 11px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.25)"></span>
+              </button>
+            </div>
+          </sc-for>
+        </div>
+        <span style="min-height: 18px; font-size: 13px; font-weight: 700; color: #0F7A54" aria-live="polite">{{msg}}</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{isOutra}}" hint-placeholder-val="{{false}}">
+      <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center">
+        <img src="/_blob/d64228d0aadce05528f7370fd4856339" alt="" style="width: 101px; height: 200px">
+        <span style="font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 24px">{{secaoTitulo}}</span>
+        <span style="font-size: 14px; color: #5B6A61; max-width: 360px">Esta seção entra na próxima rodada do mockup. Por enquanto, explore a seção Energia.</span>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":960,"height":640}}'>
+class Component extends DCLogic {
+renderVals() {
+var self = this;
+var P = {
+  pororoca: { label: 'Pororoca', sub: 'desempenho', base: 7.5, turbo: true, gpu: 'demanda', hd: true, bt: true, color: '#FF7A45', soft: '#FFF1E8' },
+  correnteza: { label: 'Correnteza', sub: 'equilibrado', base: 5.6, turbo: true, gpu: 'off', hd: true, bt: true, color: '#2BB37A', soft: '#E8F7EF' },
+  remanso: { label: 'Remanso', sub: 'bateria', base: 4.6, turbo: false, gpu: 'off', hd: false, bt: false, color: '#2468B8', soft: '#EAF1FB' },
+  sereno: { label: 'Sereno', sub: 'extremo', base: 3.8, turbo: false, gpu: 'off', hd: false, bt: false, color: '#5B3A8E', soft: '#F1EBF8' }
+};
+var st = Object.assign({ secao: 'energia', profile: 'remanso', turbo: false, gpu: 'off', hd: false, wifi: true, bt: false, priv: true, msg: '' }, this.state || {});
+
+var navDefs = [
+  ['energia', 'Energia', 'M13 2L4 14h7l-1 8 9-12h-7z'],
+  ['seres', 'Seres da mata', 'M12 3c4 3 6 6 6 10a6 6 0 0 1-12 0c0-4 2-7 6-10z M12 9v9'],
+  ['rede', 'Rede e Boto', 'M2 9a15 15 0 0 1 20 0 M5 12.5a10 10 0 0 1 14 0 M8.5 16a5 5 0 0 1 7 0 M12 19.5h.01'],
+  ['privacidade', 'Privacidade', 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z'],
+  ['snapshots', 'Cuca · snapshots', 'M3 12a9 9 0 1 0 3-6.7 M3 4v5h5 M12 7v5l3 2'],
+  ['aparencia', 'Aparência', 'M12 3a9 9 0 1 0 0 18c1 0 2-1 2-2 0-1.5-1-2 0-3s3 0 4-1c2-1 3-3 3-5 0-4-4-7-9-7z M7.5 11h.01 M10 7.5h.01 M15 7.5h.01']
+];
+var titulos = {};
+var nav = navDefs.map(function (d) {
+  titulos[d[0]] = d[1];
+  var sel = st.secao === d[0];
+  return { label: d[1], icon: d[2], current: sel ? 'page' : 'false', bg: sel ? '#FFFFFF' : 'transparent', fg: sel ? '#0F7A54' : '#3E4C44', pick: function () { self.setState({ secao: d[0] }); } };
+});
+
+var watts = P[st.profile].base + (st.turbo ? 1.5 : 0) + (st.gpu === 'demanda' ? 0.4 : st.gpu === 'on' ? 3.5 : 0) + (st.hd ? 1.0 : 0) + (st.wifi ? 0.6 : 0) + (st.bt ? 0.3 : 0) + (st.priv ? 0 : 0.1);
+var hours = 31.9 / watts;
+var h = Math.floor(hours);
+var m = Math.round((hours - h) * 60);
+if (m === 60) { h += 1; m = 0; }
+
+var profiles = Object.keys(P).map(function (k) {
+  var sel = st.profile === k;
+  return {
+    label: P[k].label, sub: P[k].sub, color: P[k].color, pressed: sel ? 'true' : 'false',
+    bg: sel ? P[k].soft : '#FFFFFF', border: sel ? P[k].color : '#EFE6D6',
+    pick: function () { self.setState({ profile: k, turbo: P[k].turbo, gpu: P[k].gpu, hd: P[k].hd, bt: P[k].bt, msg: 'Perfil ' + P[k].label + ' aplicado.' }); }
+  };
+});
+
+var gl = [['off', 'Dormindo'], ['demanda', 'Sob demanda'], ['on', 'Acordado']];
+var gpuOpts = gl.map(function (o) {
+  var sel = st.gpu === o[0];
+  return { label: o[1], pressed: sel ? 'true' : 'false', bg: sel ? '#FFFFFF' : 'transparent', fg: sel ? '#B4380B' : '#4E5C54', pick: function () { self.setState({ gpu: o[0], msg: '' }); } };
+});
+var gpuNote = st.gpu === 'off' ? 'desligada de vez: máxima economia' : 'sair de "Dormindo" exige reiniciar';
+
+var defs = [
+  { key: 'turbo', name: 'Saci · turbo', tile: 'linear-gradient(145deg, #FF8FA8, #C2265A)', icon: 'M4 8h11a3 3 0 1 0-3-3 M4 12h15a3 3 0 1 1-3 3 M4 16h7', on: 'girando até 3,4 GHz', off: 'calmo, processador fresco' },
+  { key: 'hd', name: 'Mapinguari · HD', tile: 'linear-gradient(145deg, #A98BD9, #5B3A8E)', icon: 'M4 7c0-2 16-2 16 0v10c0 2-16 2-16 0z M4 7c0 2 16 2 16 0 M8 14h.01', on: 'acordado, arquivos à mão', off: 'hibernando, motor parado' },
+  { key: 'wifi', name: 'Iara · Wi-Fi', tile: 'linear-gradient(145deg, #6FD3F2, #2468B8)', icon: 'M2 9a15 15 0 0 1 20 0 M5 12.5a10 10 0 0 1 14 0 M8.5 16a5 5 0 0 1 7 0 M12 19.5h.01', on: 'conectada em mata-5g', off: 'em silêncio' },
+  { key: 'bt', name: 'Iara · Bluetooth', tile: 'linear-gradient(145deg, #8FB8F2, #3A5EB8)', icon: 'M7 7l10 10-5 5V2l5 5L7 17', on: 'ligado', off: 'desligado' },
+  { key: 'priv', name: 'Caipora', tile: 'linear-gradient(145deg, #7FE3B0, #128A5C)', icon: 'M3 3l18 18 M10.6 6.1A10 10 0 0 1 22 12a14 14 0 0 1-3 3.6 M6.6 6.6A14 14 0 0 0 2 12s4 7 10 7a9 9 0 0 0 4.2-1', on: 'câmera e mic cortados', off: 'câmera e mic liberados' },
+  { key: 'wifi', name: 'Boto · laboratório', tile: 'linear-gradient(145deg, #F5A3D0, #8E3A9E)', icon: 'M4 6a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M16 6a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M10 18a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M8 6h8 M7 8l4 8 M17 8l-4 8', on: 'pronto para criar redes', off: 'precisa da Iara ligada', lab: true }
+];
+var rows = defs.map(function (d) {
+  var on = d.lab ? !!st.lab && !!st.wifi : !!st[d.key];
+  return {
+    name: d.name, tile: d.tile, icon: d.icon,
+    status: d.lab ? (on ? 'rede isolada "lab" ativa' : (st.wifi ? 'parado' : d.off)) : (on ? d.on : d.off),
+    pressed: on ? 'true' : 'false', aria: d.name,
+    trackBg: on ? '#12935F' : '#D9CFBE', knob: on ? '24px' : '4px',
+    toggle: function () {
+      if (d.lab) { self.setState({ lab: !on, msg: !on ? 'O Boto criou a rede isolada "lab".' : '' }); return; }
+      var u = { msg: '' }; u[d.key] = !on; self.setState(u);
+    }
+  };
+});
+
+return {
+  nav: nav,
+  isEnergia: st.secao === 'energia',
+  isOutra: st.secao !== 'energia',
+  secaoTitulo: titulos[st.secao],
+  wattsTxt: watts.toFixed(1).replace('.', ',') + ' W',
+  hoursTxt: h + 'h' + (m < 10 ? '0' : '') + m,
+  meter: Math.min(100, Math.round(hours / 9 * 100)) + '%',
+  meterColor: hours >= 5 ? '#7FE3B0' : hours >= 3.5 ? '#FFD08A' : '#FF8A70',
+  profiles: profiles,
+  gpuOpts: gpuOpts,
+  gpuNote: gpuNote,
+  gpuNoteColor: st.gpu === 'off' ? '#0F7A54' : '#B4380B',
+  rows: rows,
+  msg: st.msg
+};
+}
+}
+</script>
+</body>
+</html>

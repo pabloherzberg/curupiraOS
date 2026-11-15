@@ -19,10 +19,13 @@ NOME_MAQUINA="${NOME_MAQUINA:-curupira}"
 TECLADO="${TECLADO:-br-abnt2}"
 FUSO="${FUSO:-America/Sao_Paulo}"
 
+setfont ter-v16n 2>/dev/null || true   # fonte do terminal com acentos
 verde=$'\e[32m'; laranja=$'\e[33m'; vermelho=$'\e[31m'; neutro=$'\e[0m'
 diz()   { printf '%s==>%s %s\n' "$verde" "$neutro" "$*"; }
 avisa() { printf '%s[!]%s %s\n' "$laranja" "$neutro" "$*"; }
 morre() { printf '%s[x]%s %s\n' "$vermelho" "$neutro" "$*" >&2; exit 1; }
+
+trap 'printf "%s[x]%s Falhou na linha %s. NÃO desligue: o instalador continua na memória. Fotografe a tela; depois de corrigido, é só baixar e rodar de novo.\n" "$vermelho" "$neutro" "$LINENO" >&2' ERR
 
 # /dev/nvme0n1 + 2 -> /dev/nvme0n1p2 ; /dev/sda + 2 -> /dev/sda2
 particao() { if [[ "$1" =~ [0-9]$ ]]; then echo "${1}p$2"; else echo "${1}$2"; fi; }
@@ -103,8 +106,9 @@ read -rp "Digite APAGAR para continuar: " CONFIRMA
 diz "Particionando $DISCO_SISTEMA"
 timedatectl set-ntp true || true
 umount -R /mnt 2>/dev/null || true
-wipefs -af "$DISCO_SISTEMA" >/dev/null
-sgdisk --zap-all "$DISCO_SISTEMA" >/dev/null
+swapoff -a 2>/dev/null || true
+wipefs -af "$DISCO_SISTEMA" >/dev/null || true
+sgdisk --zap-all "$DISCO_SISTEMA" >/dev/null 2>&1 || true
 sgdisk -n1:0:+1G -t1:ef00 -c1:CURUPIRA-BOOT -n2:0:0 -t2:8300 -c2:CURUPIRA "$DISCO_SISTEMA" >/dev/null
 partprobe "$DISCO_SISTEMA"; udevadm settle
 mkfs.fat -F32 -n CURUPBOOT "$ESP" >/dev/null
@@ -123,21 +127,21 @@ mount --mkdir -o umask=0077 "$ESP" /mnt/boot
 
 if [[ "$MODO_DADOS" == "disco-inteiro" ]]; then
   diz "Preparando $DISCO_DADOS como /data"
-  wipefs -af "$DISCO_DADOS" >/dev/null
-  sgdisk --zap-all "$DISCO_DADOS" >/dev/null
+  wipefs -af "$DISCO_DADOS" >/dev/null || true
+  sgdisk --zap-all "$DISCO_DADOS" >/dev/null 2>&1 || true
   sgdisk -n1:0:0 -t1:8300 -c1:CURUPIRA-DADOS "$DISCO_DADOS" >/dev/null
   partprobe "$DISCO_DADOS"; udevadm settle
 fi
 if [[ "$MODO_DADOS" != "nenhum" ]]; then
   diz "Formatando $PART_DADOS (ext4)"
-  wipefs -af "$PART_DADOS" >/dev/null
+  wipefs -af "$PART_DADOS" >/dev/null || true
   mkfs.ext4 -F -q -L dados -m 0 "$PART_DADOS"
 fi
 
 # ---------------------------------------------------------------- pacotes
 BASE=(base base-devel linux linux-firmware intel-ucode btrfs-progs e2fsprogs dosfstools
       networkmanager sudo nano vim git man-db openssh reflector efibootmgr)
-DESKTOP=(plasma-desktop sddm sddm-kcm konsole dolphin kate ark spectacle gwenview okular
+DESKTOP=(plasma-desktop plasma-workspace kwin xorg-server sof-firmware terminus-font sddm sddm-kcm konsole dolphin kate ark spectacle gwenview okular
          plasma-nm plasma-pa powerdevil bluedevil kscreen kde-gtk-config breeze-gtk
          xdg-desktop-portal-kde pipewire pipewire-pulse wireplumber firefox
          noto-fonts noto-fonts-emoji ttf-jetbrains-mono)
@@ -152,6 +156,9 @@ reflector --country Brazil --latest 10 --protocol https --sort rate --save /etc/
   || avisa "Não consegui ordenar os espelhos; sigo com os padrões."
 
 diz "Instalando o sistema (a parte mais demorada)"
+# o initramfs é gerado durante o pacstrap e já procura este arquivo
+mkdir -p /mnt/etc
+echo "KEYMAP=$TECLADO" > /mnt/etc/vconsole.conf
 pacstrap -K /mnt "${BASE[@]}" "${DESKTOP[@]}" "${VIDEO[@]}" "${ENERGIA[@]}" "${SISTEMA[@]}" "${DEV[@]}" "${REDE[@]}"
 
 genfstab -U /mnt >> /mnt/etc/fstab
@@ -182,6 +189,7 @@ mkdir -p /etc/X11/xorg.conf.d
 printf 'Section "InputClass"\n  Identifier "teclado"\n  MatchIsKeyboard "on"\n  Option "XkbLayout" "br"\nEndSection\n' > /etc/X11/xorg.conf.d/00-keyboard.conf
 
 # usuário: root fica bloqueado, o usuário usa sudo
+groupadd -f wireshark
 useradd -m -G wheel,wireshark -s /bin/bash '$USUARIO'
 passwd -l root >/dev/null
 echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/10-wheel
@@ -229,9 +237,10 @@ printf 'default curupira.conf\ntimeout 2\nconsole-mode max\neditor no\n' > /boot
 printf 'title   Curupira OS\nlinux   /vmlinuz-linux\ninitrd  /intel-ucode.img\ninitrd  /initramfs-linux.img\noptions root=UUID=$UUID_RAIZ rootflags=subvol=@ rw quiet loglevel=3 nowatchdog\n' > /boot/loader/entries/curupira.conf
 printf 'title   Curupira OS (modo de recuperação)\nlinux   /vmlinuz-linux\ninitrd  /intel-ucode.img\ninitrd  /initramfs-linux-fallback.img\noptions root=UUID=$UUID_RAIZ rootflags=subvol=@ rw\n' > /boot/loader/entries/curupira-recuperacao.conf
 
-systemctl enable NetworkManager sddm tlp thermald bluetooth fstrim.timer systemd-timesyncd \
-  snapper-timeline.timer snapper-cleanup.timer >/dev/null 2>&1
-systemctl mask systemd-rfkill.service systemd-rfkill.socket >/dev/null 2>&1
+for u in NetworkManager sddm tlp thermald bluetooth fstrim.timer systemd-timesyncd snapper-timeline.timer snapper-cleanup.timer; do
+  systemctl enable "\$u" >/dev/null 2>&1 || echo "aviso: não consegui ativar \$u"
+done
+systemctl mask systemd-rfkill.service systemd-rfkill.socket >/dev/null 2>&1 || true
 CHROOT
 
 arch-chroot /mnt bash /root/configura.sh

@@ -1,0 +1,8 @@
+{"v":3,"createdOnFiles":{"v":1,"at":"2026-11-14T12:00:00Z"},"title":"Curupira OS","launch":{"view":"canvas"},"pages":[],
+ "boards":{"Propostas2.dc.html":{"x":0,"y":-1640,"w":1800,"h":760,"title":"Curupira: segunda leva (animada)"},
+  "Propostas1.dc.html":{"x":0,"y":-760,"w":1440,"h":640,"title":"Curupira: primeira leva (estáticas)"},
+  "Main.dc.html":{"x":0,"y":0,"w":1440,"h":900,"title":"Identidade e bestiário"},
+  "Desktop.dc.html":{"x":0,"y":1020,"w":1366,"h":768,"title":"Área de trabalho (1366×768)"},
+  "Central.dc.html":{"x":1446,"y":1020,"w":960,"h":640,"title":"Toca do Curupira: central de controle","is_interactive":true},
+  "Boot.dc.html":{"x":2486,"y":1020,"w":1366,"h":768,"title":"Tela de bloqueio"}},
+ "order":["Propostas2.dc.html","Propostas1.dc.html","Main.dc.html","Desktop.dc.html","Central.dc.html","Boot.dc.html"],"notes":{},"designSystems":[]}
