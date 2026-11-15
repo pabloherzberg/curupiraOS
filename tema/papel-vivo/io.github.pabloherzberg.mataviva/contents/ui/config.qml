@@ -8,7 +8,14 @@ import org.kde.kirigami as Kirigami
 Kirigami.FormLayout {
     property alias cfg_Movimento: movimento.currentIndex
     property int cfg_MovimentoDefault: 0
+    property alias cfg_Cena: cenaEscolhida.currentIndex
+    property int cfg_CenaDefault: 0
 
+    QQC2.ComboBox {
+        id: cenaEscolhida
+        Kirigami.FormData.label: "Cena:"
+        model: ["Brasa: o Curupira e os seres da mata", "Iara na lagoa"]
+    }
     QQC2.ComboBox {
         id: movimento
         Kirigami.FormData.label: "Movimento:"

@@ -111,6 +111,10 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   Só se mexe na tomada (ajustável) e nunca no Remanso/Sereno. Escolhe-se na Toca, em Aparência → Papel de
   parede (miniatura "Mata Viva" com o selo "animado"; com ele em uso aparece o ajuste "A mata se mexe": só na
   tomada, sempre ou parada). A Toca chama o `curupira-papel-vivo` (`--movimento …`, `--desfazer`).
+  Segunda cena: **Iara** (`arte/iara-fundo.svg`), retrato no padrão do Brasa: a Iara na lagoa sob a lua cheia, com
+  vitórias-régias. Existe parada (pacote Curupira-Iara, olhos fechados) e animada ("Iara Viva": o cabelo ondula na
+  água com o vigor, grãos de luz sobem, os anéis na água são o Wi-Fi, vaga-lumes = bateria, olhos fechados no
+  Sereno). O Pablo achou os seres pequenos da cena Brasa primitivos: redesenhar no padrão dos retratos.
   Conferido fora do Plasma com `ferramentas/ver-papel-vivo.py`; **falta ver como papel de parede de verdade**
   (`main.qml`, a tela de ajustes e o consumo de energia não foram testados).
 
@@ -126,3 +130,4 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
 6. Ícones: conferir no notebook (doca, bandeja, menus, cartão rápido); depois, menu de apps próprio no lugar do
    Kickoff (widget QML como a doca: busca, apps em ladrilhos, Cordel, botões de sessão). Mais arte na Toca:
    ícones das seções, o Cordel reagindo ao perfil, transição entre seções.
+7. Mata Viva: redesenhar Saci, Boitatá, Mapinguari, Boto e a Iara da lagoa no padrão dos retratos (Brasa e Iara).

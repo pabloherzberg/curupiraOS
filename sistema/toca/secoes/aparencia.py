@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen, QPixmap
-from PySide6.QtWidgets import QAbstractButton, QHBoxLayout, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QAbstractButton, QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 import sistema
 from visual import (BORDA, ICONES, TINTA, TINTA_SUAVE, VERDE, Cartao, Secao, Segmentado, arte, botao, Faixa,
@@ -121,7 +121,7 @@ class SecaoAparencia(Secao):
         papel = Cartao()
         pl = QVBoxLayout(papel); pl.setContentsMargins(16, 12, 16, 8); pl.setSpacing(4)
         pl.addWidget(rotulo("Papel de parede", 15, QFont.Weight.ExtraBold))
-        mini = QHBoxLayout(); mini.setSpacing(4)
+        mini = QGridLayout(); mini.setHorizontalSpacing(4); mini.setVerticalSpacing(2)
         self.miniaturas: list[Miniatura] = []
         for arquivo, nome, pacote in sistema.PAPEIS:
             caminho = arte(arquivo)
@@ -130,17 +130,20 @@ class SecaoAparencia(Secao):
                 m.pacote = pacote
                 m.clicked.connect(lambda _=False, c=caminho, n=nome, p=pacote:
                                   self._papel(sistema.caminho_papel(c, p), n))
-                mini.addWidget(m)
+                mini.addWidget(m, len(self.miniaturas) // 3, len(self.miniaturas) % 3)
                 self.miniaturas.append(m)
-        # o papel de parede animado: os seres da mata reagem ao que o computador está fazendo
-        self.mini_vivo = None
-        previa = sistema.previa_papel_vivo()
-        if previa:
-            self.mini_vivo = Miniatura(previa, "Mata Viva", selo="animado")
-            self.mini_vivo.pacote = sistema.PAPEL_VIVO
-            self.mini_vivo.clicked.connect(lambda: self._papel_vivo(None))
-            mini.addWidget(self.mini_vivo)
-        mini.addStretch()
+        # os animados: os seres da mata reagem ao que o computador está fazendo
+        self.minis_vivas: dict[str, Miniatura] = {}
+        for chave, nome, arquivo in sistema.CENAS_DO_PAPEL:
+            previa = sistema.previa_papel_vivo(arquivo)
+            if previa:
+                m = Miniatura(previa, nome, selo="animado")
+                m.pacote = sistema.PAPEL_VIVO
+                m.clicked.connect(lambda _=False, c=chave, n=nome: self._papel_vivo(cena=c, nome=n))
+                total = len(self.miniaturas) + len(self.minis_vivas)
+                mini.addWidget(m, total // 3, total % 3)
+                self.minis_vivas[chave] = m
+        mini.setColumnStretch(3, 1)
         pl.addLayout(mini)
         # ajustes do Mata Viva (só aparecem com ele em uso)
         self.vivo = QWidget()
@@ -149,14 +152,12 @@ class SecaoAparencia(Secao):
         linha_mov.addWidget(rotulo("A mata se mexe", 13, QFont.Weight.Bold))
         self.seg_mov = Segmentado([("tomada", "Só na tomada"), ("sempre", "Sempre"), ("parado", "Parada")])
         for chave in sistema.MOVIMENTOS_DO_PAPEL:
-            self.seg_mov.botoes[chave].clicked.connect(lambda _=False, c=chave: self._papel_vivo(c))
+            self.seg_mov.botoes[chave].clicked.connect(lambda _=False, c=chave: self._papel_vivo(movimento=c))
         linha_mov.addWidget(self.seg_mov); linha_mov.addStretch()
         vl.addLayout(linha_mov)
-        legenda = rotulo("O fogo do Curupira segue o perfil e o uso do processador; os vaga-lumes são a bateria. "
-                         "Boitatá, Mapinguari, Saci, Iara, Boto e Caipora aparecem quando acordam, e a lua da Cuca marca "
-                         "as horas. No Remanso e no Sereno a mata fica sempre parada, para poupar a bateria.", 12, cor=TINTA_SUAVE)
-        legenda.setWordWrap(True)
-        vl.addWidget(legenda)
+        self.legenda = rotulo("", 12, cor=TINTA_SUAVE)
+        self.legenda.setWordWrap(True)
+        vl.addWidget(self.legenda)
         self.vivo.hide()
         pl.addWidget(self.vivo)
         lay.addWidget(papel)
@@ -189,14 +190,21 @@ class SecaoAparencia(Secao):
     def _papel(self, caminho: Path, nome: str):
         self.executar.emit(["plasma-apply-wallpaperimage", str(caminho)], f"Papel de parede: {nome}.", None)
 
-    def _papel_vivo(self, movimento: str | None):
+    LEGENDAS = {
+        "brasa": "O fogo do Curupira segue o perfil e o uso do processador; os vaga-lumes são a bateria. "
+                 "Boitatá, Mapinguari, Saci, Iara, Boto e Caipora aparecem quando acordam, e a lua da Cuca marca as horas.",
+        "iara": "O cabelo da Iara ondula com o perfil e o uso do processador; os anéis na água são o Wi-Fi e os "
+                "vaga-lumes, a bateria. No Sereno ela fecha os olhos.",
+    }
+
+    def _papel_vivo(self, cena: str | None = None, movimento: str | None = None, nome: str = ""):
         if not sistema.papel_vivo_instalado():
-            self.avisar.emit("O Mata Viva ainda não está instalado: rode o instalador da Curupira.", True)
+            self.avisar.emit("Os papéis de parede animados ainda não estão instalados: rode o instalador da Curupira.", True)
             return
-        comando = ["curupira-papel-vivo"] + (["--movimento", movimento] if movimento else [])
-        frases = {None: "Papel de parede: Mata Viva.", "tomada": "A mata se mexe só na tomada.",
-                  "sempre": "A mata se mexe sempre, também na bateria.", "parado": "A mata fica parada; os seres ainda aparecem."}
-        self.executar.emit(comando, frases[movimento], None)
+        comando = ["curupira-papel-vivo"] + (["--cena", cena] if cena else []) + (["--movimento", movimento] if movimento else [])
+        frases = {"tomada": "A mata se mexe só na tomada.", "sempre": "A mata se mexe sempre, também na bateria.",
+                  "parado": "A mata fica parada; os seres ainda aparecem."}
+        self.executar.emit(comando, frases.get(movimento, f"Papel de parede: {nome}."), None)
 
     def coleta(self):
         return sistema.aparencia()
@@ -221,7 +229,9 @@ class SecaoAparencia(Secao):
         vivo = bool(d.get("papel_vivo"))
         for m in self.miniaturas:
             m.setChecked(not vivo and bool(papel) and (Path(papel).name == m.caminho.name or m.pacote in papel))
-        if self.mini_vivo:
-            self.mini_vivo.setChecked(vivo)
-            self.vivo.setVisible(vivo)
-            self.seg_mov.seleciona(d.get("movimento", "tomada"))
+        cena = d.get("cena", "brasa")
+        for chave, m in self.minis_vivas.items():
+            m.setChecked(vivo and chave == cena)
+        self.vivo.setVisible(vivo and bool(self.minis_vivas))
+        self.seg_mov.seleciona(d.get("movimento", "tomada"))
+        self.legenda.setText(self.LEGENDAS.get(cena, "") + " No Remanso e no Sereno tudo fica parado, para poupar a bateria.")

@@ -36,7 +36,7 @@ install -m755 "$AQUI/toca/toca.py" "$TOCA/"
 install -m644 "$AQUI/toca/visual.py" "$AQUI/toca/sistema.py" "$TOCA/"
 install -m644 "$AQUI"/toca/secoes/*.py "$TOCA/secoes/"
 install -m644 "$AQUI"/toca/fontes/* "$TOCA/fontes/"
-install -m644 "$ARTE/cordel-busto.svg" "$ARTE/cordel-figura.svg" "$ARTE/brasa-fundo.svg" \
+install -m644 "$ARTE/cordel-busto.svg" "$ARTE/cordel-figura.svg" "$ARTE/brasa-fundo.svg" "$ARTE/iara-fundo.svg" \
               "$ARTE/propostas/papel-de-parede-entardecer.svg" "$TOCA/arte/"
 # as artes dos seres, que a Toca anima (grupos base/vivo/frente)
 rm -rf "$TOCA/arte/icones"

@@ -11,8 +11,10 @@ python3 gerar-papeis.py     # arte/brasa-fundo.svg, arte/propostas/papel-de-pare
 python3 gerar-boot.py       # arte/01-brasa.svg -> tela de boot (Plymouth) e de abertura (KSplash)
 python3 gerar-icones.py     # arte/cordel-busto.svg -> ícone do menu + avatar do login; arte/icones/ -> tema de ícones "Curupira"
 python3 gerar-papel-vivo.py # arte/brasa-fundo.svg + arte/papel-vivo/ -> camadas do papel de parede animado "Mata Viva"
-# a miniatura do Mata Viva na Toca: a cena com todos os seres acordados
+# as miniaturas dos papéis de parede animados na Toca
 python3 ../ferramentas/ver-papel-vivo.py --todos --hora 23 --tamanho 400x225 --espera 6 \
   --captura papel-vivo/io.github.pabloherzberg.mataviva/contents/screenshot.png
+python3 ../ferramentas/ver-papel-vivo.py --arte iara --estado '{"perfil":"correnteza","wifi":true}' --tamanho 400x225 --espera 2 \
+  --captura papel-vivo/io.github.pabloherzberg.mataviva/contents/screenshot-iara.png
 python3 gerar-painel.py     # raio e sombra da doca -> estilo do Plasma "Curupira"
 echo "Pronto. Instale com: sudo bash sistema/instalar.sh"

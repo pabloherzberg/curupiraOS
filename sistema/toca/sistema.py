@@ -334,18 +334,21 @@ def comando_voltar() -> str:
 # (arte para a miniatura, nome, pacote do Plasma instalado pelo instalar.sh)
 PAPEIS = [
     ("brasa-fundo.svg", "Brasa", "Curupira-Brasa"),
+    ("iara-fundo.svg", "Iara", "Curupira-Iara"),
     ("papel-de-parede-entardecer.svg", "Entardecer", "Curupira-Entardecer"),
 ]
 DIR_PAPEIS = Path("/usr/local/share/wallpapers")
 # o papel de parede animado (plugin do Plasma, tema/papel-vivo); a Toca aplica com o curupira-papel-vivo
 PAPEL_VIVO = "io.github.pabloherzberg.mataviva"
 MOVIMENTOS_DO_PAPEL = ["tomada", "sempre", "parado"]    # na ordem do ajuste "Movimento" do plugin (0, 1, 2)
+# cenas do papel de parede animado, na ordem do ajuste "Cena": (chave, nome na Toca, miniatura)
+CENAS_DO_PAPEL = [("brasa", "Mata Viva", "screenshot.png"), ("iara", "Iara Viva", "screenshot-iara.png")]
 
 
-def previa_papel_vivo() -> Path | None:
-    """A miniatura do Mata Viva: do pacote instalado ou, no repositório, da pasta do tema."""
+def previa_papel_vivo(arquivo: str = "screenshot.png") -> Path | None:
+    """A miniatura de uma cena do Mata Viva: do pacote instalado ou, no repositório, da pasta do tema."""
     for base in (Path("/usr/share/plasma/wallpapers"), Path(__file__).resolve().parent.parent.parent / "tema" / "papel-vivo"):
-        p = base / PAPEL_VIVO / "contents" / "screenshot.png"
+        p = base / PAPEL_VIVO / "contents" / arquivo
         if p.exists():
             return p
     return None
@@ -383,7 +386,7 @@ def aparencia() -> dict:
     partes = destaque.split(",")
     if len(partes) >= 3 and all(p.strip().isdigit() for p in partes[:3]):
         cor = "#{:02X}{:02X}{:02X}".format(*(int(p) for p in partes[:3]))
-    papel, plugin, movimento, grupo = "", "", 0, ""
+    papel, plugin, movimento, cena, grupo = "", "", 0, 0, ""
     cfg = Path.home() / ".config/plasma-org.kde.plasma.desktop-appletsrc"
     try:
         for linha in cfg.read_text().splitlines():
@@ -395,9 +398,12 @@ def aparencia() -> dict:
                 plugin = linha.split("=", 1)[1].strip()
             elif linha.startswith("Movimento=") and PAPEL_VIVO in grupo:
                 movimento = int(linha.split("=", 1)[1]) if linha.split("=", 1)[1].strip().isdigit() else 0
+            elif linha.startswith("Cena=") and PAPEL_VIVO in grupo:
+                cena = int(linha.split("=", 1)[1]) if linha.split("=", 1)[1].strip().isdigit() else 0
     except OSError:
         pass
     return {"esquema": esquema, "escuro": any(x in esquema.lower() for x in ("dark", "noite")),
             "destaque": cor, "papel": papel, "curupira": esquemas_curupira(),
             "papel_vivo": plugin == PAPEL_VIVO, "papel_vivo_instalado": papel_vivo_instalado(),
-            "movimento": MOVIMENTOS_DO_PAPEL[movimento] if 0 <= movimento < 3 else "tomada"}
+            "movimento": MOVIMENTOS_DO_PAPEL[movimento] if 0 <= movimento < 3 else "tomada",
+            "cena": CENAS_DO_PAPEL[cena][0] if 0 <= cena < len(CENAS_DO_PAPEL) else "brasa"}

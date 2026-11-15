@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Gera as imagens do papel de parede animado "Mata Viva" (tema/papel-vivo/).
+"""Gera as imagens do papel de parede animado "Mata Viva" (tema/papel-vivo/), com duas cenas:
+"brasa" (arte/brasa-fundo.svg, com os seres da mata) e "iara" (arte/iara-fundo.svg).
 
-A arte arte/brasa-fundo.svg já descreve, em CSS, como cada parte se mexe (as mechas do cabelo de fogo,
+Cada arte já descreve, em CSS, como cada parte se mexe (as mechas do cabelo de fogo,
 as pálpebras, o halo, as faíscas e os vaga-lumes). O Plasma não roda CSS dentro de SVG, então este
 gerador desmonta a arte na ordem em que ela é pintada:
 
@@ -21,6 +22,7 @@ import copy
 import json
 import os
 import re
+import shutil
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -39,6 +41,8 @@ ESCALA = 1920 / LARGURA              # os PNG saem em 1920×1080
 MARGEM = 90                          # a arte passa da borda (o cabelo); os recortes levam essa sobra para poder balançar
 SVG = "http://www.w3.org/2000/svg"
 ANIMADAS = {"f", "breath", "lid", "halo", "sp", "ff"}
+# cada cena do papel de parede animado sai de uma arte
+CENAS = {"brasa": ARTE / "brasa-fundo.svg", "iara": ARTE / "iara-fundo.svg"}
 ET.register_namespace("", SVG)
 ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 
@@ -170,15 +174,13 @@ def segundos(texto: str | None, padrao: float) -> float:
     return float(texto.rstrip("s")) if texto else padrao
 
 
-def main():
-    app = QGuiApplication([])  # noqa: F841 - o QPainter precisa de uma aplicação
-    IMAGENS.mkdir(parents=True, exist_ok=True)
-    for antigo in IMAGENS.glob("*.png"):
-        antigo.unlink()
-    raiz = ET.parse(ARTE / "brasa-fundo.svg").getroot()
+def desmonta_arte(nome_cena: str, arquivo: Path) -> dict:
+    """Uma arte -> PNG em images/<cena>/ e a lista de camadas com as animações anotadas."""
+    pasta = IMAGENS / nome_cena
+    pasta.mkdir(parents=True, exist_ok=True)
+    raiz = ET.parse(arquivo).getroot()
     defs = raiz.find(f"{{{SVG}}}defs")
     quadros = quadros_css(raiz.find(f"{{{SVG}}}style").text)
-
     camadas, n = [], 0
     for unidade in desmonta(raiz):
         if unidade[0] == "vaga":
@@ -186,13 +188,13 @@ def main():
             continue
         n += 1
         if unidade[0] == "parada":
-            dado = grava(desenha(monta_svg(defs, unidade[1])), f"c{n:02d}.png")
+            dado = grava(desenha(monta_svg(defs, unidade[1])), f"{nome_cena}/c{n:02d}.png")
             if dado:
                 camadas.append({"tipo": "parada", **dado})
             continue
         _, cadeia, el = unidade
         classe, estilo = el.get("class"), estilo_de(el)
-        dado = grava(desenha(monta_svg(defs, [(cadeia, el)])), f"c{n:02d}-{classe}.png")
+        dado = grava(desenha(monta_svg(defs, [(cadeia, el)])), f"{nome_cena}/c{n:02d}-{classe}.png")
         if not dado:
             continue
         dado["tipo"] = classe
@@ -206,6 +208,19 @@ def main():
         dado["duracao"] = segundos(estilo.get("animation-duration"), {"breath": 2.6667, "lid": 8, "halo": 4, "sp": 4, "ff": 8}.get(classe, 4))
         dado["atraso"] = segundos(estilo.get("animation-delay"), 0)
         camadas.append(dado)
+    tipos = {}
+    for c in camadas:
+        tipos[c["tipo"]] = tipos.get(c["tipo"], 0) + 1
+    print(f"  {nome_cena}: {len(camadas)} camadas {tipos}")
+    return {"camadas": camadas, "quadros": quadros}
+
+
+def main():
+    app = QGuiApplication([])  # noqa: F841 - o QPainter precisa de uma aplicação
+    if IMAGENS.exists():
+        shutil.rmtree(IMAGENS)
+    IMAGENS.mkdir(parents=True)
+    cenas = {nome_cena: desmonta_arte(nome_cena, arquivo) for nome_cena, arquivo in CENAS.items()}
 
     seres = {}
     for svg in sorted((ARTE / "papel-vivo").glob("*.svg")):
@@ -221,18 +236,15 @@ def main():
         img.save(str(IMAGENS / f"ser-{svg.stem}.png"), "PNG")
         seres[svg.stem] = {"img": f"ser-{svg.stem}.png", "w": tam.width(), "h": tam.height()}
 
-    js = ("// Gerado por tema/gerar-papel-vivo.py a partir de arte/brasa-fundo.svg e arte/papel-vivo/. Não edite à mão.\n"
+    js = ("// Gerado por tema/gerar-papel-vivo.py a partir de arte/brasa-fundo.svg, arte/iara-fundo.svg e arte/papel-vivo/.\n"
+          "// Não edite à mão.\n"
           ".pragma library\n"
-          f"var camadas = {json.dumps(camadas, ensure_ascii=False, separators=(',', ':'))}\n"
-          f"var quadros = {json.dumps(quadros, separators=(',', ':'))}\n"
+          f"var cenas = {json.dumps(cenas, ensure_ascii=False, separators=(',', ':'))}\n"
           f"var seres = {json.dumps(seres, separators=(',', ':'))}\n")
     (PACOTE / "contents" / "ui").mkdir(parents=True, exist_ok=True)
     (PACOTE / "contents" / "ui" / "Camadas.js").write_text(js, encoding="utf-8")
-    pesos = sum(a.stat().st_size for a in IMAGENS.glob("*.png")) / 1e6
-    tipos = {}
-    for c in camadas:
-        tipos[c["tipo"]] = tipos.get(c["tipo"], 0) + 1
-    print(f"papel-vivo: {len(camadas)} camadas {tipos}, {len(seres)} seres, {pesos:.1f} MB em PNG")
+    pesos = sum(a.stat().st_size for a in IMAGENS.rglob("*.png")) / 1e6
+    print(f"papel-vivo: {len(cenas)} cenas, {len(seres)} seres, {pesos:.1f} MB em PNG")
 
 
 if __name__ == "__main__":

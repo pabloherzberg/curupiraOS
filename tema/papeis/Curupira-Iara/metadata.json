@@ -1,0 +1,13 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Curupira OS"
+            }
+        ],
+        "Id": "Curupira-Iara",
+        "License": "CC-BY-SA-4.0",
+        "Name": "Iara",
+        "Description": "A Iara na lagoa, sob a lua cheia."
+    }
+}

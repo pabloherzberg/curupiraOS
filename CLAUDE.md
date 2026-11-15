@@ -50,9 +50,10 @@ Ao trocar ou criar uma arte, edite o SVG em `arte/`, rode `bash tema/gerar-tudo.
 | Arte | Vira | Gerador |
 |---|---|---|
 | `arte/brasa-fundo.svg` (1366×768) | papel de parede Brasa (3 tamanhos) + fundo do login | `gerar-papeis.py` |
+| `arte/iara-fundo.svg` (1366×768) | papel de parede Iara (a Iara na lagoa, sob a lua) | `gerar-papeis.py` |
 | `arte/propostas/papel-de-parede-entardecer.svg` | papel de parede Entardecer | `gerar-papeis.py` |
 | `arte/01-brasa.svg` (800×1000) | tela de boot (Plymouth) e de abertura (KSplash): retrato + 5 pegadas (`<g class="step">`) | `gerar-boot.py` |
-| `arte/brasa-fundo.svg` + `arte/papel-vivo/*.svg` | papel de parede animado **Mata Viva** (`tema/papel-vivo/`): a arte desmontada em camadas + os seres | `gerar-papel-vivo.py` (escreve os PNG e o `Camadas.js`) |
+| `arte/brasa-fundo.svg`, `arte/iara-fundo.svg` + `arte/papel-vivo/*.svg` | papel de parede animado **Mata Viva** (`tema/papel-vivo/`), com duas cenas (`brasa` e `iara`): cada arte desmontada em camadas + os seres da cena brasa | `gerar-papel-vivo.py` (escreve os PNG e o `Camadas.js`) |
 | `arte/cordel-busto.svg` | ícone do menu da doca (PNG), avatar do login, avatar da Toca e do widget | `gerar-icones.py` (a Toca e o widget usam o SVG direto) |
 | `arte/cordel-figura.svg` | figura de corpo inteiro (instalada com a Toca) | — |
 | `arte/icones/apps/*.svg` (64 px) | ícones dos apps do KDE no tema de ícones "Curupira" (`tema/icones/Curupira/`) | `gerar-icones.py` (tabela `APPS`: arte → nomes de ícone) |
@@ -75,7 +76,12 @@ Cada ser em `arte/icones/seres/` tem quatro grupos **sem grupos dentro**: `ladri
 `MOVIMENTOS`, no `sistema/toca/visual.py`. As cenas de `arte/cenas/` usam os mesmos grupos (sem `ladrilho`) e a
 tabela `CENAS`.
 
-**Mata Viva (papel de parede animado):** `brasa-fundo.svg` já descreve em CSS como cada parte se mexe (classes
+**Retratos (Brasa e Iara):** o padrão é o do `brasa-fundo.svg`: rosto em planos chapados (base na sombra, plano de
+luz por cima), poucos degradês, formas fortes para sobrancelha, pálpebra e boca, fios de luz na borda, cabelo em
+mechas com degradê e fios de brilho. O Pablo achou os seres pequenos do Mata Viva (Saci, Boitatá, Mapinguari,
+Boto e a Iara da lagoa, em `arte/papel-vivo/`) primitivos perto disso: ao redesenhá-los, siga este padrão.
+
+**Mata Viva (papel de parede animado):** `brasa-fundo.svg` e `iara-fundo.svg` já descrevem em CSS como cada parte se mexe (classes
 `f` mechas do cabelo, `lid` pálpebras, `halo`, `sp` faíscas, `ff` vaga-lumes, `breath`). O Plasma não roda esse
 CSS, então o gerador recorta cada parte e o `Cena.qml` refaz o movimento. Ao editar a arte, mantenha essas
 classes e os estilos `transform-origin`/`animation-*` nelas. Os seres entram em três vagas entre as camadas:

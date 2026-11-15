@@ -22,6 +22,7 @@ ARTE = AQUI.parent / "arte"
 TAMANHOS = [(1366, 768), (1920, 1080), (2560, 1440)]
 PAPEIS = [
     ("Curupira-Brasa", "Brasa", "O Curupira de cabelo de fogo na mata à noite.", ARTE / "brasa-fundo.svg"),
+    ("Curupira-Iara", "Iara", "A Iara na lagoa, sob a lua cheia.", ARTE / "iara-fundo.svg"),
     ("Curupira-Entardecer", "Entardecer", "Entardecer na praia, nas cores da Curupira OS.",
      ARTE / "propostas" / "papel-de-parede-entardecer.svg"),
 ]

@@ -3,6 +3,8 @@
 # Na Toca do Curupira isso fica em Aparência → Papel de parede; este comando é o que ela chama.
 #
 #   curupira-papel-vivo                        aplica         (no repositório: bash tema/aplicar-papel-vivo.sh)
+#   curupira-papel-vivo --cena brasa           o Curupira e os seres da mata (padrão)
+#   curupira-papel-vivo --cena iara            a Iara na lagoa
 #   curupira-papel-vivo --movimento tomada     a mata só se mexe na tomada (padrão)
 #   curupira-papel-vivo --movimento sempre     se mexe também na bateria
 #   curupira-papel-vivo --movimento parado     os seres aparecem e somem, mas sem movimento
@@ -10,29 +12,39 @@
 
 set -euo pipefail
 ID=io.github.pabloherzberg.mataviva
-if [[ "${1:-}" == "--desfazer" ]]; then
-  plasma-apply-wallpaperimage /usr/local/share/wallpapers/Curupira-Brasa
-  echo "Papel de parede Brasa de volta."
-  exit 0
-fi
-movimento=""
-if [[ "${1:-}" == "--movimento" ]]; then
-  case "${2:-}" in
-    tomada) movimento=0 ;;
-    sempre) movimento=1 ;;
-    parado) movimento=2 ;;
-    *) echo "Use: curupira-papel-vivo --movimento tomada|sempre|parado" >&2; exit 1 ;;
+movimento="" cena=""
+while (( $# )); do
+  case "$1" in
+    --desfazer)
+      plasma-apply-wallpaperimage /usr/local/share/wallpapers/Curupira-Brasa
+      echo "Papel de parede Brasa de volta."
+      exit 0 ;;
+    --movimento)
+      case "${2:-}" in
+        tomada) movimento=0 ;;
+        sempre) movimento=1 ;;
+        parado) movimento=2 ;;
+        *) echo "Use: curupira-papel-vivo --movimento tomada|sempre|parado" >&2; exit 1 ;;
+      esac
+      shift 2 ;;
+    --cena)
+      case "${2:-}" in
+        brasa) cena=0 ;;
+        iara) cena=1 ;;
+        *) echo "Use: curupira-papel-vivo --cena brasa|iara" >&2; exit 1 ;;
+      esac
+      shift 2 ;;
+    *) echo "Opção desconhecida: $1" >&2; exit 1 ;;
   esac
-fi
+done
 [[ -d "/usr/share/plasma/wallpapers/$ID" ]] \
   || { echo "O Mata Viva não está instalado. Rode: sudo bash sistema/instalar.sh" >&2; exit 1; }
 qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
   var areas = desktops();
   for (var i = 0; i < areas.length; i++) {
     areas[i].wallpaperPlugin = '$ID';
-    if ('$movimento' !== '') {
-      areas[i].currentConfigGroup = ['Wallpaper', '$ID', 'General'];
-      areas[i].writeConfig('Movimento', '$movimento');
-    }
+    areas[i].currentConfigGroup = ['Wallpaper', '$ID', 'General'];
+    if ('$movimento' !== '') areas[i].writeConfig('Movimento', '$movimento');
+    if ('$cena' !== '') areas[i].writeConfig('Cena', '$cena');
   }"
 echo "Mata Viva aplicado. Para voltar ao Brasa parado: curupira-papel-vivo --desfazer"

@@ -25,6 +25,7 @@ def main() -> int:
     args.add_argument("--estado", default="{}", help="JSON com os campos de 'curupira json'")
     args.add_argument("--todos", action="store_true", help="acorda todos os seres")
     args.add_argument("--parado", action="store_true", help="sem movimento")
+    args.add_argument("--arte", default="brasa", choices=["brasa", "iara"], help="a cena")
     args.add_argument("--hora", type=float, help="hora do dia (0 a 24) para a lua da Cuca")
     args.add_argument("--captura", metavar="PNG")
     args.add_argument("--quadros", type=int, default=1)
@@ -53,6 +54,7 @@ def main() -> int:
             print(erro.toString(), file=sys.stderr)
         return 1
     raiz = vista.rootObject()
+    raiz.setProperty("arte", op.arte)
     raiz.setProperty("estado", estado)
     raiz.setProperty("mover", not op.parado)
     if op.hora is not None:

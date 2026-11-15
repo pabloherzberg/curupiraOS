@@ -12,6 +12,9 @@
 //   Boto        salta na lagoa quando a rede de laboratório existe
 //   Caipora     com câmera e microfone cortados, a névoa cobre a mata e os olhos dela vigiam
 //   Cuca        a lua atravessa o céu marcando as horas
+//
+// Na cena "iara" não há outros seres: o cabelo dela ondula com o vigor, os grãos de luz sobem da água,
+// os anéis na água são o Wi-Fi, os vaga-lumes são a bateria e ela fecha os olhos no Sereno.
 
 import QtQuick
 import "Camadas.js" as Camadas
@@ -20,6 +23,10 @@ Item {
     id: cena
 
     property var estado: ({})       // o que "curupira json" devolve
+    property string arte: "brasa"   // a cena: "brasa" (o Curupira e os seres da mata) ou "iara" (a Iara na lagoa)
+    readonly property var camadas: Camadas.cenas[arte].camadas
+    readonly property var quadros: Camadas.cenas[arte].quadros
+    readonly property bool naMata: arte === "brasa"
     property bool mover: true       // falso: tudo parado (bateria, ou movimento desligado)
     property real hora: new Date().getHours() + new Date().getMinutes() / 60
 
@@ -42,25 +49,25 @@ Item {
     readonly property real vigorAlvo: Math.min(1.9, ({ pororoca: 1.2, correnteza: 0.85, remanso: 0.55, sereno: 0.3 }[perfil] || 0.8) + carga * 0.006)
     property real vigor: vigorAlvo
     Behavior on vigor { NumberAnimation { duration: 2500; easing.type: Easing.InOutSine } }
-    readonly property int faiscas: Math.round(Camadas.camadas.filter(c => c.tipo === "sp").length * Math.min(1, vigor / 1.3))
-    readonly property int vagaLumes: Math.max(1, Math.ceil(Camadas.camadas.filter(c => c.tipo === "ff").length * bateria / 100))
+    readonly property int faiscas: Math.round(cena.camadas.filter(c => c.tipo === "sp").length * Math.min(1, vigor / 1.3))
+    readonly property int vagaLumes: Math.max(1, Math.ceil(cena.camadas.filter(c => c.tipo === "ff").length * bateria / 100))
     readonly property real forcaDoHalo: 0.45 + 0.55 * Math.min(1, bateria / 60)     // bateria baixa: a brasa esmorece
 
     // ---------------------------------------------------------------- ajudas
     function vaga(nome) {
-        for (let i = 0; i < Camadas.camadas.length; i++)
-            if (Camadas.camadas[i].tipo === "vaga" && Camadas.camadas[i].nome === nome) return i + 0.5
+        for (let i = 0; i < cena.camadas.length; i++)
+            if (cena.camadas[i].tipo === "vaga" && cena.camadas[i].nome === nome) return i + 0.5
         return 0
     }
     function ordem(indice, tipo) {     // este é o enésimo recorte do seu tipo
         let n = 0
-        for (let i = 0; i < indice; i++) if (Camadas.camadas[i].tipo === tipo) n++
+        for (let i = 0; i < indice; i++) if (cena.camadas[i].tipo === tipo) n++
         return n
     }
     function suave(u) { return u * u * (3 - 2 * u) }
     // quadros de animação tirados do CSS da arte: [fração, giro, escala x, escala y, opacidade]
     function quadro(nome, t) {
-        const q = Camadas.quadros[nome]
+        const q = cena.quadros[nome]
         for (let i = 1; i < q.length; i++) {
             if (t <= q[i][0]) {
                 const a = q[i - 1], b = q[i], u = suave((t - a[0]) / (b[0] - a[0]))
@@ -91,7 +98,7 @@ Item {
 
         // ---- a arte do Brasa, camada por camada, na ordem de pintura
         Repeater {
-            model: Camadas.camadas
+            model: cena.camadas
             Image {
                 id: peca
                 required property var modelData
@@ -122,7 +129,9 @@ Item {
                     switch (tipo) {
                     case "f": return 1 - (1 - q[3]) * Math.min(1, cena.vigor)
                     case "breath": return q[3]
-                    case "halo": return modelData.opacidade * cena.forcaDoHalo * cena.entre(cena.pulsoDoHalo, t)[1]
+                    // no Brasa o halo é a brasa (bateria); na Iara são os anéis na água (o sinal do Wi-Fi)
+                    case "halo": return modelData.opacidade * cena.entre(cena.pulsoDoHalo, t)[1]
+                                        * (cena.naMata ? cena.forcaDoHalo : cena.iara ? 1 : 0.22)
                     case "sp": return t < 0.1 ? t * 10 : t < 0.7 ? 1 - (t - 0.1) / 3 : 0.8 * (1 - (t - 0.7) / 0.3)
                     case "ff": return cena.mover ? voo[1] : 0.6
                     case "lid": return palpebra > 0 ? 1 : 0
@@ -170,12 +179,14 @@ Item {
             width: Camadas.seres.lua.w; height: Camadas.seres.lua.h
             x: 20 + u * 520 - width / 2
             y: 190 - Math.sin(Math.PI * u) * 130 - height / 2
+            visible: cena.naMata
             opacity: 0.35 + 0.65 * Math.sin(Math.PI * u)
         }
 
         // ---- Mapinguari: o vulto está sempre lá; o olho abre quando o HD acorda
         Item {
             id: mapinguari
+            visible: cena.naMata
             z: cena.vaga("longe")
             x: 455; y: 200
             width: Camadas.seres.mapinguari.w; height: Camadas.seres.mapinguari.h
@@ -216,7 +227,7 @@ Item {
             x: 30 + passeio * 46
             y: 372 + Math.sin(passeio * Math.PI) * 10
             opacity: cena.boitata ? 1 : 0
-            visible: opacity > 0.01
+            visible: cena.naMata && opacity > 0.01
             Behavior on opacity { NumberAnimation { duration: 1800 } }
             Image {
                 anchors.fill: parent
@@ -241,6 +252,7 @@ Item {
         // ---- Iara: a lagoa, as ondas do Wi-Fi, os fogos azuis do Bluetooth e o salto do Boto
         Item {
             id: lagoa
+            visible: cena.naMata
             z: cena.vaga("perto")
             x: 236; y: 632
             width: Camadas.seres.lagoa.w; height: Camadas.seres.lagoa.h
@@ -327,7 +339,7 @@ Item {
             x: 36; y: 392
             width: Camadas.seres.redemoinho.w; height: Camadas.seres.redemoinho.h
             opacity: cena.saci ? 1 : 0
-            visible: opacity > 0.01
+            visible: cena.naMata && opacity > 0.01
             Behavior on opacity { NumberAnimation { duration: 1400 } }
             NumberAnimation on giro {
                 running: cena.mover && cena.saci
@@ -380,7 +392,7 @@ Item {
             width: Camadas.seres.nevoa.w; height: Camadas.seres.nevoa.h
             x: -120 + vento * 60; y: 400
             opacity: cena.caipora
-            visible: opacity > 0.01
+            visible: cena.naMata && opacity > 0.01
             Behavior on opacity { NumberAnimation { duration: 2600 } }
             SequentialAnimation on vento {
                 running: cena.mover && cena.caipora > 0
@@ -396,6 +408,7 @@ Item {
             source: "../images/" + Camadas.seres["olhos-caipora"].img
             width: Camadas.seres["olhos-caipora"].w * 0.62; height: Camadas.seres["olhos-caipora"].h * 0.62
             x: 150; y: 628
+            visible: cena.naMata
             opacity: cena.caipora >= 1 ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 1800 } }
             transform: Scale { origin.y: olhosDaCaipora.height / 2; yScale: olhosDaCaipora.pisca }
@@ -413,7 +426,7 @@ Item {
             z: 1001
             anchors.fill: parent
             color: ({ pororoca: "#FF7A45", remanso: "#2468B8", sereno: "#0B0717" }[cena.perfil] || "#000000")
-            opacity: ({ pororoca: 0.07, remanso: 0.09, sereno: 0.3 }[cena.perfil] || 0)
+            opacity: cena.naMata || cena.sereno ? ({ pororoca: 0.07, remanso: 0.09, sereno: 0.3 }[cena.perfil] || 0) : 0
             Behavior on opacity { NumberAnimation { duration: 2500 } }
             Behavior on color { ColorAnimation { duration: 2500 } }
         }

@@ -11,6 +11,7 @@ WallpaperItem {
     property var estado: ({})
     // 0: só na tomada; 1: sempre; 2: nunca
     readonly property int movimento: raiz.configuration.Movimento || 0
+    readonly property string arte: ["brasa", "iara"][raiz.configuration.Cena || 0] || "brasa"
     // animação contínua mantém a placa de vídeo acordada: na bateria, e nos perfis de economia, a mata fica parada
     readonly property bool economia: estado.perfil === "remanso" || estado.perfil === "sereno"
     readonly property bool mover: !economia && (movimento === 1 || (movimento === 0 && estado.fonte === "tomada"))
@@ -43,6 +44,7 @@ WallpaperItem {
         id: cena
         anchors.fill: parent
         estado: raiz.estado
+        arte: raiz.arte
         mover: raiz.mover
     }
 }
