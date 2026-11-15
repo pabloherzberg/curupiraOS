@@ -110,6 +110,13 @@ for tam in 32 48 64 128 256; do
   install -Dm644 "$TEMA/icones/${tam}x${tam}/curupira-menu.png" \
                  "$RAIZ/usr/local/share/icons/hicolor/${tam}x${tam}/apps/curupira-menu.png"
 done
+# Papel de parede animado "Mata Viva" (aparece em Configurar área de trabalho → Tipo de papel de parede).
+PAPEL_VIVO="$RAIZ/usr/share/plasma/wallpapers/io.github.pabloherzberg.mataviva"
+rm -rf "$PAPEL_VIVO"
+install -dm755 "$RAIZ/usr/share/plasma/wallpapers"
+cp -r "$TEMA/papel-vivo/io.github.pabloherzberg.mataviva" "$PAPEL_VIVO"
+chmod -R u=rwX,go=rX "$PAPEL_VIVO"
+install -Dm755 "$TEMA/aplicar-papel-vivo.sh" "$RAIZ/usr/local/bin/curupira-papel-vivo"
 # Tema de ícones "Curupira": apps do KDE, bandeja e menus; o resto vem do Breeze.
 # Para voltar: Configurações → Cores e temas → Ícones → Breeze.
 ICONES_TEMA="$RAIZ/usr/local/share/icons/Curupira"

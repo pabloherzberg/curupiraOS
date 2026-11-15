@@ -117,6 +117,8 @@ roda brilho 1 >/dev/null
 confere "brilho nunca fica abaixo de 5%" 75 "$(cat "$T/sys/class/backlight/intel_backlight/brightness")"
 confere "brilho com texto falha" 1 "$(roda brilho muito >/dev/null 2>&1; echo $?)"
 confere "json tem o usuário" 1 "$(roda json | grep -c '"usuario":"')"
+confere "json tem a carga do processador (papel de parede)" 0 "$(campo '["carga"]')"
+confere "json diz se o laboratório do Boto existe" false "$(campo '["lab"]')"
 tomada 1; roda auto ligar >/dev/null; tomada 0; bateria 60 Discharging; roda evento tomada >/dev/null
 confere "json guarda o último aviso automático" "Perfil Remanso" "$(campo '["ultimo_evento"]["titulo"]')"
 

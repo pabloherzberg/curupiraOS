@@ -52,6 +52,7 @@ Ao trocar ou criar uma arte, edite o SVG em `arte/`, rode `bash tema/gerar-tudo.
 | `arte/brasa-fundo.svg` (1366×768) | papel de parede Brasa (3 tamanhos) + fundo do login | `gerar-papeis.py` |
 | `arte/propostas/papel-de-parede-entardecer.svg` | papel de parede Entardecer | `gerar-papeis.py` |
 | `arte/01-brasa.svg` (800×1000) | tela de boot (Plymouth) e de abertura (KSplash): retrato + 5 pegadas (`<g class="step">`) | `gerar-boot.py` |
+| `arte/brasa-fundo.svg` + `arte/papel-vivo/*.svg` | papel de parede animado **Mata Viva** (`tema/papel-vivo/`): a arte desmontada em camadas + os seres | `gerar-papel-vivo.py` (escreve os PNG e o `Camadas.js`) |
 | `arte/cordel-busto.svg` | ícone do menu da doca (PNG), avatar do login, avatar da Toca e do widget | `gerar-icones.py` (a Toca e o widget usam o SVG direto) |
 | `arte/cordel-figura.svg` | figura de corpo inteiro (instalada com a Toca) | — |
 | `arte/icones/apps/*.svg` (64 px) | ícones dos apps do KDE no tema de ícones "Curupira" (`tema/icones/Curupira/`) | `gerar-icones.py` (tabela `APPS`: arte → nomes de ícone) |
@@ -74,6 +75,13 @@ Cada ser em `arte/icones/seres/` tem quatro grupos **sem grupos dentro**: `ladri
 `MOVIMENTOS`, no `sistema/toca/visual.py`. As cenas de `arte/cenas/` usam os mesmos grupos (sem `ladrilho`) e a
 tabela `CENAS`.
 
+**Mata Viva (papel de parede animado):** `brasa-fundo.svg` já descreve em CSS como cada parte se mexe (classes
+`f` mechas do cabelo, `lid` pálpebras, `halo`, `sp` faíscas, `ff` vaga-lumes, `breath`). O Plasma não roda esse
+CSS, então o gerador recorta cada parte e o `Cena.qml` refaz o movimento. Ao editar a arte, mantenha essas
+classes e os estilos `transform-origin`/`animation-*` nelas. Os seres entram em três vagas entre as camadas:
+`ceu`, `longe` e `perto`. O que cada ser mostra está no cabeçalho do `Cena.qml`. `main.qml` só lê o
+`curupira json`; na bateria e no Remanso/Sereno a mata fica parada (animação contínua gasta energia).
+
 **As três artes da Toca**, cada uma com um papel (não misture os papéis ao criar arte nova):
 a **paisagem** no pé da barra lateral mostra o perfil de energia (`Paisagem`, desenhada em código, cores em
 `PAISAGENS`); a **faixa** cor da noite abre a seção (`Faixa`); o **ser no canto** de baixo é quem está acordado
@@ -85,6 +93,8 @@ agora e some quando ninguém está ou quando os cartões chegam até ali (`SerNo
 - `python3 sistema/toca/toca.py --captura-todas /tmp/telas/`: um PNG de cada seção da Toca, sem abrir janela.
 - Ícone novo aparece? `kiconfinder6 system-file-manager` deve apontar para `/usr/local/share/icons/Curupira/`.
 - Widget avulso: `plasmawindowed io.github.pabloherzberg.doca` (ou `.curupira`).
+- Papel de parede animado fora do Plasma: `python3 ferramentas/ver-papel-vivo.py --todos` (janela) ou com
+  `--captura tela.png` (sem tela); `--estado '{"turbo": true}'` usa os campos do `curupira json`.
 - Login sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
 - Abertura: `ksplashqml --test --window <pasta do tema global com splash/images preenchida>`.
 - Captura de tela: `spectacle -b -n -a -o arquivo.png` (janela ativa) ou `-f` (tela toda).

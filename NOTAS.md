@@ -101,6 +101,16 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   Privacidade: Caipora).
   Feito numa sessão na nuvem: desenhos conferidos com o QtSvg e a Toca por captura; **falta ver no Plasma de
   verdade** a doca, o cartão rápido, a bandeja e os menus (os nomes de ícone vieram do Breeze 5.115).
+- Papel de parede animado "Mata Viva" (15/11/2026, `tema/papel-vivo/`, plugin de papel de parede do Plasma 6):
+  um só, com todos os seres. A arte do Brasa é desmontada em 47 camadas e o cabelo de fogo, as pálpebras, o halo,
+  as faíscas e os vaga-lumes se mexem como a própria arte descreve. Reage ao `curupira json` (que ganhou `carga`
+  e `lab`): perfil e uso do processador dão o vigor do fogo; bateria = vaga-lumes acesos e força do halo; Sereno
+  fecha os olhos do Curupira; Boitatá (cobra de fogo atrás dos troncos) = NVIDIA acordada; Mapinguari abre o olho
+  = HD; Saci no redemoinho = turbo; Iara sobe na lagoa = Wi-Fi, fogos azuis = Bluetooth; Boto salta = rede de
+  laboratório; névoa e olhos da Caipora = câmera e microfone cortados; a lua da Cuca marca as horas.
+  Só se mexe na tomada (ajustável) e nunca no Remanso/Sereno. Aplicar: `curupira-papel-vivo` (`--desfazer`).
+  Conferido fora do Plasma com `ferramentas/ver-papel-vivo.py`; **falta ver como papel de parede de verdade**
+  (`main.qml`, a tela de ajustes e o consumo de energia não foram testados).
 
 ## A fazer
 1. Cuca: terminar o teste do curupira-voltar; depois, boot direto num snapshot (exige um subvolume

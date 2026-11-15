@@ -464,7 +464,14 @@ define_brilho() {
   apaga_estado brilho-antes; apaga_estado brilho-definido   # a pessoa escolheu: o Sereno não devolve depois
 }
 
-# Estado para a Toca do Curupira e o widget do painel (uma linha de JSON).
+carga_pct() {   # uso do processador de 0 a 100, pela carga média do último minuto
+  [[ -n "$TESTE" ]] && { echo 0; return 0; }
+  awk -v n="$(nproc 2>/dev/null || echo 1)" '{ c = $1 * 100 / n; if (c > 100) c = 100; printf "%d\n", c }' /proc/loadavg 2>/dev/null || echo 0
+}
+# a rede de laboratório do Boto (Podman sem root guarda cada rede num arquivo)
+lab_existe() { [[ -e "${TESTE:-}${HOME:-/nonexistent}/.local/share/containers/storage/networks/curupira-lab.json" ]]; }
+
+# Estado para a Toca do Curupira, o widget do painel e o papel de parede Mata Viva (uma linha de JSON).
 json() {
   local p d st sep="" q
   p="$(le_estado perfil)"; existe_perfil "${p:-x}" || p=""
@@ -483,6 +490,7 @@ json() {
     "$(texto_json "$(rede_wifi)")" "$(bool eval '! rfkill_bloqueado bluetooth')" "$(bool tem_radio bluetooth)"
   printf '"turbo":%s,"hd_acordado":%s,"boitata_dormindo":%s,"volume":%s,"microfone_mudo":%s,"brilho":%s,' \
     "$(bool turbo_ligado)" "$(bool hd_acordado)" "$(bool boitata_dormindo)" "${vol:-null}" "${mic:-false}" "$(brilho_pct)"
+  printf '"carga":%s,"lab":%s,' "$(carga_pct)" "$(bool lab_existe)"
   ev="$(le_estado ultimo-evento)"
   if [[ -n "$ev" ]]; then
     IFS='|' read -r quando titulo msg <<<"$ev"
