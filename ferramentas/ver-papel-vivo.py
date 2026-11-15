@@ -28,6 +28,7 @@ def main() -> int:
     args.add_argument("--hora", type=float, help="hora do dia (0 a 24) para a lua da Cuca")
     args.add_argument("--captura", metavar="PNG")
     args.add_argument("--quadros", type=int, default=1)
+    args.add_argument("--espera", type=float, default=0.4, help="segundos antes da primeira captura (os seres surgem aos poucos)")
     args.add_argument("--tamanho", default="1366x768")
     op = args.parse_args()
     if op.captura:
@@ -71,8 +72,7 @@ def main() -> int:
 
     relogio = QTimer()
     relogio.timeout.connect(captura)
-    relogio.start(400)
-    QTimer.singleShot(3000 if op.quadros == 1 else 3000, lambda: None)
+    QTimer.singleShot(int(op.espera * 1000), lambda: (captura(), relogio.start(400)))
     return app.exec()
 
 

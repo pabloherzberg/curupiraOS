@@ -108,7 +108,9 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   fecha os olhos do Curupira; Boitatá (cobra de fogo atrás dos troncos) = NVIDIA acordada; Mapinguari abre o olho
   = HD; Saci no redemoinho = turbo; Iara sobe na lagoa = Wi-Fi, fogos azuis = Bluetooth; Boto salta = rede de
   laboratório; névoa e olhos da Caipora = câmera e microfone cortados; a lua da Cuca marca as horas.
-  Só se mexe na tomada (ajustável) e nunca no Remanso/Sereno. Aplicar: `curupira-papel-vivo` (`--desfazer`).
+  Só se mexe na tomada (ajustável) e nunca no Remanso/Sereno. Escolhe-se na Toca, em Aparência → Papel de
+  parede (miniatura "Mata Viva" com o selo "animado"; com ele em uso aparece o ajuste "A mata se mexe": só na
+  tomada, sempre ou parada). A Toca chama o `curupira-papel-vivo` (`--movimento …`, `--desfazer`).
   Conferido fora do Plasma com `ferramentas/ver-papel-vivo.py`; **falta ver como papel de parede de verdade**
   (`main.qml`, a tela de ajustes e o consumo de energia não foram testados).
 

@@ -81,6 +81,8 @@ CSS, então o gerador recorta cada parte e o `Cena.qml` refaz o movimento. Ao ed
 classes e os estilos `transform-origin`/`animation-*` nelas. Os seres entram em três vagas entre as camadas:
 `ceu`, `longe` e `perto`. O que cada ser mostra está no cabeçalho do `Cena.qml`. `main.qml` só lê o
 `curupira json`; na bateria e no Remanso/Sereno a mata fica parada (animação contínua gasta energia).
+Quem usa escolhe o papel de parede na Toca (Aparência), que chama `curupira-papel-vivo`; a miniatura é o
+`contents/screenshot.png`, tirado pelo `gerar-tudo.sh` com o `ver-papel-vivo.py`.
 
 **As três artes da Toca**, cada uma com um papel (não misture os papéis ao criar arte nova):
 a **paisagem** no pé da barra lateral mostra o perfil de energia (`Paisagem`, desenhada em código, cores em

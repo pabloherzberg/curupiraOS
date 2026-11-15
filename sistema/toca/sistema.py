@@ -337,6 +337,22 @@ PAPEIS = [
     ("papel-de-parede-entardecer.svg", "Entardecer", "Curupira-Entardecer"),
 ]
 DIR_PAPEIS = Path("/usr/local/share/wallpapers")
+# o papel de parede animado (plugin do Plasma, tema/papel-vivo); a Toca aplica com o curupira-papel-vivo
+PAPEL_VIVO = "io.github.pabloherzberg.mataviva"
+MOVIMENTOS_DO_PAPEL = ["tomada", "sempre", "parado"]    # na ordem do ajuste "Movimento" do plugin (0, 1, 2)
+
+
+def previa_papel_vivo() -> Path | None:
+    """A miniatura do Mata Viva: do pacote instalado ou, no repositório, da pasta do tema."""
+    for base in (Path("/usr/share/plasma/wallpapers"), Path(__file__).resolve().parent.parent.parent / "tema" / "papel-vivo"):
+        p = base / PAPEL_VIVO / "contents" / "screenshot.png"
+        if p.exists():
+            return p
+    return None
+
+
+def papel_vivo_instalado() -> bool:
+    return (Path("/usr/share/plasma/wallpapers") / PAPEL_VIVO / "metadata.json").exists()
 ESQUEMAS = [("Curupira", "Curupira"), ("CurupiraNoite", "Curupira Noite")]
 
 
@@ -367,14 +383,21 @@ def aparencia() -> dict:
     partes = destaque.split(",")
     if len(partes) >= 3 and all(p.strip().isdigit() for p in partes[:3]):
         cor = "#{:02X}{:02X}{:02X}".format(*(int(p) for p in partes[:3]))
-    papel = ""
+    papel, plugin, movimento, grupo = "", "", 0, ""
     cfg = Path.home() / ".config/plasma-org.kde.plasma.desktop-appletsrc"
     try:
         for linha in cfg.read_text().splitlines():
-            if linha.startswith("Image="):
+            if linha.startswith("["):
+                grupo = linha
+            elif linha.startswith("Image=") and not papel:
                 papel = linha.split("=", 1)[1].removeprefix("file://")
-                break
+            elif linha.startswith("wallpaperplugin=") and not plugin:
+                plugin = linha.split("=", 1)[1].strip()
+            elif linha.startswith("Movimento=") and PAPEL_VIVO in grupo:
+                movimento = int(linha.split("=", 1)[1]) if linha.split("=", 1)[1].strip().isdigit() else 0
     except OSError:
         pass
     return {"esquema": esquema, "escuro": any(x in esquema.lower() for x in ("dark", "noite")),
-            "destaque": cor, "papel": papel, "curupira": esquemas_curupira()}
+            "destaque": cor, "papel": papel, "curupira": esquemas_curupira(),
+            "papel_vivo": plugin == PAPEL_VIVO, "papel_vivo_instalado": papel_vivo_instalado(),
+            "movimento": MOVIMENTOS_DO_PAPEL[movimento] if 0 <= movimento < 3 else "tomada"}
