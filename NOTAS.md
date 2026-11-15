@@ -35,11 +35,17 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   com dados reais (`curupira json`: watts, Wh, perfil). Wi-Fi via nmcli, Bluetooth via rfkill+bluetoothctl,
   HD pelo automount de /data. Boitatá, Caipora e Boto aparecem desabilitados ("em breve").
   `--captura arquivo.png` desenha a janela sem tela (bom para conferir mudanças).
+- Toca v0.2: código dividido em `visual.py` (peças), `sistema.py` (leitura do sistema, sem Qt) e `secoes/`.
+  Seções novas: Seres da mata, Rede e Boto (rede Podman interna "curupira-lab"), Privacidade (câmera via
+  `curupira camera cortar|liberar`, que bloqueia o uvcvideo no modprobe; MAC via `curupira mac aleatorio|fixo`,
+  que usa cloned-mac-address=stable no NetworkManager; microfone via wpctl), Cuca (snapper liberado para o grupo
+  wheel com ALLOW_GROUPS) e Aparência (plasma-apply-colorscheme e plasma-apply-wallpaperimage).
+  `--captura-todas pasta/` gera um PNG de cada seção.
 - Widget do painel (`sistema/plasmoide/`, QML do Plasma 6): ícone na cor do perfil, lista de perfis, botão para a Toca.
 - Fontes Baloo 2 e Nunito (OFL) vão junto em `sistema/toca/fontes/`.
 
 ## A fazer
-1. Toca: seções Seres da mata, Rede e Boto, Privacidade (Caipora), Cuca (snapshots) e Aparência.
+1. Toca: voltar no tempo pela Cuca (hoje só mostra o comando undochange) e boot direto num snapshot.
 2. Tema do Plasma, do SDDM, do Plymouth e do Konsole com as artes acima.
 3. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
    `/etc/udev/rules.d/00-curupira-boitata.rules` e `/etc/modprobe.d/curupira-boitata.conf` a religa).

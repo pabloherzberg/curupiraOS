@@ -1,0 +1,345 @@
+"""Leitura do sistema para a Toca do Curupira.
+
+Tudo aqui roda fora da interface (numa thread) e não depende do Qt. Cada função
+devolve dados simples; um valor None significa "não deu para saber".
+"""
+
+from __future__ import annotations
+
+import grp
+import json
+import os
+import shutil
+import subprocess
+import time
+from datetime import datetime
+from pathlib import Path
+
+AQUI = Path(__file__).resolve().parent
+REDE_LAB = "curupira-lab"
+
+
+def roda(*cmd: str, tempo: float = 5) -> subprocess.CompletedProcess | None:
+    if not shutil.which(cmd[0]) and not Path(cmd[0]).exists():
+        return None
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=tempo)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
+def saida(*cmd: str, tempo: float = 5) -> str | None:
+    r = roda(*cmd, tempo=tempo)
+    return r.stdout if r and r.returncode == 0 else None
+
+
+def lanca(*cmd: str) -> bool:
+    """Abre um programa sem esperar por ele."""
+    if not shutil.which(cmd[0]):
+        return False
+    subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True)
+    return True
+
+
+def comando_curupira() -> str:
+    if os.environ.get("CURUPIRA_BIN"):
+        return os.environ["CURUPIRA_BIN"]
+    local = AQUI.parent / "bin" / "curupira"
+    if os.environ.get("CURUPIRA_TESTE") and local.exists():
+        return str(local)
+    return shutil.which("curupira") or "/usr/local/bin/curupira"
+
+
+def ultima_linha(r: subprocess.CompletedProcess | None, padrao: str = "Falhou.") -> str:
+    if r is None:
+        return "Não consegui rodar o comando."
+    texto = (r.stderr or r.stdout or "").strip()
+    return texto.splitlines()[-1] if texto else padrao
+
+
+# ------------------------------------------------------------------ energia e seres da seção Energia
+def energia() -> dict:
+    """Estado do comando curupira (perfil, bateria, watts, Caipora)."""
+    texto = saida(comando_curupira(), "json")
+    if texto is None:
+        return {"_erro": "O comando curupira não respondeu. Ele está instalado?"}
+    try:
+        return json.loads(texto)
+    except json.JSONDecodeError:
+        return {"_erro": "Não entendi a resposta do comando curupira."}
+
+
+def turbo() -> bool | None:
+    try:
+        return Path("/sys/devices/system/cpu/intel_pstate/no_turbo").read_text().strip() == "0"
+    except OSError:
+        return None
+
+
+def hd_acordado() -> bool | None:
+    texto = saida("findmnt", "-no", "FSTYPE", "/data")
+    if texto is None:
+        return None
+    return any(t != "autofs" for t in texto.split())
+
+
+def wifi() -> tuple[bool | None, str]:
+    texto = saida("nmcli", "-t", "-f", "WIFI", "radio")
+    if texto is None:
+        return None, ""
+    ligado = texto.strip() in ("enabled", "habilitado")
+    rede = ""
+    ativas = saida("nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active") or ""
+    for linha in ativas.splitlines():
+        nome, _, tipo = linha.rpartition(":")
+        if tipo == "802-11-wireless" and nome:
+            rede = nome.replace("\\:", ":")
+            break
+    return ligado, rede
+
+
+def bluetooth() -> bool | None:
+    texto = saida("bluetoothctl", "show")
+    if not texto or "Powered:" not in texto:
+        return None
+    return "Powered: yes" in texto
+
+
+def boitata_dormindo() -> bool:
+    return Path("/etc/udev/rules.d/00-curupira-boitata.rules").exists()
+
+
+def microfone_mudo() -> bool | None:
+    texto = saida("wpctl", "get-volume", "@DEFAULT_AUDIO_SOURCE@")
+    if texto is None:
+        return None
+    return "MUTED" in texto
+
+
+def lab() -> dict | None:
+    """Rede isolada do Boto (Podman). None se não existe."""
+    texto = saida("podman", "network", "inspect", REDE_LAB, tempo=10)
+    if not texto:
+        return None
+    try:
+        dados = json.loads(texto)
+        info = dados[0] if isinstance(dados, list) and dados else {}
+    except json.JSONDecodeError:
+        info = {}
+    subredes = [s.get("subnet", "") for s in info.get("subnets", []) if isinstance(s, dict)]
+    return {"subrede": ", ".join(x for x in subredes if x), "interna": bool(info.get("internal"))}
+
+
+def resumo_energia() -> dict:
+    """Tudo que a seção Energia mostra."""
+    ligado, rede = wifi()
+    return {
+        "energia": energia(),
+        "turbo": turbo(),
+        "hd": hd_acordado(),
+        "wifi": ligado,
+        "wifi_rede": rede,
+        "bluetooth": bluetooth(),
+        "boitata_dormindo": boitata_dormindo(),
+        "microfone_mudo": microfone_mudo(),
+        "lab": lab(),
+    }
+
+
+# ------------------------------------------------------------------ Caipora
+def apps_microfone() -> list[str]:
+    texto = saida("pactl", "-f", "json", "list", "source-outputs")
+    if not texto:
+        return []
+    try:
+        saidas = json.loads(texto)
+    except json.JSONDecodeError:
+        return []
+    nomes = []
+    for s in saidas:
+        props = s.get("properties", {})
+        nome = props.get("application.name") or props.get("application.process.binary") or "programa sem nome"
+        if nome not in nomes:
+            nomes.append(nome)
+    return nomes
+
+
+def apps_camera() -> list[str]:
+    """Programas (do próprio usuário) com a câmera aberta, olhando os descritores em /proc."""
+    nomes: list[str] = []
+    for pid in os.listdir("/proc"):
+        if not pid.isdigit():
+            continue
+        fd_dir = f"/proc/{pid}/fd"
+        try:
+            for fd in os.listdir(fd_dir):
+                try:
+                    alvo = os.readlink(f"{fd_dir}/{fd}")
+                except OSError:
+                    continue
+                if alvo.startswith("/dev/video"):
+                    nome = Path(f"/proc/{pid}/comm").read_text().strip()
+                    if nome not in nomes:
+                        nomes.append(nome)
+                    break
+        except OSError:
+            continue
+    return nomes
+
+
+def camera_presente() -> bool:
+    return any(Path("/sys/class/video4linux").glob("video*")) or Path("/sys/bus/usb/drivers/uvcvideo").exists()
+
+
+def privacidade() -> dict:
+    en = energia()
+    return {
+        "camera_cortada": en.get("camera_cortada"),
+        "mac_aleatorio": en.get("mac_aleatorio"),
+        "camera_presente": camera_presente(),
+        "microfone_mudo": microfone_mudo(),
+        "apps_microfone": apps_microfone(),
+        "apps_camera": apps_camera(),
+        "_erro": en.get("_erro", ""),
+    }
+
+
+# ------------------------------------------------------------------ rede
+def rede() -> dict:
+    d: dict = {}
+    ligado, nome = wifi()
+    d["wifi"], d["wifi_rede"], d["bluetooth"] = ligado, nome, bluetooth()
+
+    dispositivos = saida("nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device") or ""
+    conectado = None
+    for linha in dispositivos.splitlines():
+        partes = linha.split(":")
+        if len(partes) >= 4 and partes[1] in ("wifi", "ethernet") and partes[2].startswith(("connected", "conectado")):
+            conectado = {"dispositivo": partes[0], "tipo": partes[1], "conexao": ":".join(partes[3:])}
+            break
+    d["conectado"] = conectado
+
+    if conectado:
+        dev = conectado["dispositivo"]
+        if conectado["tipo"] == "wifi":
+            lista = saida("nmcli", "-t", "-f", "IN-USE,SIGNAL,SSID,SECURITY", "dev", "wifi", "list", "--rescan", "no") or ""
+            for linha in lista.splitlines():
+                if linha.startswith("*"):
+                    _, sinal, *resto = linha.split(":")
+                    d["sinal"] = int(sinal) if sinal.isdigit() else None
+                    d["seguranca"] = resto[-1] if resto else ""
+                    break
+        enderecos = saida("ip", "-j", "addr", "show", "dev", dev)
+        try:
+            info = json.loads(enderecos)[0] if enderecos else {}
+        except (json.JSONDecodeError, IndexError):
+            info = {}
+        d["ipv4"] = [f"{a['local']}/{a['prefixlen']}" for a in info.get("addr_info", []) if a.get("family") == "inet"]
+        d["ipv6"] = [a["local"] for a in info.get("addr_info", [])
+                     if a.get("family") == "inet6" and a.get("scope") == "global"]
+        d["mac"] = info.get("address", "")
+        rotas = saida("ip", "-j", "route", "show", "default", "dev", dev)
+        try:
+            d["gateway"] = json.loads(rotas)[0].get("gateway", "") if rotas else ""
+        except (json.JSONDecodeError, IndexError):
+            d["gateway"] = ""
+        dns = saida("nmcli", "-t", "-f", "IP4.DNS,IP6.DNS", "dev", "show", dev) or ""
+        d["dns"] = [l.split(":", 1)[1] for l in dns.splitlines() if ":" in l and l.split(":", 1)[1]]
+
+    d["mac_aleatorio"] = energia().get("mac_aleatorio")
+    d["lab"] = lab()
+    d["podman"] = shutil.which("podman") is not None
+    d["ferramentas"] = {f: shutil.which(f) is not None for f in ("wireshark", "mitmproxy", "nmap", "tcpdump", "konsole")}
+    try:
+        d["grupo_wireshark"] = grp.getgrnam("wireshark").gr_gid in os.getgroups()
+    except KeyError:
+        d["grupo_wireshark"] = False
+    return d
+
+
+# ------------------------------------------------------------------ Cuca (snapper)
+def snapshots() -> dict:
+    r = roda("snapper", "--jsonout", "-c", "root", "list", tempo=15)
+    if r is None:
+        return {"_erro": "O snapper não está instalado."}
+    if r.returncode != 0:
+        msg = ultima_linha(r)
+        if "permiss" in msg.lower() or "permission" in msg.lower():
+            return {"_erro": "sem_permissao"}
+        return {"_erro": msg}
+    try:
+        dados = json.loads(r.stdout)
+    except json.JSONDecodeError:
+        return {"_erro": "Não entendi a resposta do snapper."}
+    lista = dados.get("root", []) if isinstance(dados, dict) else []
+    agora = time.time()
+    itens = []
+    for s in lista:
+        if s.get("number") == 0:
+            continue
+        try:
+            quando = datetime.strptime(s.get("date", ""), "%Y-%m-%d %H:%M:%S").timestamp()
+        except ValueError:
+            quando = agora
+        itens.append({
+            "numero": s.get("number"),
+            "tipo": s.get("type", "single"),
+            "pre": s.get("pre-number"),
+            "data": s.get("date", ""),
+            "idade": agora - quando,
+            "descricao": s.get("description", "") or "",
+            "limpeza": s.get("cleanup", "") or "",
+            "userdata": s.get("userdata") or {},
+        })
+    return {"itens": itens}
+
+
+def conta_mudancas(texto: str) -> dict:
+    """Resume a saída de "snapper status A..B" (primeira coluna: + criado, - apagado, c alterado)."""
+    c = {"criados": 0, "apagados": 0, "alterados": 0}
+    for linha in texto.splitlines():
+        if not linha.strip():
+            continue
+        marca = linha[0]
+        if marca == "+":
+            c["criados"] += 1
+        elif marca == "-":
+            c["apagados"] += 1
+        else:
+            c["alterados"] += 1
+    return c
+
+
+# ------------------------------------------------------------------ aparência
+PAPEIS = [
+    ("brasa-fundo.svg", "Brasa"),
+    ("papel-de-parede-entardecer.svg", "Entardecer"),
+]
+CORES_DESTAQUE = [
+    ("#2BB37A", "Mata"),
+    ("#FF7A45", "Brasa"),
+    ("#D2507A", "Urucum"),
+    ("#2468B8", "Rio"),
+    ("#5B3A8E", "Noite"),
+    ("#3DAEE9", "Azul do Plasma"),
+]
+
+
+def aparencia() -> dict:
+    esquema = (saida("kreadconfig6", "--file", "kdeglobals", "--group", "General", "--key", "ColorScheme") or "").strip()
+    destaque = (saida("kreadconfig6", "--file", "kdeglobals", "--group", "General", "--key", "AccentColor") or "").strip()
+    cor = ""
+    partes = destaque.split(",")
+    if len(partes) >= 3 and all(p.strip().isdigit() for p in partes[:3]):
+        cor = "#{:02X}{:02X}{:02X}".format(*(int(p) for p in partes[:3]))
+    papel = ""
+    cfg = Path.home() / ".config/plasma-org.kde.plasma.desktop-appletsrc"
+    try:
+        for linha in cfg.read_text().splitlines():
+            if linha.startswith("Image="):
+                papel = linha.split("=", 1)[1].removeprefix("file://")
+                break
+    except OSError:
+        pass
+    return {"esquema": esquema, "escuro": "dark" in esquema.lower(), "destaque": cor, "papel": papel}

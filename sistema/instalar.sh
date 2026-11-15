@@ -26,10 +26,27 @@ install -dm755 "$RAIZ/var/lib/curupira"
 echo "==> Instalando a Toca do Curupira e o widget do painel"
 ARTE="$AQUI/../arte"
 install -Dm755 "$AQUI/bin/toca-do-curupira" "$RAIZ/usr/local/bin/toca-do-curupira"
-install -Dm755 "$AQUI/toca/toca.py" "$RAIZ/usr/local/share/curupira/toca/toca.py"
-install -dm755 "$RAIZ/usr/local/share/curupira/toca/fontes" "$RAIZ/usr/local/share/curupira/toca/arte"
-install -m644 "$AQUI"/toca/fontes/* "$RAIZ/usr/local/share/curupira/toca/fontes/"
-install -m644 "$ARTE/cordel-busto.svg" "$ARTE/cordel-figura.svg" "$RAIZ/usr/local/share/curupira/toca/arte/"
+TOCA="$RAIZ/usr/local/share/curupira/toca"
+rm -rf "$TOCA"
+install -dm755 "$TOCA/secoes" "$TOCA/fontes" "$TOCA/arte"
+install -m755 "$AQUI/toca/toca.py" "$TOCA/"
+install -m644 "$AQUI/toca/visual.py" "$AQUI/toca/sistema.py" "$TOCA/"
+install -m644 "$AQUI"/toca/secoes/*.py "$TOCA/secoes/"
+install -m644 "$AQUI"/toca/fontes/* "$TOCA/fontes/"
+install -m644 "$ARTE/cordel-busto.svg" "$ARTE/cordel-figura.svg" "$ARTE/brasa-fundo.svg" \
+              "$ARTE/propostas/papel-de-parede-entardecer.svg" "$TOCA/arte/"
+
+# Cuca: quem é do grupo wheel vê e cria snapshots pela Toca
+if [[ -f "$RAIZ/etc/snapper/configs/root" ]]; then
+  if [[ -z "$RAIZ" ]]; then
+    snapper -c root set-config "ALLOW_GROUPS=wheel" "SYNC_ACL=yes" || echo "aviso: não consegui liberar o snapper para o grupo wheel"
+  elif command -v arch-chroot >/dev/null; then
+    arch-chroot "$RAIZ" snapper --no-dbus -c root set-config "ALLOW_GROUPS=wheel" "SYNC_ACL=yes" \
+      || echo "aviso: não consegui liberar o snapper para o grupo wheel"
+  else
+    sed -i 's/^ALLOW_GROUPS=.*/ALLOW_GROUPS="wheel"/; s/^SYNC_ACL=.*/SYNC_ACL="yes"/' "$RAIZ/etc/snapper/configs/root"
+  fi
+fi
 install -Dm644 "$AQUI/toca/io.github.pabloherzberg.Toca.desktop" \
                "$RAIZ/usr/local/share/applications/io.github.pabloherzberg.Toca.desktop"
 install -Dm644 "$ARTE/cordel-busto.svg" \

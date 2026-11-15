@@ -88,6 +88,18 @@ confere "perfil inexistente falha" 1 "$(roda tsunami >/dev/null 2>&1; echo $?)"
 confere "lista os quatro perfis" 4 "$(roda perfis | wc -l)"
 confere "estado mostra o perfil" 1 "$(roda | grep -c 'perfil Correnteza')"
 
+echo "Caipora"
+roda camera cortar >/dev/null
+confere "câmera cortada grava o bloqueio do driver" 1 "$(grep -c '^install uvcvideo /bin/true' "$T/modprobe.d/curupira-caipora.conf")"
+confere "json mostra a câmera cortada" true "$(roda json | python3 -c 'import json,sys; print(str(json.load(sys.stdin)["camera_cortada"]).lower())')"
+roda camera liberar >/dev/null
+confere "câmera liberada apaga o bloqueio" no "$([[ -e "$T/modprobe.d/curupira-caipora.conf" ]] && echo sim || echo no)"
+roda mac aleatorio >/dev/null
+confere "MAC por rede no NetworkManager" 1 "$(grep -c '^wifi.cloned-mac-address=stable' "$T/NetworkManager/conf.d/90-curupira-caipora.conf")"
+roda mac fixo >/dev/null
+confere "MAC fixo apaga a configuração" no "$([[ -e "$T/NetworkManager/conf.d/90-curupira-caipora.conf" ]] && echo sim || echo no)"
+confere "verbo errado falha" 1 "$(roda camera quebrar >/dev/null 2>&1; echo $?)"
+
 echo
 if (( falhas )); then echo "$falhas de $total testes falharam."; exit 1; fi
 echo "Todos os $total testes passaram."

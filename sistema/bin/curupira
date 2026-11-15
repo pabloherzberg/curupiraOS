@@ -7,6 +7,12 @@
 #   curupira auto [ligar|desligar]
 #                            troca automática: saiu da tomada = Remanso,
 #                            voltou = Correnteza, bateria no limite = Sereno
+#   curupira camera cortar|liberar
+#                            Caipora: descarrega o driver da câmera (uvcvideo) e o
+#                            impede de voltar, inclusive depois de reiniciar
+#   curupira mac aleatorio|fixo
+#                            Caipora: o Wi-Fi e o cabo usam um MAC diferente em cada rede
+#   curupira json            estado em JSON (para a Toca do Curupira e o widget)
 #
 # Quem aplica os ajustes é o TLP: o curupira grava o perfil escolhido em
 # /etc/tlp.d/20-curupira-perfil.conf e roda "tlp start".
@@ -30,12 +36,16 @@ if [[ -n "$TESTE" ]]; then
   TRAVA="$TESTE/trava"
   DIR_PERFIS="${CURUPIRA_PERFIS:-$(cd "$(dirname "$0")/../perfis" && pwd)}"
   CONF="$TESTE/curupira.conf"
+  CAIPORA_CAMERA="$TESTE/modprobe.d/curupira-caipora.conf"
+  CAIPORA_MAC="$TESTE/NetworkManager/conf.d/90-curupira-caipora.conf"
 else
   SYS=/sys
   DIR_ESTADO=/var/lib/curupira
   TLP_PERFIL=/etc/tlp.d/20-curupira-perfil.conf
   TRAVA=/run/curupira.lock
   DIR_PERFIS=/usr/local/share/curupira/perfis
+  CAIPORA_CAMERA=/etc/modprobe.d/curupira-caipora.conf
+  CAIPORA_MAC=/etc/NetworkManager/conf.d/90-curupira-caipora.conf
 fi
 
 # Padrões; /etc/curupira.conf pode trocar qualquer um.
@@ -284,6 +294,58 @@ evento_boot() {
   aplica "$p" "início do sistema"
 }
 
+# ---------------------------------------------------------------- Caipora (privacidade)
+camera_cortada() { [[ -e "$CAIPORA_CAMERA" ]]; }
+mac_aleatorio()  { [[ -e "$CAIPORA_MAC" ]]; }
+
+camera() {
+  case "$1" in
+    cortar)
+      mkdir -p "$(dirname "$CAIPORA_CAMERA")"
+      printf '%s\n' "# Caipora: câmera cortada pelo comando curupira. Para liberar: curupira camera liberar" \
+        "blacklist uvcvideo" "install uvcvideo /bin/true" > "$CAIPORA_CAMERA"
+      if [[ -z "$TESTE" && -d /sys/module/uvcvideo ]] && ! modprobe -r uvcvideo 2>/dev/null; then
+        rm -f "$CAIPORA_CAMERA"
+        morre "A câmera está em uso. Feche o programa que está usando a câmera e tente de novo."
+      fi
+      registra "camera cortada"
+      diz "Câmera cortada. Nenhum programa consegue usá-la até você liberar." ;;
+    liberar)
+      rm -f "$CAIPORA_CAMERA"
+      [[ -n "$TESTE" ]] || modprobe uvcvideo 2>/dev/null || avisa "Não consegui carregar o driver da câmera agora; ele volta no próximo boot."
+      registra "camera liberada"
+      diz "Câmera liberada." ;;
+    *) morre "Use: curupira camera cortar | curupira camera liberar" ;;
+  esac
+}
+
+mac() {
+  case "$1" in
+    aleatorio|aleatório)
+      mkdir -p "$(dirname "$CAIPORA_MAC")"
+      cat > "$CAIPORA_MAC" <<'NM'
+# Caipora: cada rede vê um MAC diferente (o mesmo sempre que você volta a ela).
+# Para desligar: curupira mac fixo
+[device]
+wifi.scan-rand-mac-address=yes
+
+[connection]
+wifi.cloned-mac-address=stable
+ethernet.cloned-mac-address=stable
+NM
+      chmod 644 "$CAIPORA_MAC"
+      [[ -n "$TESTE" ]] || nmcli general reload conf 2>/dev/null || true
+      registra "mac aleatorio"
+      diz "MAC diferente em cada rede. Vale a partir da próxima conexão." ;;
+    fixo)
+      rm -f "$CAIPORA_MAC"
+      [[ -n "$TESTE" ]] || nmcli general reload conf 2>/dev/null || true
+      registra "mac fixo"
+      diz "MAC original de volta. Vale a partir da próxima conexão." ;;
+    *) morre "Use: curupira mac aleatorio | curupira mac fixo" ;;
+  esac
+}
+
 # ---------------------------------------------------------------- telas
 estado() {
   local p f pct st d
@@ -340,8 +402,10 @@ json() {
   d="$(bateria_dir)"; st="$(cat "$d/status" 2>/dev/null || true)"
   printf '{"versao":"%s","perfil":"%s","fonte":"%s","bateria":%s,"status":"%s","watts":%s,"capacidade_wh":%s,' \
     "$VERSAO" "$p" "$(fonte)" "$(bateria_pct)" "$st" "$(bateria_watts)" "$(bateria_wh)"
-  printf '"auto":%s,"limite_critico":%s,"perfil_tomada":"%s","perfil_bateria":"%s","perfil_critico":"%s","perfis":[' \
+  printf '"auto":%s,"limite_critico":%s,"perfil_tomada":"%s","perfil_bateria":"%s","perfil_critico":"%s",' \
     "$(auto_ligada && echo true || echo false)" "$LIMITE_CRITICO" "$PERFIL_TOMADA" "$PERFIL_BATERIA" "$PERFIL_CRITICO"
+  printf '"camera_cortada":%s,"mac_aleatorio":%s,"perfis":[' \
+    "$(camera_cortada && echo true || echo false)" "$(mac_aleatorio && echo true || echo false)"
   for q in $(lista_perfis); do
     printf '%s{"id":"%s","nome":"%s","descricao":"%s"}' "$sep" "$q" "$(nome_bonito "$q")" "$(campo_perfil "$q" DESCRICAO)"
     sep=","
@@ -367,6 +431,8 @@ curupira $VERSAO: perfis de energia da Curupira OS
   curupira perfis             lista os perfis
   curupira auto               mostra se a troca automática está ligada
   curupira auto ligar|desligar
+  curupira camera cortar|liberar
+  curupira mac aleatorio|fixo
 
 Perfis:
 $(perfis)
@@ -383,6 +449,12 @@ case "$comando" in
   estado|status)        estado ;;
   perfis|lista)         perfis ;;
   json)                 json ;;
+  camera|câmera)
+    [[ -n "${2:-}" ]] || { camera_cortada && echo "Câmera cortada." || echo "Câmera liberada."; exit 0; }
+    precisa_root "$@"; trava; camera "$(normaliza "$2")" ;;
+  mac)
+    [[ -n "${2:-}" ]] || { mac_aleatorio && echo "MAC diferente em cada rede." || echo "MAC original."; exit 0; }
+    precisa_root "$@"; trava; mac "$(normaliza "$2")" ;;
   ajuda|-h|--help|help) ajuda ;;
   versao|--version)     echo "curupira $VERSAO" ;;
   perfil)

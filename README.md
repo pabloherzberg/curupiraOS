@@ -78,8 +78,16 @@ Num sistema já instalado: `sudo bash sistema/instalar.sh`. Para testar sem root
 ## Toca do Curupira
 
 Central de controle em Qt/Python (PySide6), no menu como **Toca do Curupira** ou pelo comando
-`toca-do-curupira`. A seção Energia mostra consumo, duração da bateria e os quatro perfis, e liga ou desliga
-Wi-Fi, Bluetooth e o HD. As outras seções chegam nas próximas versões.
+`toca-do-curupira`. Seis seções:
+
+| Seção | O que faz |
+|---|---|
+| Energia | consumo, duração da bateria, os quatro perfis; liga e desliga Wi-Fi, Bluetooth, HD, Caipora e Boto |
+| Seres da mata | o bestiário, com o estado de cada ser agora |
+| Rede e Boto | conexão (sinal, IP, roteador, DNS, MAC), Wireshark e mitmproxy, rede isolada do Podman |
+| Privacidade | Caipora: corta a câmera, silencia o microfone, MAC diferente em cada rede, quem está usando agora |
+| Cuca · snapshots | lista os snapshots, guarda um agora, conta o que mudou em cada instalação de pacote |
+| Aparência | tema claro ou escuro, cor de destaque e papel de parede |
 
 No painel, o widget **Curupira** (botão direito no painel → Adicionar widgets) mostra o perfil pela cor e troca
 de perfil com um clique.
