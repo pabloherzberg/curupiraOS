@@ -50,6 +50,31 @@ partição como "Curupira Resgate" e usa o restante do HD como `/data`.
 DISCO_SISTEMA=/dev/vda DISCO_DADOS=nenhum bash install.sh
 ```
 
+## Perfis de energia
+
+O comando `curupira` troca o computador entre quatro perfis. Quem aplica os ajustes é o TLP.
+
+| Perfil | Quando | O que faz |
+|---|---|---|
+| Pororoca | desempenho | turbo e processador no máximo, sem economia |
+| Correnteza | equilibrado (tomada) | turbo ligado, economia leve |
+| Remanso | bateria | sem turbo, processador até 80%, Wi-Fi econômico |
+| Sereno | economia extrema | processador até 50%, vídeo contido, brilho até 30% |
+
+```bash
+curupira               # perfil atual, bateria e automação
+curupira remanso       # troca de perfil (sem senha para quem está no grupo wheel)
+curupira perfis        # lista os perfis
+curupira auto desligar # fixa o perfil escolhido
+```
+
+A troca é automática: saiu da tomada, Remanso; voltou, Correnteza; bateria em 15%, Sereno. Uma troca
+manual vale até o próximo desses eventos. Os limites ficam em `/etc/curupira.conf` e os perfis em
+`/usr/local/share/curupira/perfis/` (no repositório, `sistema/perfis/`).
+
+Num sistema já instalado: `sudo bash sistema/instalar.sh`. Para testar sem root:
+`bash ferramentas/testar-curupira.sh`.
+
 ## Seres da mata
 
 | Ser | Papel |
@@ -65,6 +90,5 @@ DISCO_SISTEMA=/dev/vda DISCO_DADOS=nenhum bash install.sh
 
 ## Próximos passos
 
-- Comando `curupira` com os perfis Pororoca, Correnteza, Remanso e Sereno.
 - Central de controle "Toca do Curupira".
 - Tema do Plasma, da tela de login e do boot.

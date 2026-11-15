@@ -1,0 +1,11 @@
+[Unit]
+Description=Curupira: confere a bateria a cada minuto
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+AccuracySec=15s
+Unit=curupira-evento@bateria.service
+
+[Install]
+WantedBy=timers.target

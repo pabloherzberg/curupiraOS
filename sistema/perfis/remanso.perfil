@@ -1,0 +1,22 @@
+# Remanso: bateria. Sem turbo, processador até 80%, Wi-Fi econômico,
+# Bluetooth desligado quando nada está conectado.
+# Formato explicado em pororoca.perfil.
+
+NOME=Remanso
+DESCRICAO=bateria
+
+CPU_ENERGY_PERF_POLICY=balance_power
+CPU_SCALING_GOVERNOR=powersave
+CPU_MIN_PERF=0
+CPU_MAX_PERF=80
+CPU_BOOST=0
+CPU_HWP_DYN_BOOST=0
+INTEL_GPU_MIN_FREQ=300
+INTEL_GPU_MAX_FREQ=900
+INTEL_GPU_BOOST_FREQ=900
+WIFI_PWR=on
+PCIE_ASPM=powersave
+RUNTIME_PM=auto
+SATA_LINKPWR=med_power_with_dipm
+SOUND_POWER_SAVE=1
+DEVICES_TO_DISABLE_ON_@_NOT_IN_USE=bluetooth

@@ -1,0 +1,21 @@
+# Correnteza: equilibrado, o perfil de todo dia na tomada.
+# Formato explicado em pororoca.perfil.
+
+NOME=Correnteza
+DESCRICAO=equilibrado
+
+CPU_ENERGY_PERF_POLICY=balance_performance
+CPU_SCALING_GOVERNOR=powersave
+CPU_MIN_PERF=0
+CPU_MAX_PERF=100
+CPU_BOOST=1
+CPU_HWP_DYN_BOOST=0
+INTEL_GPU_MIN_FREQ=300
+INTEL_GPU_MAX_FREQ=1100
+INTEL_GPU_BOOST_FREQ=1100
+WIFI_PWR=off
+PCIE_ASPM=default
+RUNTIME_PM=auto
+SATA_LINKPWR=med_power_with_dipm
+SOUND_POWER_SAVE=0
+DEVICES_TO_DISABLE_ON_@_NOT_IN_USE=

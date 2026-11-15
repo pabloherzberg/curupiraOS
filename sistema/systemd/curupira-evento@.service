@@ -1,0 +1,11 @@
+[Unit]
+Description=Curupira: evento de energia (%i)
+After=tlp.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/curupira evento %i
+
+[Install]
+# só a instância "boot" é ativada; "tomada" vem do udev e "bateria" do timer
+WantedBy=multi-user.target

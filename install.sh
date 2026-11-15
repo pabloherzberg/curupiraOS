@@ -212,21 +212,7 @@ cat > /etc/udev/rules.d/69-curupira-mapinguari.rules <<'UDEV'
 ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", RUN+="/usr/bin/hdparm -B 127 -S 60 /dev/%k"
 UDEV
 
-# TLP: base dos perfis (o comando "curupira" vai ajustar isso por perfil)
-mkdir -p /etc/tlp.d
-cat > /etc/tlp.d/10-curupira.conf <<'TLP'
-CPU_ENERGY_PERF_POLICY_ON_AC=balance_performance
-CPU_ENERGY_PERF_POLICY_ON_BAT=power
-CPU_BOOST_ON_AC=1
-CPU_BOOST_ON_BAT=0
-PLATFORM_PROFILE_ON_AC=balanced
-PLATFORM_PROFILE_ON_BAT=low-power
-WIFI_PWR_ON_AC=off
-WIFI_PWR_ON_BAT=on
-RUNTIME_PM_ON_AC=auto
-RUNTIME_PM_ON_BAT=auto
-DEVICES_TO_DISABLE_ON_BAT_NOT_IN_USE="bluetooth"
-TLP
+# TLP: os perfis de energia ficam com o comando "curupira" (instalado mais abaixo)
 
 # Cuca (snapshots): um antes e um depois de cada instalação de pacote (snap-pac)
 snapper --no-dbus -c root create-config / || echo 'aviso: snapper será configurado no primeiro uso'
@@ -247,6 +233,18 @@ arch-chroot /mnt bash /root/configura.sh
 printf '%s:%s\n' "$USUARIO" "$SENHA" | arch-chroot /mnt chpasswd
 unset SENHA
 rm -f /mnt/root/configura.sh
+
+# Comando "curupira" (perfis de energia). Usa a pasta sistema/ ao lado deste script;
+# se o script foi baixado sozinho, baixa o repositório do GitHub.
+diz "Instalando o comando curupira"
+SISTEMA_DIR="$(cd "$(dirname "$0")" && pwd)/sistema"
+if [[ ! -f "$SISTEMA_DIR/instalar.sh" ]]; then
+  TMP_REPO="$(mktemp -d)"
+  curl -fsSL https://github.com/pabloherzberg/curupiraOS/archive/refs/heads/main.tar.gz \
+    | tar -xz -C "$TMP_REPO" --strip-components=1
+  SISTEMA_DIR="$TMP_REPO/sistema"
+fi
+bash "$SISTEMA_DIR/instalar.sh" /mnt
 
 if [[ "$MODO_DADOS" != "nenhum" ]]; then
   mount "$PART_DADOS" /mnt/data
@@ -271,4 +269,4 @@ umount -R /mnt
 echo
 diz "Curupira OS instalado."
 echo "    Reinicie com: reboot   (se usou pendrive, retire-o antes)"
-echo "    Entre com o usuário '$USUARIO'. O tema e o comando 'curupira' chegam nas próximas versões."
+echo "    Entre com o usuário '$USUARIO'. Perfis de energia: rode 'curupira ajuda'. O tema chega na próxima versão."

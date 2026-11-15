@@ -1,0 +1,2 @@
+# Curupira: troca de perfil assim que o carregador entra ou sai.
+SUBSYSTEM=="power_supply", ACTION=="change", ATTR{type}=="Mains|USB", RUN+="/usr/bin/systemctl --no-block start curupira-evento@tomada.service"

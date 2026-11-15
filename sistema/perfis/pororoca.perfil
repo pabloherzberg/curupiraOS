@@ -1,0 +1,27 @@
+# Pororoca: desempenho máximo, para compilar, jogar ou rodar máquina virtual.
+#
+# Linhas NOME=valor. NOME e DESCRICAO são do curupira; BRILHO_MAX (opcional,
+# em %) limita o brilho da tela. Todo o resto é parâmetro do TLP sem o sufixo
+# do perfil: o curupira escreve cada um como _ON_PRF, _ON_BAL e _ON_SAV.
+# Onde o sufixo fica no meio do nome, marque o lugar com @.
+# Todos os perfis precisam definir os mesmos parâmetros do TLP: um parâmetro
+# ausente deixaria o valor do perfil anterior em vigor.
+
+NOME=Pororoca
+DESCRICAO=desempenho
+
+CPU_ENERGY_PERF_POLICY=performance
+CPU_SCALING_GOVERNOR=performance
+CPU_MIN_PERF=20
+CPU_MAX_PERF=100
+CPU_BOOST=1
+CPU_HWP_DYN_BOOST=1
+INTEL_GPU_MIN_FREQ=300
+INTEL_GPU_MAX_FREQ=1100
+INTEL_GPU_BOOST_FREQ=1100
+WIFI_PWR=off
+PCIE_ASPM=performance
+RUNTIME_PM=on
+SATA_LINKPWR=max_performance
+SOUND_POWER_SAVE=0
+DEVICES_TO_DISABLE_ON_@_NOT_IN_USE=

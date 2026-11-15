@@ -1,0 +1,23 @@
+# Sereno: economia extrema, para esticar o fim da bateria.
+# Processador até 50%, vídeo contido e tela em no máximo 30% de brilho.
+# Formato explicado em pororoca.perfil.
+
+NOME=Sereno
+DESCRICAO=economia extrema
+BRILHO_MAX=30
+
+CPU_ENERGY_PERF_POLICY=power
+CPU_SCALING_GOVERNOR=powersave
+CPU_MIN_PERF=0
+CPU_MAX_PERF=50
+CPU_BOOST=0
+CPU_HWP_DYN_BOOST=0
+INTEL_GPU_MIN_FREQ=300
+INTEL_GPU_MAX_FREQ=600
+INTEL_GPU_BOOST_FREQ=600
+WIFI_PWR=on
+PCIE_ASPM=powersupersave
+RUNTIME_PM=auto
+SATA_LINKPWR=min_power
+SOUND_POWER_SAVE=1
+DEVICES_TO_DISABLE_ON_@_NOT_IN_USE=bluetooth

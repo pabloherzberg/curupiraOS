@@ -1,0 +1,394 @@
+#!/usr/bin/env bash
+# curupira - perfis de energia da Curupira OS
+#
+#   curupira                 mostra o perfil atual e a energia
+#   curupira <perfil>        troca de perfil (pororoca, correnteza, remanso, sereno)
+#   curupira perfis          lista os perfis
+#   curupira auto [ligar|desligar]
+#                            troca automática: saiu da tomada = Remanso,
+#                            voltou = Correnteza, bateria no limite = Sereno
+#
+# Quem aplica os ajustes é o TLP: o curupira grava o perfil escolhido em
+# /etc/tlp.d/20-curupira-perfil.conf e roda "tlp start".
+# Eventos (chamados pelo systemd/udev, como root):
+#   curupira evento boot|tomada|bateria
+#
+# CURUPIRA_TESTE=<pasta> roda sem root e sem TLP, simulando /sys e /var dentro
+# da pasta (veja ferramentas/testar-curupira.sh).
+
+set -euo pipefail
+
+VERSAO=0.1
+EU=/usr/local/bin/curupira
+CONF=/etc/curupira.conf
+
+TESTE="${CURUPIRA_TESTE:-}"
+if [[ -n "$TESTE" ]]; then
+  SYS="$TESTE/sys"
+  DIR_ESTADO="$TESTE/estado"
+  TLP_PERFIL="$TESTE/tlp.d/20-curupira-perfil.conf"
+  TRAVA="$TESTE/trava"
+  DIR_PERFIS="${CURUPIRA_PERFIS:-$(cd "$(dirname "$0")/../perfis" && pwd)}"
+  CONF="$TESTE/curupira.conf"
+else
+  SYS=/sys
+  DIR_ESTADO=/var/lib/curupira
+  TLP_PERFIL=/etc/tlp.d/20-curupira-perfil.conf
+  TRAVA=/run/curupira.lock
+  DIR_PERFIS=/usr/local/share/curupira/perfis
+fi
+
+# Padrões; /etc/curupira.conf pode trocar qualquer um.
+PERFIL_TOMADA=correnteza
+PERFIL_BATERIA=remanso
+PERFIL_CRITICO=sereno
+LIMITE_CRITICO=15
+# shellcheck source=/dev/null
+[[ -r "$CONF" ]] && source "$CONF"
+
+if [[ -t 1 ]]; then
+  verde=$'\e[32m'; laranja=$'\e[33m'; vermelho=$'\e[31m'; negrito=$'\e[1m'; neutro=$'\e[0m'
+else
+  verde=; laranja=; vermelho=; negrito=; neutro=
+fi
+diz()   { printf '%s==>%s %s\n' "$verde" "$neutro" "$*"; }
+avisa() { printf '%s[!]%s %s\n' "$laranja" "$neutro" "$*" >&2; }
+morre() { printf '%s[x]%s %s\n' "$vermelho" "$neutro" "$*" >&2; exit 1; }
+registra() { [[ -n "$TESTE" ]] || logger -t curupira -- "$*" 2>/dev/null || true; }
+
+# ---------------------------------------------------------------- estado
+le_estado()    { local f="$DIR_ESTADO/$1"; if [[ -r "$f" ]]; then cat "$f"; else echo "${2:-}"; fi; }
+grava_estado() { mkdir -p "$DIR_ESTADO"; printf '%s\n' "$2" > "$DIR_ESTADO/$1.novo"; mv -f "$DIR_ESTADO/$1.novo" "$DIR_ESTADO/$1"; }
+apaga_estado() { rm -f "$DIR_ESTADO/$1"; }
+
+trava() {
+  exec 9>"$TRAVA"
+  flock -w 30 9 || morre "Outro curupira está rodando; tente de novo."
+}
+
+precisa_root() {
+  [[ -n "$TESTE" || $EUID -eq 0 ]] && return 0
+  command -v pkexec >/dev/null || morre "Precisa de root: rode com sudo."
+  exec pkexec "$EU" "$@"
+}
+
+# ---------------------------------------------------------------- energia
+# "tomada" se algum carregador (Mains/USB) estiver ligado; sem carregador detectável, assume tomada.
+fonte() {
+  local d achou=0
+  for d in "$SYS"/class/power_supply/*; do
+    [[ -r "$d/type" ]] || continue
+    case "$(<"$d/type")" in
+      Mains|USB)
+        achou=1
+        [[ "$(cat "$d/online" 2>/dev/null)" == 1 ]] && { echo tomada; return; } ;;
+    esac
+  done
+  (( achou )) && echo bateria || echo tomada
+}
+
+bateria_dir() {
+  local d
+  for d in "$SYS"/class/power_supply/*; do
+    [[ -r "$d/type" && "$(<"$d/type")" == Battery ]] && { echo "$d"; return 0; }
+  done
+  return 0
+}
+
+bateria_pct() {
+  local d; d="$(bateria_dir)"
+  if [[ -n "$d" && -r "$d/capacity" ]]; then cat "$d/capacity"; else echo 100; fi
+}
+
+# ---------------------------------------------------------------- perfis
+normaliza() { local p="${1,,}"; echo "${p%.perfil}"; }
+
+arquivo_perfil() { echo "$DIR_PERFIS/$1.perfil"; }
+
+existe_perfil() { [[ "$1" =~ ^[a-z0-9_-]+$ && -r "$(arquivo_perfil "$1")" ]]; }
+
+lista_perfis() {
+  local f
+  for f in "$DIR_PERFIS"/*.perfil; do [[ -e "$f" ]] && basename "$f" .perfil; done
+  return 0
+}
+
+# Imprime "CHAVE<TAB>valor" para cada linha útil do perfil.
+le_perfil() {
+  local linha chave valor
+  while IFS= read -r linha || [[ -n "$linha" ]]; do
+    linha="${linha%%#*}"
+    [[ "$linha" =~ ^[[:space:]]*$ ]] && continue
+    [[ "$linha" =~ ^[[:space:]]*([A-Z0-9_@]+)=(.*)$ ]] || { avisa "Linha ignorada em $1: $linha"; continue; }
+    chave="${BASH_REMATCH[1]}"; valor="${BASH_REMATCH[2]}"
+    valor="${valor%"${valor##*[![:space:]]}"}"          # tira espaços no fim
+    [[ "$valor" =~ ^\"(.*)\"$ ]] && valor="${BASH_REMATCH[1]}"
+    printf '%s\t%s\n' "$chave" "$valor"
+  done < "$(arquivo_perfil "$1")"
+}
+
+# (o awk lê tudo em vez de sair no primeiro achado: sair cedo quebra o pipe e o pipefail derruba o script)
+campo_perfil() { le_perfil "$1" | awk -F'\t' -v c="$2" '$1==c && !achou{print $2; achou=1}'; }
+
+nome_bonito() { local n; n="$(campo_perfil "$1" NOME)"; echo "${n:-${1^}}"; }
+
+eh_chave_curupira() { [[ "$1" == NOME || "$1" == DESCRICAO || "$1" == BRILHO_MAX ]]; }
+
+chaves_tlp() { le_perfil "$1" | cut -f1 | while read -r c; do eh_chave_curupira "$c" || echo "$c"; done | sort -u; }
+
+# Avisa se o perfil não define algum parâmetro que outro perfil define.
+confere_chaves() {
+  local alvo="$1" todas faltam
+  todas="$(for p in $(lista_perfis); do chaves_tlp "$p"; done | sort -u)"
+  faltam="$(comm -23 <(echo "$todas") <(chaves_tlp "$alvo"))"
+  [[ -z "$faltam" ]] || avisa "O perfil $alvo não define: $(echo $faltam). Esses valores ficam como estavam."
+}
+
+gera_conf_tlp() {
+  local p="$1" chave valor s
+  echo "# Gerado pelo comando curupira em $(date '+%d/%m/%Y %H:%M'). Não edite à mão:"
+  echo "# troque de perfil com \"curupira <perfil>\" ou edite $(arquivo_perfil "$p")."
+  echo "# Perfil: $p"
+  le_perfil "$p" | while IFS=$'\t' read -r chave valor; do
+    eh_chave_curupira "$chave" && continue
+    for s in PRF BAL SAV; do
+      if [[ "$chave" == *@* ]]; then printf '%s="%s"\n' "${chave//@/$s}" "$valor"
+      else printf '%s_ON_%s="%s"\n' "$chave" "$s" "$valor"; fi
+    done
+  done
+}
+
+# ---------------------------------------------------------------- brilho
+backlight() { local b; for b in "$SYS"/class/backlight/*; do [[ -w "$b/brightness" ]] && { echo "$b"; return 0; }; done; return 0; }
+
+ajusta_brilho() {
+  local p="$1" b max atual limite_pct alvo
+  b="$(backlight)"; [[ -n "$b" ]] || return 0
+  max="$(<"$b/max_brightness")"; atual="$(<"$b/brightness")"
+  limite_pct="$(campo_perfil "$p" BRILHO_MAX)"
+
+  if [[ "$limite_pct" =~ ^[0-9]+$ ]]; then
+    alvo=$(( max * limite_pct / 100 ))
+    if (( atual > alvo )); then
+      [[ -n "$(le_estado brilho-antes)" ]] || grava_estado brilho-antes "$atual"
+      echo "$alvo" > "$b/brightness"
+      grava_estado brilho-definido "$alvo"
+    fi
+  else
+    # Saindo de um perfil que baixou o brilho: devolve o anterior,
+    # a não ser que a pessoa já tenha mexido no brilho depois.
+    local antes definido
+    antes="$(le_estado brilho-antes)"; definido="$(le_estado brilho-definido)"
+    if [[ -n "$antes" ]]; then
+      [[ "$atual" == "$definido" ]] && echo "$antes" > "$b/brightness"
+      apaga_estado brilho-antes; apaga_estado brilho-definido
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------- aplicar
+# aplica <perfil> <motivo>   (motivo vazio = escolha manual)
+aplica() {
+  local p="$1" motivo="${2:-}" tmp
+  existe_perfil "$p" || morre "Perfil desconhecido: $p. Perfis: $(lista_perfis | paste -sd' ')"
+  confere_chaves "$p"
+
+  mkdir -p "$(dirname "$TLP_PERFIL")"
+  tmp="$TLP_PERFIL.novo"
+  gera_conf_tlp "$p" > "$tmp"
+  chmod 644 "$tmp"
+  mv -f "$tmp" "$TLP_PERFIL"
+
+  if [[ -z "$TESTE" ]]; then
+    local saida
+    if ! saida="$(tlp start 2>&1)"; then
+      avisa "O TLP reclamou ao aplicar o perfil:"; printf '%s\n' "$saida" >&2
+    elif grep -qiE 'error|erro|invalid' <<<"$saida"; then
+      printf '%s\n' "$saida" >&2
+    fi
+  fi
+  ajusta_brilho "$p"
+
+  grava_estado perfil "$p"
+  registra "perfil $p${motivo:+ ($motivo)}"
+}
+
+# ---------------------------------------------------------------- aviso na tela
+notifica() {
+  local titulo="$1" texto="$2"
+  if [[ -n "$TESTE" ]]; then echo "[notificação] $titulo: $texto"; return 0; fi
+  command -v notify-send >/dev/null || return 0
+  local s uid usuario _
+  while read -r s uid usuario _; do
+    [[ "$(loginctl show-session "$s" -p Active --value 2>/dev/null)" == yes ]] || continue
+    [[ -S "/run/user/$uid/bus" ]] || continue
+    timeout 5 runuser -u "$usuario" -- env DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" \
+      notify-send -a Curupira -i battery "$titulo" "$texto" >/dev/null 2>&1 || true
+  done < <(loginctl list-sessions --no-legend 2>/dev/null)
+}
+
+aplica_auto() {
+  local p="$1" motivo="$2"
+  [[ "$(le_estado perfil)" == "$p" ]] && { registra "$motivo; já estava em $p"; return 0; }
+  aplica "$p" "$motivo"
+  notifica "Perfil $(nome_bonito "$p")" "$motivo."
+}
+
+# ---------------------------------------------------------------- eventos
+auto_ligada() { [[ "$(le_estado auto 1)" == 1 ]]; }
+
+perfil_para_bateria() {
+  if (( $(bateria_pct) <= LIMITE_CRITICO )); then grava_estado critico 1; echo "$PERFIL_CRITICO"
+  else echo "$PERFIL_BATERIA"; fi
+}
+
+evento_tomada() {
+  local agora antes p
+  agora="$(fonte)"; antes="$(le_estado tomada)"
+  [[ "$agora" == "$antes" ]] && return 0
+  grava_estado tomada "$agora"
+  auto_ligada || return 0
+  if [[ "$agora" == tomada ]]; then
+    grava_estado critico 0
+    aplica_auto "$PERFIL_TOMADA" "Voltou para a tomada"
+  else
+    p="$(perfil_para_bateria)"
+    aplica_auto "$p" "Saiu da tomada, bateria em $(bateria_pct)%"
+  fi
+}
+
+evento_bateria() {
+  evento_tomada                       # reforço caso o udev tenha perdido a troca
+  [[ "$(fonte)" == bateria ]] || return 0
+  auto_ligada || return 0
+  local pct; pct="$(bateria_pct)"
+  if (( pct <= LIMITE_CRITICO )); then
+    [[ "$(le_estado critico 0)" == 1 ]] && return 0   # já avisou; respeita se a pessoa trocou depois
+    grava_estado critico 1
+    aplica_auto "$PERFIL_CRITICO" "Bateria em $pct%"
+  elif (( pct > LIMITE_CRITICO + 5 )); then
+    grava_estado critico 0
+  fi
+}
+
+evento_boot() {
+  local agora p
+  agora="$(fonte)"
+  grava_estado tomada "$agora"
+  if auto_ligada; then
+    if [[ "$agora" == tomada ]]; then grava_estado critico 0; p="$PERFIL_TOMADA"; else p="$(perfil_para_bateria)"; fi
+  else
+    p="$(le_estado perfil "$PERFIL_TOMADA")"
+  fi
+  existe_perfil "$p" || p="$PERFIL_TOMADA"
+  aplica "$p" "início do sistema"
+}
+
+# ---------------------------------------------------------------- telas
+estado() {
+  local p f pct st d
+  p="$(le_estado perfil)"
+  f="$(fonte)"; pct="$(bateria_pct)"
+  d="$(bateria_dir)"; st="$(cat "$d/status" 2>/dev/null || true)"
+  case "$st" in
+    Full) st="cheia";; Charging) st="carregando";; Discharging) st="descarregando";;
+    "Not charging") st="sem carregar";; *) st="${st,,}";;
+  esac
+
+  if [[ -n "$p" ]] && existe_perfil "$p"; then
+    echo "${negrito}Curupira OS${neutro}: perfil ${negrito}$(nome_bonito "$p")${neutro} ($(campo_perfil "$p" DESCRICAO))"
+  else
+    echo "${negrito}Curupira OS${neutro}: nenhum perfil aplicado ainda (use: curupira correnteza)"
+  fi
+  printf '  Energia     : %s, bateria em %s%%%s\n' \
+    "$([[ $f == tomada ]] && echo "na tomada" || echo "na bateria")" "$pct" "${st:+ ($st)}"
+  if auto_ligada; then
+    printf '  Automação   : ligada (tomada: %s, bateria: %s, até %s%%: %s)\n' \
+      "$(nome_bonito "$PERFIL_TOMADA")" "$(nome_bonito "$PERFIL_BATERIA")" "$LIMITE_CRITICO" "$(nome_bonito "$PERFIL_CRITICO")"
+  else
+    echo "  Automação   : desligada (ligue com: curupira auto ligar)"
+  fi
+
+  local cpu="$SYS/devices/system/cpu" epp turbo maxp
+  epp="$(cat "$cpu/cpufreq/policy0/energy_performance_preference" 2>/dev/null || echo '?')"
+  turbo="$(cat "$cpu/intel_pstate/no_turbo" 2>/dev/null || echo '?')"
+  maxp="$(cat "$cpu/intel_pstate/max_perf_pct" 2>/dev/null || echo '?')"
+  case "$turbo" in 0) turbo="turbo ligado";; 1) turbo="turbo desligado";; *) turbo="turbo ?";; esac
+  printf '  Processador : %s, %s, até %s%%\n' "$epp" "$turbo" "$maxp"
+}
+
+perfis() {
+  local p atual marca
+  atual="$(le_estado perfil)"
+  for p in $(lista_perfis); do
+    [[ "$p" == "$atual" ]] && marca="*" || marca=" "
+    printf ' %s %-11s %s\n' "$marca" "$p" "$(campo_perfil "$p" DESCRICAO)"
+  done
+}
+
+ajuda() {
+  cat <<AJUDA
+curupira $VERSAO: perfis de energia da Curupira OS
+
+  curupira                    mostra o perfil atual e a energia
+  curupira <perfil>           troca de perfil
+  curupira perfis             lista os perfis
+  curupira auto               mostra se a troca automática está ligada
+  curupira auto ligar|desligar
+
+Perfis:
+$(perfis)
+
+A troca automática muda de perfil quando o carregador entra ou sai e quando a
+bateria chega a $LIMITE_CRITICO%. Uma troca manual vale até o próximo desses eventos.
+Os limites e perfis automáticos podem ser trocados em /etc/curupira.conf.
+AJUDA
+}
+
+# ---------------------------------------------------------------- principal
+comando="$(normaliza "${1:-estado}")"
+case "$comando" in
+  estado|status)        estado ;;
+  perfis|lista)         perfis ;;
+  ajuda|-h|--help|help) ajuda ;;
+  versao|--version)     echo "curupira $VERSAO" ;;
+  perfil)
+    [[ -n "${2:-}" ]] || morre "Qual perfil? $(lista_perfis | paste -sd' ')"
+    precisa_root "$@"; trava
+    p="$(normaliza "$2")"; aplica "$p"
+    diz "Perfil $(nome_bonito "$p") aplicado."
+    ;;
+  auto)
+    case "$(normaliza "${2:-}")" in
+      "")             auto_ligada && echo "Automação ligada." || echo "Automação desligada." ;;
+      ligar|on|sim)   precisa_root "$@"; trava; grava_estado auto 1; grava_estado tomada ""; evento_tomada
+                      diz "Automação ligada. Perfil atual: $(nome_bonito "$(le_estado perfil "$PERFIL_TOMADA")")." ;;
+      desligar|off|nao|não) precisa_root "$@"; trava; grava_estado auto 0
+                      diz "Automação desligada. O perfil só muda quando você mandar." ;;
+      *)              morre "Use: curupira auto ligar | curupira auto desligar" ;;
+    esac
+    ;;
+  evento)
+    [[ -n "$TESTE" || $EUID -eq 0 ]] || morre "Eventos são chamados pelo sistema (como root)."
+    trava
+    case "${2:-}" in
+      boot)    evento_boot ;;
+      tomada)  evento_tomada ;;
+      bateria) evento_bateria ;;
+      *)       morre "Evento desconhecido: ${2:-}" ;;
+    esac
+    ;;
+  *)
+    if existe_perfil "$comando"; then
+      precisa_root "$@"; trava
+      aplica "$comando"
+      diz "Perfil $(nome_bonito "$comando") aplicado."
+      if auto_ligada; then
+        echo "    A troca automática continua ligada: o perfil muda de novo quando o carregador"
+        echo "    entrar ou sair. Para fixar este perfil: curupira auto desligar"
+      fi
+    else
+      avisa "Não conheço \"$1\"."; echo; ajuda; exit 1
+    fi
+    ;;
+esac

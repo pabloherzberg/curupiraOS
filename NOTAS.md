@@ -25,9 +25,14 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
 ## Feito
 - `install.sh`: Arch + KDE Plasma, Btrfs com snapshots, HD em `/data` sob demanda, TLP, zram, NVIDIA desligada.
 - `ferramentas/preparar-instalador.ps1`: boot do instalador sem pendrive, a partir de uma partição no NVMe.
+- Sistema instalado no notebook em 15/11/2026 (Arch + KDE pelo `install.sh`).
+- Comando `curupira` (`sistema/`): os quatro perfis viram configuração do TLP 1.11 (nomes `_ON_PRF/_BAL/_SAV`;
+  os antigos `_ON_AC/_ON_BAT` foram descontinuados). O TLP fica parado no perfil BAL e o curupira reescreve
+  `/etc/tlp.d/20-curupira-perfil.conf`. Tomada via udev, bateria via timer de 1 min, polkit libera o grupo wheel.
+  Testado no notebook: Sereno deixa EPP `power`, sem turbo, CPU em 50% e brilho em 30%.
 
 ## A fazer
-1. Comando `curupira` com os quatro perfis, automação tomada/bateria e regras do polkit.
+1. Testar a automação tirando o carregador de verdade (o teste simulado passa).
 2. "Toca do Curupira": central de controle em Qt/Python e widget do painel.
 3. Tema do Plasma, do SDDM, do Plymouth e do Konsole com as artes acima.
 4. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar

@@ -1,0 +1,8 @@
+// Curupira: quem está sentado no computador (grupo wheel, sessão local e ativa)
+// troca o perfil de energia sem digitar senha. Os demais casos pedem senha de administrador.
+polkit.addRule(function (action, subject) {
+  if (action.id == "io.github.pabloherzberg.curupira.perfil" &&
+      subject.local && subject.active && subject.isInGroup("wheel")) {
+    return polkit.Result.YES;
+  }
+});
