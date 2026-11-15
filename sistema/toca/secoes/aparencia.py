@@ -80,11 +80,13 @@ class SecaoAparencia(Secao):
         tl = QHBoxLayout(tema); tl.setContentsMargins(16, 12, 14, 12)
         tt = QVBoxLayout(); tt.setSpacing(0)
         tt.addWidget(rotulo("Tema", 15, QFont.Weight.ExtraBold))
-        tt.addWidget(rotulo("Claro para o dia, escuro para a noite na mata.", 12, cor=TINTA_SUAVE))
+        self.nota_tema = rotulo("Curupira para o dia, Curupira Noite para a noite na mata.", 12, cor=TINTA_SUAVE)
+        tt.addWidget(self.nota_tema)
         tl.addLayout(tt, 1)
-        self.seg_tema = Segmentado([("claro", "Claro"), ("escuro", "Escuro")])
-        self.seg_tema.botoes["claro"].clicked.connect(lambda: self._esquema("BreezeLight", "Tema claro aplicado."))
-        self.seg_tema.botoes["escuro"].clicked.connect(lambda: self._esquema("BreezeDark", "Tema escuro aplicado."))
+        self.seg_tema = Segmentado([("claro", "Curupira"), ("escuro", "Curupira Noite")])
+        self.seg_tema.botoes["claro"].clicked.connect(lambda: self._tema(escuro=False))
+        self.seg_tema.botoes["escuro"].clicked.connect(lambda: self._tema(escuro=True))
+        self.tem_curupira = True
         tl.addWidget(self.seg_tema)
         lay.addWidget(tema)
 
@@ -110,21 +112,28 @@ class SecaoAparencia(Secao):
         pl.addWidget(rotulo("Papel de parede", 15, QFont.Weight.ExtraBold))
         mini = QHBoxLayout(); mini.setSpacing(4)
         self.miniaturas: list[Miniatura] = []
-        for arquivo, nome in sistema.PAPEIS:
+        for arquivo, nome, pacote in sistema.PAPEIS:
             caminho = arte(arquivo)
             if caminho:
                 m = Miniatura(caminho, nome)
-                m.clicked.connect(lambda _=False, c=caminho, n=nome: self._papel(c, n))
+                m.pacote = pacote
+                m.clicked.connect(lambda _=False, c=caminho, n=nome, p=pacote:
+                                  self._papel(sistema.caminho_papel(c, p), n))
                 mini.addWidget(m)
                 self.miniaturas.append(m)
         mini.addStretch()
         pl.addLayout(mini)
         lay.addWidget(papel)
 
-        lay.addWidget(rotulo("Tema próprio do Plasma, da tela de login e do boot: em breve.", 12, cor=TINTA_SUAVE))
+        lay.addWidget(rotulo("A tela de login já usa o tema Curupira. A tela de boot chega numa próxima versão.",
+                             12, cor=TINTA_SUAVE))
         lay.addStretch()
 
-    def _esquema(self, nome: str, msg: str):
+    def _tema(self, escuro: bool):
+        if self.tem_curupira:
+            nome, msg = ("CurupiraNoite", "Tema Curupira Noite aplicado.") if escuro else ("Curupira", "Tema Curupira aplicado.")
+        else:   # esquemas ainda não instalados: usa o Breeze
+            nome, msg = ("BreezeDark", "Tema escuro aplicado.") if escuro else ("BreezeLight", "Tema claro aplicado.")
         self.executar.emit(["plasma-apply-colorscheme", nome], msg, None)
 
     def _destaque(self, hexa: str, nome: str):
@@ -137,7 +146,16 @@ class SecaoAparencia(Secao):
         return sistema.aparencia()
 
     def mostra(self, d: dict):
-        self.seg_tema.seleciona("escuro" if d.get("escuro") else "claro")
+        self.tem_curupira = d.get("curupira", False)
+        if self.tem_curupira:
+            self.seg_tema.botoes["claro"].setText("Curupira"); self.seg_tema.botoes["escuro"].setText("Curupira Noite")
+        else:
+            self.seg_tema.botoes["claro"].setText("Claro"); self.seg_tema.botoes["escuro"].setText("Escuro")
+        e = d.get("esquema", "")
+        if self.tem_curupira:   # só marca quando o esquema atual é mesmo um dos da Curupira
+            self.seg_tema.seleciona("escuro" if e == "CurupiraNoite" else "claro" if e == "Curupira" else "")
+        else:
+            self.seg_tema.seleciona("escuro" if d.get("escuro") else "claro")
         atual = (d.get("destaque") or "").upper()
         for hexa, a in self.amostras.items():
             a.setChecked(hexa == atual)
@@ -145,4 +163,4 @@ class SecaoAparencia(Secao):
         self.nome_destaque.setText(nomes.get(atual, "cor do esquema" if not atual else f"outra cor ({atual})"))
         papel = d.get("papel", "")
         for m in self.miniaturas:
-            m.setChecked(bool(papel) and Path(papel).name == m.caminho.name)
+            m.setChecked(bool(papel) and (Path(papel).name == m.caminho.name or m.pacote in papel))

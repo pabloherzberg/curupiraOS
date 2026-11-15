@@ -331,10 +331,25 @@ def comando_voltar() -> str:
 
 
 # ------------------------------------------------------------------ aparência
+# (arte para a miniatura, nome, pacote do Plasma instalado pelo instalar.sh)
 PAPEIS = [
-    ("brasa-fundo.svg", "Brasa"),
-    ("papel-de-parede-entardecer.svg", "Entardecer"),
+    ("brasa-fundo.svg", "Brasa", "Curupira-Brasa"),
+    ("papel-de-parede-entardecer.svg", "Entardecer", "Curupira-Entardecer"),
 ]
+DIR_PAPEIS = Path("/usr/local/share/wallpapers")
+ESQUEMAS = [("Curupira", "Curupira"), ("CurupiraNoite", "Curupira Noite")]
+
+
+def esquemas_curupira() -> bool:
+    return all((Path(d) / "color-schemes" / f"{e}.colors").exists() or
+               (Path.home() / ".local/share/color-schemes" / f"{e}.colors").exists()
+               for e, _ in ESQUEMAS for d in ["/usr/local/share"])
+
+
+def caminho_papel(arte_svg: Path, pacote: str) -> str:
+    """O pacote instalado (PNG em vários tamanhos) se existir; senão, a arte em SVG."""
+    p = DIR_PAPEIS / pacote
+    return str(p) if (p / "metadata.json").exists() else str(arte_svg)
 CORES_DESTAQUE = [
     ("#2BB37A", "Mata"),
     ("#FF7A45", "Brasa"),
@@ -361,4 +376,5 @@ def aparencia() -> dict:
                 break
     except OSError:
         pass
-    return {"esquema": esquema, "escuro": "dark" in esquema.lower(), "destaque": cor, "papel": papel}
+    return {"esquema": esquema, "escuro": any(x in esquema.lower() for x in ("dark", "noite")),
+            "destaque": cor, "papel": papel, "curupira": esquemas_curupira()}

@@ -59,6 +59,26 @@ rm -rf "$PLASMOIDE"
 install -Dm644 "$AQUI/plasmoide/metadata.json" "$PLASMOIDE/metadata.json"
 install -Dm644 "$AQUI/plasmoide/contents/ui/main.qml" "$PLASMOIDE/contents/ui/main.qml"
 
+echo "==> Instalando o tema (cores, Konsole, papéis de parede e tela de login)"
+TEMA="$AQUI/../tema"
+install -dm755 "$RAIZ/usr/local/share/color-schemes" "$RAIZ/usr/local/share/konsole" "$RAIZ/usr/local/share/wallpapers"
+install -m644 "$TEMA"/cores/*.colors "$RAIZ/usr/local/share/color-schemes/"
+install -m644 "$TEMA"/konsole/Curupira.colorscheme "$TEMA"/konsole/Curupira.profile "$RAIZ/usr/local/share/konsole/"
+for papel in "$TEMA"/papeis/*/; do
+  nome="$(basename "$papel")"
+  rm -rf "$RAIZ/usr/local/share/wallpapers/$nome"
+  cp -r "$papel" "$RAIZ/usr/local/share/wallpapers/$nome"
+  chmod -R u=rwX,go=rX "$RAIZ/usr/local/share/wallpapers/$nome"
+done
+SDDM_TEMA="$RAIZ/usr/share/sddm/themes/curupira"
+rm -rf "$SDDM_TEMA"
+cp -r "$TEMA/sddm/curupira" "$SDDM_TEMA"
+chmod -R u=rwX,go=rX "$SDDM_TEMA"
+# Se a tela de login não abrir: Ctrl+Alt+F2, entre no terminal e apague este arquivo.
+install -dm755 "$RAIZ/etc/sddm.conf.d"
+printf '%s\n' "# Curupira OS: tela de login. Para voltar ao padrão, apague este arquivo." \
+  "[Theme]" "Current=curupira" > "$RAIZ/etc/sddm.conf.d/10-curupira.conf"
+
 if [[ ! -e "$RAIZ/etc/curupira.conf" ]]; then
   cat > "$RAIZ/etc/curupira.conf" <<'CONF'
 # Curupira: troca automática de perfil (veja "curupira ajuda").

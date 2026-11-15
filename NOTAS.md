@@ -47,6 +47,10 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   `curupira cuca lista|mudancas|guardar`. Conferido: o snapper não entra em /home, /var/log, cache do pacman,
   /data nem /boot. **Falta rodar `sudo bash ferramentas/testar-cuca.sh`** (interrompido) e apagar snapshots
   "teste da Cuca" que tenham sobrado.
+- Tema (`tema/`): esquemas Curupira (claro, barra de título noite) e Curupira Noite, gerados por
+  `gerar-cores.py`; perfil do Konsole; papéis de parede Brasa e Entardecer em PNG (1366×768, 1920×1080,
+  2560×1440) por `gerar-papeis.py`; tela de login SDDM em QML puro seguindo `mockup/Boot.dc.html`
+  (avatar do Cordel quando não há foto; testada com `sddm-greeter-qt6 --test-mode`). A Toca troca os esquemas.
 - Incidente de 15/11/2026: uma linha "curupira cuca lista" sem "#" no cabeçalho fez o curupira chamar a si
   mesmo; o widget e o timer recomeçavam a cadeia e a memória esgotou (~14 mil processos root). Corrigido e
   coberto por teste em `ferramentas/testar-curupira.sh`.
@@ -56,7 +60,8 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
 ## A fazer
 1. Cuca: terminar o teste do curupira-voltar; depois, boot direto num snapshot (exige um subvolume
    @snapshots fora do @).
-2. Tema do Plasma, do SDDM, do Plymouth e do Konsole com as artes acima.
+2. Tema, parte 2: tela de boot (Plymouth: precisa do pacote, do hook no mkinitcpio e de "splash" no boot)
+   com `arte/01-brasa.svg` e as pegadas ao contrário; tema global do Plasma com tela de abertura.
 3. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
    `/etc/udev/rules.d/00-curupira-boitata.rules` e `/etc/modprobe.d/curupira-boitata.conf` a religa).
    O módulo nouveau ainda carrega apesar da blacklist (provavelmente pelo hook kms do initramfs).

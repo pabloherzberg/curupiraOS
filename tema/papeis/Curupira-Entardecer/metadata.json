@@ -1,0 +1,13 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Curupira OS"
+            }
+        ],
+        "Id": "Curupira-Entardecer",
+        "License": "CC-BY-SA-4.0",
+        "Name": "Entardecer",
+        "Description": "Entardecer na praia, nas cores da Curupira OS."
+    }
+}

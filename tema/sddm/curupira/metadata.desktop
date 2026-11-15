@@ -1,0 +1,14 @@
+[SddmGreeterTheme]
+Name=Curupira
+Description=Tela de login da Curupira OS: peça licença para entrar na mata
+Author=Curupira OS
+License=CC-BY-SA-4.0
+Type=sddm-theme
+Version=0.1
+Website=https://github.com/pabloherzberg/curupiraOS
+Screenshot=fundo.png
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-Id=curupira
+Theme-API=2.0
+QtVersion=6

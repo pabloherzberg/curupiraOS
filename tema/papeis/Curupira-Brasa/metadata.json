@@ -1,0 +1,13 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Curupira OS"
+            }
+        ],
+        "Id": "Curupira-Brasa",
+        "License": "CC-BY-SA-4.0",
+        "Name": "Brasa",
+        "Description": "O Curupira de cabelo de fogo na mata à noite."
+    }
+}

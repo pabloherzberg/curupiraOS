@@ -92,6 +92,18 @@ Central de controle em Qt/Python (PySide6), no menu como **Toca do Curupira** ou
 No painel, o widget **Curupira** (botão direito no painel → Adicionar widgets) mostra o perfil pela cor e troca
 de perfil com um clique.
 
+## Tema
+
+| Peça | Onde fica | Como usar |
+|---|---|---|
+| Esquemas de cores Curupira e Curupira Noite | `tema/cores/` → `/usr/local/share/color-schemes` | Toca → Aparência, ou Configurações do sistema → Cores |
+| Perfil do Konsole (JetBrains Mono, cores da paleta) | `tema/konsole/` → `/usr/local/share/konsole` | Konsole → Configurações → perfil Curupira |
+| Papéis de parede Brasa e Entardecer | `tema/papeis/` → `/usr/local/share/wallpapers` | Toca → Aparência, ou clique direito na área de trabalho |
+| Tela de login | `tema/sddm/curupira/` → `/usr/share/sddm/themes/curupira` | ativa pelo instalador (`/etc/sddm.conf.d/10-curupira.conf`) |
+
+As cores saem de `tema/gerar-cores.py` e os papéis de parede de `tema/gerar-papeis.py`. Para ver a tela de login
+sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
+
 ## Seres da mata
 
 | Ser | Papel |
@@ -108,4 +120,4 @@ de perfil com um clique.
 ## Próximos passos
 
 - Demais seções da Toca do Curupira.
-- Tema do Plasma, da tela de login e do boot.
+- Tela de boot (Plymouth) e tema global do Plasma (tela de abertura).
