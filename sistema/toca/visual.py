@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import QByteArray, QObject, QRectF, QRunnable, QSize, Qt, QThreadPool, Signal
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QLinearGradient, QPainter, QPainterPath, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (QAbstractButton, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy,
@@ -359,8 +359,41 @@ class Segmentado(QFrame):
 
 
 # ------------------------------------------------------------------ peças comuns às seções
+class _Sinais(QObject):
+    pronto = Signal(object)
+
+
+class Tarefa(QRunnable):
+    """Roda uma função fora da interface e devolve o resultado por sinal."""
+
+    vivas: set = set()
+
+    def __init__(self, funcao, ao_terminar):
+        super().__init__()
+        self.funcao = funcao
+        self.sinais = _Sinais()
+        self.sinais.pronto.connect(ao_terminar)
+        self.setAutoDelete(False)
+        Tarefa.vivas.add(self)   # o Python segura a tarefa até ela terminar
+
+    def run(self):
+        try:
+            resultado = self.funcao()
+        except Exception as erro:  # noqa: BLE001 - qualquer falha vira mensagem na tela
+            resultado = erro
+        self.sinais.pronto.emit(resultado)
+        Tarefa.vivas.discard(self)
+
+    @staticmethod
+    def inicia(funcao, ao_terminar):
+        QThreadPool.globalInstance().start(Tarefa(funcao, ao_terminar))
+
+
 class Secao(QWidget):
-    """Base das seções. coleta() roda fora da interface; mostra() recebe o resultado."""
+    """Base das seções. coleta() roda fora da interface; mostra() recebe o resultado.
+    intervalo: de quanto em quanto tempo (ms) a seção visível é relida."""
+
+    intervalo = 4000
 
     executar = Signal(list, str, object)   # comando, mensagem de sucesso, função opcional(resultado) -> mensagem
     ir_para = Signal(str)

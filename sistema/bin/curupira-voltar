@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# curupira-voltar - a Cuca volta no tempo. Pede a senha de administrador toda vez.
+#
+#   curupira-voltar desfazer ANTES DEPOIS   desfaz o que mudou entre dois snapshots
+#                                           (uma instalação de pacotes: o par do snap-pac)
+#   curupira-voltar sistema N               volta os arquivos do sistema ao snapshot N
+#
+# Antes de mexer, guarda o sistema atual num snapshot "Antes de voltar no tempo",
+# para dar para refazer (curupira-voltar sistema <esse número>).
+# Só mexe no subvolume do sistema: /home, /var/log, o cache do pacman, /data e /boot
+# ficam de fora (são subvolumes ou partições à parte).
+# Recusa quando o kernel mudou no meio do caminho: o /boot não entra nos snapshots,
+# então o kernel de lá ficaria sem os módulos dele e o sistema poderia não iniciar.
+
+set -euo pipefail
+
+EU=/usr/local/bin/curupira-voltar
+SNAPS=/.snapshots
+
+morre() { printf '[x] %s\n' "$*" >&2; exit 1; }
+diz()   { printf '==> %s\n' "$*"; }
+
+uso() {
+  sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'
+  exit 1
+}
+
+[[ $# -ge 1 ]] || uso
+[[ $EUID -eq 0 ]] || exec pkexec "$EU" "$@"
+command -v snapper >/dev/null || morre "O snapper não está instalado."
+
+numero() {
+  [[ "${1:-}" =~ ^[0-9]+$ ]] && (( $1 > 0 )) || morre "Número de snapshot inválido: ${1:-vazio}"
+  [[ -d "$SNAPS/$1/snapshot" ]] || morre "O snapshot #$1 não existe."
+}
+
+# versões de kernel com módulos instalados num sistema (ou num snapshot)
+modulos() { ls -1 "$1/usr/lib/modules" 2>/dev/null | sort | paste -sd' '; }
+
+exec 9>/run/curupira-voltar.lock
+flock -n 9 || morre "Já tem uma volta no tempo em andamento."
+
+case "$1" in
+  desfazer)
+    numero "${2:-}"; numero "${3:-}"
+    ANTES=$2; DEPOIS=$3
+    (( ANTES < DEPOIS )) || morre "O primeiro snapshot precisa ser o mais antigo (ANTES < DEPOIS)."
+    [[ "$(modulos "$SNAPS/$ANTES/snapshot")" == "$(modulos "$SNAPS/$DEPOIS/snapshot")" ]] \
+      || morre "Essa mudança trocou o kernel. Desfazer deixaria o kernel do /boot sem os módulos dele e o sistema poderia não iniciar. Use o pacman para voltar a versão do pacote."
+    INTERVALO="$ANTES..$DEPOIS"
+    DESC="desfazer #$ANTES → #$DEPOIS"
+    ;;
+  sistema)
+    numero "${2:-}"
+    ANTES=$2
+    [[ "$(modulos "$SNAPS/$ANTES/snapshot")" == "$(modulos "")" ]] \
+      || morre "O kernel mudou depois do snapshot #$ANTES. Voltar deixaria o kernel do /boot sem os módulos dele e o sistema poderia não iniciar."
+    INTERVALO="$ANTES..0"
+    DESC="voltar ao #$ANTES"
+    ;;
+  *) uso ;;
+esac
+
+SEGURANCA="$(snapper -c root create -d "Antes de voltar no tempo ($DESC)" -c number --print-number)"
+diz "A Cuca guardou o sistema atual no snapshot #$SEGURANCA."
+diz "Voltando no tempo: $DESC"
+snapper -c root undochange "$INTERVALO"
+logger -t curupira -- "cuca: $DESC (snapshot de segurança #$SEGURANCA)" 2>/dev/null || true
+echo "Pronto: $DESC. Reinicie o computador para tudo voltar a valer. Para refazer: curupira-voltar sistema $SEGURANCA"

@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from PySide6.QtCore import QObject, QRunnable, QSize, Qt, QThreadPool, QTimer, Signal  # noqa: E402
+from PySide6.QtCore import QSize, Qt, QThreadPool, QTimer  # noqa: E402
 from PySide6.QtGui import QFont, QIcon  # noqa: E402
 from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QPushButton, QScrollArea,  # noqa: E402
                                QStackedWidget, QVBoxLayout, QWidget)
@@ -31,10 +31,10 @@ from secoes.energia import SecaoEnergia  # noqa: E402
 from secoes.privacidade import SecaoPrivacidade  # noqa: E402
 from secoes.rede import SecaoRede  # noqa: E402
 from secoes.seres import SecaoSeres  # noqa: E402
-from visual import (AREIA, BRASA, ICONES, SECOES, TINTA_SUAVE, VERDE_ESCURO, Avatar, arte, icone,  # noqa: E402
-                    rotulo)
+from visual import (AREIA, BRASA, ICONES, SECOES, TINTA_SUAVE, VERDE_ESCURO, Avatar, Tarefa, arte,  # noqa: E402
+                    icone, rotulo)
 
-VERSAO = "0.2"
+VERSAO = "0.3"
 CLASSES = {
     "energia": SecaoEnergia,
     "seres": SecaoSeres,
@@ -44,32 +44,6 @@ CLASSES = {
     "aparencia": SecaoAparencia,
 }
 COM_ROLAGEM_PROPRIA = {"snapshots"}
-
-
-class _Sinais(QObject):
-    pronto = Signal(object)
-
-
-class Tarefa(QRunnable):
-    """Roda uma função fora da interface e devolve o resultado por sinal."""
-
-    vivas: set = set()
-
-    def __init__(self, funcao, ao_terminar):
-        super().__init__()
-        self.funcao = funcao
-        self.sinais = _Sinais()
-        self.sinais.pronto.connect(ao_terminar)
-        self.setAutoDelete(False)
-        Tarefa.vivas.add(self)   # o Python segura a tarefa até ela terminar
-
-    def run(self):
-        try:
-            resultado = self.funcao()
-        except Exception as erro:  # noqa: BLE001 - qualquer falha vira mensagem na tela
-            resultado = erro
-        self.sinais.pronto.emit(resultado)
-        Tarefa.vivas.discard(self)
 
 
 def com_rolagem(w: QWidget) -> QScrollArea:
@@ -157,7 +131,7 @@ class Toca(QWidget):
 
         self.relogio = QTimer(self)
         self.relogio.timeout.connect(self.atualiza)
-        self.relogio.start(4000)
+        self.relogio.start(self.secoes[self.atual].intervalo)
 
     # -- navegação
     def vai_para(self, ident: str):
@@ -172,6 +146,8 @@ class Toca(QWidget):
         for i, b in self.botoes_nav.items():
             b.setIcon(QIcon(icone(ICONES[i], VERDE_ESCURO if i == ident else "#3E4C44")))
         self.avisa("")
+        if hasattr(self, "relogio"):
+            self.relogio.start(self.secoes[ident].intervalo)
         self.atualiza()
 
     # -- dados

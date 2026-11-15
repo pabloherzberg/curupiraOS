@@ -41,11 +41,21 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   que usa cloned-mac-address=stable no NetworkManager; microfone via wpctl), Cuca (snapper liberado para o grupo
   wheel com ALLOW_GROUPS) e Aparência (plasma-apply-colorscheme e plasma-apply-wallpaperimage).
   `--captura-todas pasta/` gera um PNG de cada seção.
+- Cuca volta no tempo (Toca 0.3): `curupira-voltar desfazer A B` / `sistema N` (snapper undochange), com
+  senha toda vez (polkit próprio, auth_admin), snapshot de segurança antes e recusa se /usr/lib/modules
+  mudou (o /boot fica fora dos snapshots). O snapper voltou a ser só do root: a Toca lê por
+  `curupira cuca lista|mudancas|guardar`. Conferido: o snapper não entra em /home, /var/log, cache do pacman,
+  /data nem /boot. **Falta rodar `sudo bash ferramentas/testar-cuca.sh`** (interrompido) e apagar snapshots
+  "teste da Cuca" que tenham sobrado.
+- Incidente de 15/11/2026: uma linha "curupira cuca lista" sem "#" no cabeçalho fez o curupira chamar a si
+  mesmo; o widget e o timer recomeçavam a cadeia e a memória esgotou (~14 mil processos root). Corrigido e
+  coberto por teste em `ferramentas/testar-curupira.sh`.
 - Widget do painel (`sistema/plasmoide/`, QML do Plasma 6): ícone na cor do perfil, lista de perfis, botão para a Toca.
 - Fontes Baloo 2 e Nunito (OFL) vão junto em `sistema/toca/fontes/`.
 
 ## A fazer
-1. Toca: voltar no tempo pela Cuca (hoje só mostra o comando undochange) e boot direto num snapshot.
+1. Cuca: terminar o teste do curupira-voltar; depois, boot direto num snapshot (exige um subvolume
+   @snapshots fora do @).
 2. Tema do Plasma, do SDDM, do Plymouth e do Konsole com as artes acima.
 3. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
    `/etc/udev/rules.d/00-curupira-boitata.rules` e `/etc/modprobe.d/curupira-boitata.conf` a religa).

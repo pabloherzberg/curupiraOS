@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Curupira OS</vendor>
+  <vendor_url>https://github.com/pabloherzberg/curupiraOS</vendor_url>
+
+  <!-- Voltar no tempo reescreve arquivos do sistema: pede a senha toda vez (sem "keep")
+       e não entra na regra 50-curupira.rules, que libera só a troca de perfil. -->
+  <action id="io.github.pabloherzberg.curupira.voltar">
+    <description>Voltar o sistema no tempo</description>
+    <message>A Cuca vai trocar arquivos do sistema pelos de um snapshot</message>
+    <icon_name>document-revert</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/bin/curupira-voltar</annotate>
+  </action>
+</policyconfig>

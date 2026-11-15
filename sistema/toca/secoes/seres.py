@@ -86,6 +86,8 @@ class CartaoSer(QAbstractButton):
 
 
 class SecaoSeres(Secao):
+    intervalo = 15000   # lê os snapshots pelo curupira (polkit): sem pressa
+
     def __init__(self):
         super().__init__()
         lay = QVBoxLayout(self); lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(14)
@@ -130,9 +132,7 @@ class SecaoSeres(Secao):
         lab = d.get("lab")
         self.cartoes["boto"].define(f'rede "{sistema.REDE_LAB}" ativa' if lab else "laboratório parado", True)
         snaps = d.get("snapshots", {})
-        if snaps.get("_erro") == "sem_permissao":
-            self.cartoes["cuca"].define("a Toca ainda não tem permissão para ver os snapshots", True)
-        elif snaps.get("_erro"):
+        if snaps.get("_erro"):
             self.cartoes["cuca"].define(snaps["_erro"], True)
         else:
             itens = snaps.get("itens", [])

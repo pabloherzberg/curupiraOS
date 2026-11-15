@@ -260,14 +260,14 @@ def rede() -> dict:
 
 # ------------------------------------------------------------------ Cuca (snapper)
 def snapshots() -> dict:
-    r = roda("snapper", "--jsonout", "-c", "root", "list", tempo=15)
+    """Lista pelo "curupira cuca lista" (o snapper só responde ao root; o polkit libera esse comando)."""
+    r = roda(comando_curupira(), "cuca", "lista", tempo=30)
     if r is None:
-        return {"_erro": "O snapper não está instalado."}
+        return {"_erro": "O comando curupira não respondeu. Ele está instalado?"}
+    if r.returncode in (126, 127):
+        return {"_erro": "A Toca não recebeu permissão para ler os snapshots."}
     if r.returncode != 0:
-        msg = ultima_linha(r)
-        if "permiss" in msg.lower() or "permission" in msg.lower():
-            return {"_erro": "sem_permissao"}
-        return {"_erro": msg}
+        return {"_erro": ultima_linha(r)}
     try:
         dados = json.loads(r.stdout)
     except json.JSONDecodeError:
@@ -296,11 +296,15 @@ def snapshots() -> dict:
 
 
 def conta_mudancas(texto: str) -> dict:
-    """Resume a saída de "snapper status A..B" (primeira coluna: + criado, - apagado, c alterado)."""
-    c = {"criados": 0, "apagados": 0, "alterados": 0}
+    """Resume a saída de "snapper status A..B" (primeira coluna: + criado, - apagado, c alterado).
+    "kernel" diz se algum módulo do kernel mudou (aí não dá para voltar sem quebrar o boot)."""
+    c = {"criados": 0, "apagados": 0, "alterados": 0, "kernel": False}
     for linha in texto.splitlines():
         if not linha.strip():
             continue
+        partes = linha.split(maxsplit=1)
+        if len(partes) == 2 and partes[1].startswith("/usr/lib/modules/"):
+            c["kernel"] = True
         marca = linha[0]
         if marca == "+":
             c["criados"] += 1
@@ -309,6 +313,21 @@ def conta_mudancas(texto: str) -> dict:
         else:
             c["alterados"] += 1
     return c
+
+
+def previa(antes: int, depois: int) -> dict:
+    """O que muda entre dois snapshots (depois=0 é o sistema atual)."""
+    r = roda(comando_curupira(), "cuca", "mudancas", str(antes), str(depois), tempo=180)
+    if r is None or r.returncode != 0:
+        return {"_erro": ultima_linha(r, "Não consegui comparar os snapshots.")}
+    return conta_mudancas(r.stdout)
+
+
+def comando_voltar() -> str:
+    local = AQUI.parent / "bin" / "curupira-voltar"
+    if os.environ.get("CURUPIRA_TESTE") and local.exists():
+        return str(local)
+    return shutil.which("curupira-voltar") or "/usr/local/bin/curupira-voltar"
 
 
 # ------------------------------------------------------------------ aparência

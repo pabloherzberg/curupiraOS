@@ -13,6 +13,10 @@
 #   curupira mac aleatorio|fixo
 #                            Caipora: o Wi-Fi e o cabo usam um MAC diferente em cada rede
 #   curupira json            estado em JSON (para a Toca do Curupira e o widget)
+#   curupira cuca lista|mudancas A B|guardar
+#                            Cuca: lista os snapshots (JSON do snapper), conta o que mudou
+#                            entre dois (B=0 é o sistema atual) e guarda um agora.
+#                            Voltar no tempo é com curupira-voltar, que pede senha.
 #
 # Quem aplica os ajustes é o TLP: o curupira grava o perfil escolhido em
 # /etc/tlp.d/20-curupira-perfil.conf e roda "tlp start".
@@ -346,6 +350,20 @@ NM
   esac
 }
 
+# ---------------------------------------------------------------- Cuca (só leitura e guardar)
+eh_numero() { [[ "$1" =~ ^[0-9]+$ ]]; }
+
+cuca() {
+  command -v snapper >/dev/null || morre "O snapper não está instalado."
+  case "${1:-}" in
+    lista)    snapper --jsonout -c root list ;;
+    mudancas) eh_numero "${2:-}" && eh_numero "${3:-}" || morre "Use: curupira cuca mudancas A B (B=0 é o sistema atual)"
+              snapper -c root status "$2..$3" ;;
+    guardar)  snapper -c root create -d "Ponto manual (Toca do Curupira)" -c number --print-number ;;
+    *)        morre "Use: curupira cuca lista | mudancas A B | guardar" ;;
+  esac
+}
+
 # ---------------------------------------------------------------- telas
 estado() {
   local p f pct st d
@@ -433,6 +451,7 @@ curupira $VERSAO: perfis de energia da Curupira OS
   curupira auto ligar|desligar
   curupira camera cortar|liberar
   curupira mac aleatorio|fixo
+  curupira cuca lista|mudancas A B|guardar
 
 Perfis:
 $(perfis)
@@ -452,6 +471,8 @@ case "$comando" in
   camera|câmera)
     [[ -n "${2:-}" ]] || { camera_cortada && echo "Câmera cortada." || echo "Câmera liberada."; exit 0; }
     precisa_root "$@"; trava; camera "$(normaliza "$2")" ;;
+  cuca)
+    precisa_root "$@"; cuca "${2:-}" "${3:-}" "${4:-}" ;;
   mac)
     [[ -n "${2:-}" ]] || { mac_aleatorio && echo "MAC diferente em cada rede." || echo "MAC original."; exit 0; }
     precisa_root "$@"; trava; mac "$(normaliza "$2")" ;;

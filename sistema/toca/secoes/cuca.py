@@ -1,14 +1,19 @@
-"""Seção Cuca: os snapshots do sistema (snapper)."""
+"""Seção Cuca: os snapshots do sistema e a volta no tempo.
+
+Ler e guardar passa pelo "curupira cuca" (sem senha). Voltar no tempo passa pelo
+curupira-voltar, que pede a senha de administrador toda vez. Antes de voltar, a seção
+conta o que vai mudar, recusa se o kernel estiver no meio e pede confirmação.
+"""
 
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QMessageBox, QScrollArea, QVBoxLayout, QWidget
 
 import sistema
-from visual import (BORDA, DEGRADES, ICONES, TINTA_SUAVE, Cartao, Ladrilho, Secao, botao, cabecalho, rotulo,
-                    tempo_relativo)
+from visual import (BORDA, DEGRADES, ICONES, TINTA_SUAVE, Cartao, Ladrilho, Secao, Tarefa, botao, cabecalho,
+                    rotulo, tempo_relativo)
 
 LIMITE_LISTA = 40
 
@@ -20,11 +25,13 @@ def descreve(item: dict) -> tuple[str, str]:
         return f"Pacotes: {item['pacotes']}", "antes e depois do pacman"
     if desc == "timeline":
         return "Automático de hora em hora", "linha do tempo"
+    if desc.startswith("Antes de voltar no tempo"):
+        return desc, "segurança da Cuca"
     if desc.startswith(("pacman", "/usr/bin/pacman")):
-        return desc.replace("/usr/bin/", ""), "antes e depois de pacotes"
+        return desc.replace("/usr/bin/", ""), "pacman"
     if not desc:
         return "Snapshot sem descrição", item["tipo"]
-    return desc, "manual" if item["limpeza"] in ("number", "") else item["limpeza"]
+    return desc, "manual"
 
 
 def agrupa(itens: list[dict]) -> list[dict]:
@@ -44,12 +51,16 @@ def agrupa(itens: list[dict]) -> list[dict]:
     return linhas
 
 
+def plural(n: int, singular: str, plural_: str) -> str:
+    return f"{n} {singular if n == 1 else plural_}"
+
+
 class LinhaSnapshot(QFrame):
-    def __init__(self, item: dict, ao_ver_mudancas):
+    def __init__(self, item: dict, ao_desfazer, ao_voltar):
         super().__init__()
         self.setObjectName("snap")
         self.setStyleSheet(f"#snap {{ border-bottom: 1px solid {BORDA}; background: transparent; }}")
-        lay = QHBoxLayout(self); lay.setContentsMargins(4, 8, 4, 8); lay.setSpacing(12)
+        lay = QHBoxLayout(self); lay.setContentsMargins(4, 8, 4, 8); lay.setSpacing(8)
         titulo, tipo = descreve(item)
         textos = QVBoxLayout(); textos.setSpacing(0)
         t = rotulo(titulo, 13, QFont.Weight.ExtraBold)
@@ -60,14 +71,22 @@ class LinhaSnapshot(QFrame):
                                 12, cor=TINTA_SUAVE))
         lay.addLayout(textos, 1)
         if item.get("post"):
-            b = botao("O que mudou")
-            b.clicked.connect(lambda: ao_ver_mudancas(item["numero"], item["post"]))
+            b = botao("Desfazer")
+            b.setToolTip("Desfaz só o que essa instalação mudou")
+            b.clicked.connect(lambda: ao_desfazer(item))
             lay.addWidget(b)
+        v = botao("Voltar até aqui")
+        v.setToolTip("Volta os arquivos do sistema a como estavam neste ponto")
+        v.clicked.connect(lambda: ao_voltar(item))
+        lay.addWidget(v)
 
 
 class SecaoCuca(Secao):
+    intervalo = 30000   # lê pelo curupira (polkit): sem pressa
+
     def __init__(self):
         super().__init__()
+        self.ocupado = False
         lay = QVBoxLayout(self); lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(12)
         lay.addWidget(cabecalho("Cuca · snapshots", "Guarda o passado. Quebrou algo? Ela volta no tempo."))
 
@@ -84,10 +103,6 @@ class SecaoCuca(Secao):
         self.b_criar = botao("Guardar agora", primario=True, icone_svg=ICONES["mais"])
         self.b_criar.clicked.connect(self._cria)
         tl.addWidget(self.b_criar)
-        self.b_permissao = botao("Dar permissão", primario=True)
-        self.b_permissao.clicked.connect(self._permite)
-        self.b_permissao.hide()
-        tl.addWidget(self.b_permissao)
         lay.addWidget(topo)
 
         self.rolagem = QScrollArea()
@@ -99,16 +114,15 @@ class SecaoCuca(Secao):
         self.rolagem.setWidget(self.lista)
         lay.addWidget(self.rolagem, 1)
 
-        dica = rotulo("Para desfazer uma instalação: sudo snapper -c root undochange ANTES..DEPOIS "
-                      "(os números aparecem em cada linha).", 12, cor=TINTA_SUAVE)
+        dica = rotulo("Voltar no tempo pede sua senha e não toca em /home, /data, /boot nem nos logs. "
+                      "Antes, a Cuca guarda o sistema atual, para dar para refazer.", 12, cor=TINTA_SUAVE)
         dica.setWordWrap(True)
-        dica.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         lay.addWidget(dica)
         self._assinatura = None
 
+    # -- guardar
     def _cria(self):
-        self.executar.emit(["snapper", "-c", "root", "create", "-d", "Ponto manual (Toca do Curupira)",
-                            "-c", "number", "--print-number"], "", self._criado)
+        self.executar.emit([sistema.comando_curupira(), "cuca", "guardar"], "", self._criado)
 
     @staticmethod
     def _criado(r) -> str:
@@ -116,42 +130,89 @@ class SecaoCuca(Secao):
             return sistema.ultima_linha(r, "Não consegui criar o snapshot.")
         return f"A Cuca guardou o sistema como está agora (snapshot #{r.stdout.strip()})."
 
-    def _permite(self):
-        self.executar.emit(["pkexec", "snapper", "-c", "root", "set-config", "ALLOW_GROUPS=wheel", "SYNC_ACL=yes"],
-                           "Pronto: a Toca já pode ver os snapshots.", None)
+    # -- voltar no tempo
+    def _desfazer(self, item: dict):
+        antes, depois = item["numero"], item["post"]
+        titulo, _ = descreve(item)
+        self._prepara(antes, depois, ["desfazer", str(antes), str(depois)],
+                      f"Desfazer “{titulo}”?",
+                      "Arquivos que essa instalação criou serão apagados, e os que ela mudou ou apagou voltam "
+                      "como eram antes.")
 
-    def _mudancas(self, antes: int, depois: int):
-        def resume(r) -> str:
-            if r is None or r.returncode != 0:
-                return sistema.ultima_linha(r, "Não consegui comparar os snapshots.")
-            c = sistema.conta_mudancas(r.stdout)
-            total = sum(c.values())
-            return (f"#{antes} → #{depois}: {total} arquivos mudaram ({c['criados']} criados, "
-                    f"{c['alterados']} alterados, {c['apagados']} apagados). "
-                    f"Desfazer: sudo snapper -c root undochange {antes}..{depois}")
-        self.executar.emit(["snapper", "-c", "root", "status", f"{antes}..{depois}"], "", resume)
+    def _voltar(self, item: dict):
+        n = item["numero"]
+        self._prepara(n, 0, ["sistema", str(n)],
+                      f"Voltar o sistema ao snapshot #{n} ({item['data'][:16]})?",
+                      "Tudo que foi instalado ou configurado no sistema depois desse ponto some, inclusive "
+                      "programas e ajustes em /etc. Seus arquivos em /home não são tocados.")
 
+    def _prepara(self, antes: int, depois: int, args: list[str], pergunta: str, explicacao: str):
+        if self.ocupado:
+            return
+        self.ocupado = True
+        self.avisar.emit("A Cuca está contando o que vai mudar…", False)
+        Tarefa.inicia(lambda: sistema.previa(antes, depois),
+                      lambda p: self._confirma(p, args, pergunta, explicacao))
+
+    def _confirma(self, p, args: list[str], pergunta: str, explicacao: str):
+        self.ocupado = False
+        if isinstance(p, Exception) or p.get("_erro"):
+            self.avisar.emit(str(p) if isinstance(p, Exception) else p["_erro"], True)
+            return
+        total = p["criados"] + p["alterados"] + p["apagados"]
+        if total == 0:
+            self.avisar.emit("Nada mudou desde esse ponto: não há o que voltar.", False)
+            return
+        if p["kernel"]:
+            self.avisar.emit("O kernel mudou nesse intervalo. Voltar deixaria o kernel do /boot sem os módulos "
+                             "dele e o sistema poderia não iniciar, então a Cuca não faz isso.", True)
+            return
+        self.avisar.emit("", False)
+        caixa = QMessageBox(self)
+        caixa.setIcon(QMessageBox.Icon.Warning)
+        caixa.setWindowTitle("Voltar no tempo")
+        caixa.setText(pergunta)
+        caixa.setInformativeText(
+            f"{explicacao}\n\n"
+            f"• {plural(p['criados'], 'arquivo criado será apagado', 'arquivos criados serão apagados')}\n"
+            f"• {plural(p['alterados'], 'arquivo alterado volta', 'arquivos alterados voltam')} à versão antiga\n"
+            f"• {plural(p['apagados'], 'arquivo apagado volta', 'arquivos apagados voltam')}\n\n"
+            "Antes, a Cuca guarda o sistema atual num snapshot, para dar para refazer. "
+            "Depois, reinicie o computador.")
+        sim = caixa.addButton("Voltar no tempo", QMessageBox.ButtonRole.DestructiveRole)
+        cancelar = caixa.addButton("Cancelar", QMessageBox.ButtonRole.RejectRole)
+        caixa.setDefaultButton(cancelar)   # Enter sem querer não volta no tempo
+        caixa.exec()
+        if caixa.clickedButton() is not sim:
+            self.avisar.emit("Nada foi mudado.", False)
+            return
+        self.executar.emit([sistema.comando_voltar(), *args], "", self._voltou)
+
+    @staticmethod
+    def _voltou(r) -> str:
+        if r is None:
+            return "Não consegui rodar o curupira-voltar."
+        if r.returncode in (126, 127):
+            return "Cancelado: a senha não foi confirmada. Nada foi mudado."
+        if r.returncode != 0:
+            return sistema.ultima_linha(r, "A Cuca não conseguiu voltar no tempo.")
+        return sistema.ultima_linha(r, "Pronto. Reinicie o computador.")
+
+    # -- dados
     def coleta(self):
         return sistema.snapshots()
 
     def mostra(self, d: dict):
         erro = d.get("_erro")
-        sem_permissao = erro == "sem_permissao"
-        self.b_permissao.setVisible(sem_permissao)
-        self.b_criar.setVisible(not sem_permissao)
-        if sem_permissao:
-            self.resumo.setText("A Toca ainda não pode ver os snapshots")
-            self.detalhe.setText("O snapper só mostra os snapshots para quem tem permissão. "
-                                 "\"Dar permissão\" libera o grupo wheel (pede sua senha uma vez).")
-            self._preenche([])
-            return
+        self.b_criar.setEnabled(not erro)
         if erro:
             self.resumo.setText("A Cuca não respondeu")
             self.detalhe.setText(erro)
             self._preenche([])
             return
         linhas = agrupa(d.get("itens", []))
-        self.resumo.setText(f"{len(d.get('itens', []))} snapshots guardados" if linhas else "Nenhum snapshot ainda")
+        self.resumo.setText(plural(len(d.get("itens", [])), "snapshot guardado", "snapshots guardados")
+                            if linhas else "Nenhum snapshot ainda")
         self.detalhe.setText("Automáticos a cada hora, e um antes e um depois de cada instalação de pacote.")
         self._preenche(linhas[:LIMITE_LISTA])
 
@@ -165,5 +226,5 @@ class SecaoCuca(Secao):
             if w:
                 w.deleteLater()
         for l in linhas:
-            self.lista_lay.addWidget(LinhaSnapshot(l, self._mudancas))
+            self.lista_lay.addWidget(LinhaSnapshot(l, self._desfazer, self._voltar))
         self.lista_lay.addStretch()

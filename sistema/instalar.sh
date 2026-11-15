@@ -13,6 +13,7 @@ AQUI="$(cd "$(dirname "$0")" && pwd)"
 
 echo "==> Instalando o comando curupira em ${RAIZ:-/}"
 install -Dm755 "$AQUI/bin/curupira" "$RAIZ/usr/local/bin/curupira"
+install -Dm755 "$AQUI/bin/curupira-voltar" "$RAIZ/usr/local/bin/curupira-voltar"
 install -dm755 "$RAIZ/usr/local/share/curupira/perfis"
 install -m644 "$AQUI"/perfis/*.perfil "$RAIZ/usr/local/share/curupira/perfis/"
 install -Dm644 "$AQUI/systemd/curupira-evento@.service" "$RAIZ/etc/systemd/system/curupira-evento@.service"
@@ -20,6 +21,8 @@ install -Dm644 "$AQUI/systemd/curupira-bateria.timer"   "$RAIZ/etc/systemd/syste
 install -Dm644 "$AQUI/udev/99-curupira-tomada.rules"    "$RAIZ/etc/udev/rules.d/99-curupira-tomada.rules"
 install -Dm644 "$AQUI/polkit/io.github.pabloherzberg.curupira.policy" \
                "$RAIZ/usr/share/polkit-1/actions/io.github.pabloherzberg.curupira.policy"
+install -Dm644 "$AQUI/polkit/io.github.pabloherzberg.curupira.voltar.policy" \
+               "$RAIZ/usr/share/polkit-1/actions/io.github.pabloherzberg.curupira.voltar.policy"
 install -Dm644 "$AQUI/polkit/50-curupira.rules" "$RAIZ/etc/polkit-1/rules.d/50-curupira.rules"
 install -dm755 "$RAIZ/var/lib/curupira"
 
@@ -36,15 +39,15 @@ install -m644 "$AQUI"/toca/fontes/* "$TOCA/fontes/"
 install -m644 "$ARTE/cordel-busto.svg" "$ARTE/cordel-figura.svg" "$ARTE/brasa-fundo.svg" \
               "$ARTE/propostas/papel-de-parede-entardecer.svg" "$TOCA/arte/"
 
-# Cuca: quem é do grupo wheel vê e cria snapshots pela Toca
-if [[ -f "$RAIZ/etc/snapper/configs/root" ]]; then
+# Cuca: o snapper fica só para o root. A Toca lê pelo "curupira cuca" (só leitura e guardar)
+# e volta no tempo pelo curupira-voltar, que pede senha. (A v0.2 liberava o grupo wheel no
+# snapper, o que deixava qualquer programa do usuário reescrever o sistema sem senha.)
+if [[ -f "$RAIZ/etc/snapper/configs/root" ]] && grep -q '^ALLOW_GROUPS="wheel"' "$RAIZ/etc/snapper/configs/root"; then
   if [[ -z "$RAIZ" ]]; then
-    snapper -c root set-config "ALLOW_GROUPS=wheel" "SYNC_ACL=yes" || echo "aviso: não consegui liberar o snapper para o grupo wheel"
-  elif command -v arch-chroot >/dev/null; then
-    arch-chroot "$RAIZ" snapper --no-dbus -c root set-config "ALLOW_GROUPS=wheel" "SYNC_ACL=yes" \
-      || echo "aviso: não consegui liberar o snapper para o grupo wheel"
+    snapper -c root set-config "ALLOW_GROUPS=" "SYNC_ACL=no" || echo "aviso: não consegui fechar o snapper para o grupo wheel"
+    setfacl -b /.snapshots 2>/dev/null || true
   else
-    sed -i 's/^ALLOW_GROUPS=.*/ALLOW_GROUPS="wheel"/; s/^SYNC_ACL=.*/SYNC_ACL="yes"/' "$RAIZ/etc/snapper/configs/root"
+    sed -i 's/^ALLOW_GROUPS=.*/ALLOW_GROUPS=""/; s/^SYNC_ACL=.*/SYNC_ACL="no"/' "$RAIZ/etc/snapper/configs/root"
   fi
 fi
 install -Dm644 "$AQUI/toca/io.github.pabloherzberg.Toca.desktop" \

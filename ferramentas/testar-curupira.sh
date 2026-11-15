@@ -33,6 +33,13 @@ confere() {   # confere <descrição> <esperado> <obtido>
   else printf '  FALHA %s (esperado "%s", veio "%s")\n' "$1" "$2" "$3"; falhas=$((falhas+1)); fi
 }
 
+echo "Cabeçalho"
+# Uma linha sem "#" no cabeçalho vira comando: em 15/11/2026 uma linha "curupira cuca lista"
+# solta fez cada execução chamar a si mesma e esgotou a memória do notebook.
+soltas="$(awk '/^set -euo pipefail/{exit} NR>1 && !/^#/ && !/^[[:space:]]*$/' "$CURUPIRA" "$RAIZ_REPO/sistema/bin/curupira-voltar")"
+confere "nenhum comando solto no cabeçalho" "" "$soltas"
+confere "não chama a si mesmo ao iniciar" "curupira" "$(ulimit -u 400; timeout 5 "$CURUPIRA" versao 2>&1 | cut -d' ' -f1)"
+
 echo "Boot na tomada"
 tomada 1; bateria 100 Full; brilho 1500
 roda evento boot >/dev/null
