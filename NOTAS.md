@@ -29,13 +29,14 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
 - Comando `curupira` (`sistema/`): os quatro perfis viram configuração do TLP 1.11 (nomes `_ON_PRF/_BAL/_SAV`;
   os antigos `_ON_AC/_ON_BAT` foram descontinuados). O TLP fica parado no perfil BAL e o curupira reescreve
   `/etc/tlp.d/20-curupira-perfil.conf`. Tomada via udev, bateria via timer de 1 min, polkit libera o grupo wheel.
-  Testado no notebook: Sereno deixa EPP `power`, sem turbo, CPU em 50% e brilho em 30%.
+  Testado no notebook: Sereno deixa EPP `power`, sem turbo, CPU em 50% e brilho em 30%. Tirar e pôr o
+  carregador troca Remanso/Correnteza com aviso na tela. Falta ver o Sereno disparar sozinho em 15%.
 
 ## A fazer
-1. Testar a automação tirando o carregador de verdade (o teste simulado passa).
-2. "Toca do Curupira": central de controle em Qt/Python e widget do painel.
-3. Tema do Plasma, do SDDM, do Plymouth e do Konsole com as artes acima.
-4. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
+1. "Toca do Curupira": central de controle em Qt/Python e widget do painel.
+2. Tema do Plasma, do SDDM, do Plymouth e do Konsole com as artes acima.
+3. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
    `/etc/udev/rules.d/00-curupira-boitata.rules` e `/etc/modprobe.d/curupira-boitata.conf` a religa).
-5. Criptografia de disco (LUKS) como opção do instalador.
-6. Gerar uma ISO própria pelo GitHub Actions.
+   O módulo nouveau ainda carrega apesar da blacklist (provavelmente pelo hook kms do initramfs).
+4. Criptografia de disco (LUKS) como opção do instalador.
+5. Gerar uma ISO própria pelo GitHub Actions.
