@@ -26,7 +26,7 @@ baseada em Arch Linux com KDE Plasma. O Curupira, guardião da mata, cuida da ba
    ```
 3. Baixe o instalador:
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/SEU_USUARIO/curupira-os/main/install.sh -o install.sh
+   curl -fsSL https://raw.githubusercontent.com/pabloherzberg/curupiraOS/main/install.sh -o install.sh
    ```
 4. Veja o plano sem alterar nada:
    ```bash
