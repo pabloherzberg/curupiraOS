@@ -193,7 +193,7 @@ class SecaoAparencia(Secao):
     LEGENDAS = {
         "brasa": "O fogo do Curupira segue o perfil e o uso do processador; os vaga-lumes são a bateria. "
                  "Boitatá, Mapinguari, Saci, Iara, Boto e Caipora aparecem quando acordam, e a lua da Cuca marca as horas.",
-        "iara": "O cabelo da Iara ondula com o perfil e o uso do processador; os anéis na água são o Wi-Fi e os "
+        "iara": "A Iara penteia o cabelo e balança a cauda conforme o perfil e o uso do processador; os anéis na água são o Wi-Fi e os "
                 "vaga-lumes, a bateria. No Sereno ela fecha os olhos.",
     }
 

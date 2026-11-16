@@ -111,8 +111,10 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   Só se mexe na tomada (ajustável) e nunca no Remanso/Sereno. Escolhe-se na Toca, em Aparência → Papel de
   parede (miniatura "Mata Viva" com o selo "animado"; com ele em uso aparece o ajuste "A mata se mexe": só na
   tomada, sempre ou parada). A Toca chama o `curupira-papel-vivo` (`--movimento …`, `--desfazer`).
-  Segunda cena: **Iara** (`arte/iara-fundo.svg`), retrato no padrão do Brasa: a Iara na lagoa sob a lua cheia, com
-  vitórias-régias. Existe parada (pacote Curupira-Iara, olhos fechados) e animada ("Iara Viva": o cabelo ondula na
+  Segunda cena: **Iara** (`arte/iara-fundo.svg`). Primeiro foi um retrato na lagoa (guardado em
+  `arte/propostas/iara-retrato.svg`); a pedido do Pablo virou a Iara de corpo inteiro, de perfil contra a lua,
+  sentada na pedra no meio do rio, penteando o cabelo, com a cauda de sereia descendo para a água (seios à mostra,
+  como na tradição, em desenho estilizado). Existe parada (pacote Curupira-Iara, olhos fechados) e animada ("Iara Viva": o cabelo ondula na
   água com o vigor, grãos de luz sobem, os anéis na água são o Wi-Fi, vaga-lumes = bateria, olhos fechados no
   Sereno). O Pablo achou os seres pequenos da cena Brasa primitivos: redesenhar no padrão dos retratos.
   Conferido fora do Plasma com `ferramentas/ver-papel-vivo.py`; **falta ver como papel de parede de verdade**
