@@ -81,7 +81,41 @@ def hd_acordado() -> bool | None:
     texto = saida("findmnt", "-no", "FSTYPE", "/data")
     if texto is None:
         return None
-    return any(t != "autofs" for t in texto.split())
+    montado = any(t != "autofs" for t in texto.split())
+    # acordado = motor girando: o kernel para o disco sozinho, mesmo com o /data montado (ler isto não o acorda)
+    disco = _hd_disco()
+    if disco:
+        try:
+            estado = open(f"/sys/block/{disco}/device/power/runtime_status").read().strip()
+        except OSError:
+            estado = ""
+        if estado == "suspended":
+            return False
+        if estado in ("active", "suspending", "resuming"):
+            return True
+    return montado
+
+
+def _hd_disco() -> str | None:
+    """O disco inteiro ("sda") onde mora o /data, lendo o fstab sem encostar na pasta."""
+    try:
+        linhas = open("/etc/fstab").read().splitlines()
+    except OSError:
+        return None
+    for linha in linhas:
+        campos = linha.split()
+        if len(campos) < 2 or campos[0].startswith("#") or campos[1] != "/data":
+            continue
+        fonte = campos[0]
+        for prefixo, pasta in (("UUID=", "by-uuid"), ("LABEL=", "by-label"), ("PARTUUID=", "by-partuuid")):
+            if fonte.startswith(prefixo):
+                fonte = f"/dev/disk/{pasta}/{fonte[len(prefixo):]}"
+        nome = os.path.basename(os.path.realpath(fonte))
+        no_sys = os.path.realpath(f"/sys/class/block/{nome}")
+        if os.path.exists(os.path.join(no_sys, "partition")):
+            nome = os.path.basename(os.path.dirname(no_sys))
+        return nome if os.path.isdir(f"/sys/block/{nome}") else None
+    return None
 
 
 def wifi() -> tuple[bool | None, str]:

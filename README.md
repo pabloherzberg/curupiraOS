@@ -145,7 +145,7 @@ sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
 |---|---|
 | Curupira | mascote e central de controle |
 | Boitatá | placa de vídeo NVIDIA: dorme por padrão; `curupira boitata acordar` ou `rodar <programa>`; depois de acordada, volta a dormir ao reiniciar |
-| Mapinguari | HD de 1 TB em `/data`: acorda ao abrir a pasta; `curupira hd dormir` fecha e para o motor; para sozinho depois de 10 min sem uso |
+| Mapinguari | HD de 1 TB em `/data`: acorda ao abrir a pasta; `curupira hd dormir` fecha e para o motor; para sozinho depois de 5 min sem uso |
 | Iara | Wi-Fi e Bluetooth |
 | Saci | turbo do processador |
 | Caipora | privacidade |

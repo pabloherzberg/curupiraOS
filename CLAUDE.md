@@ -130,9 +130,10 @@ agora e some quando ninguém está ou quando os cartões chegam até ali (`SerNo
   O `curupira` de teste (`CURUPIRA_TESTE`) não exercita esse caminho: mudanças nele pedem teste de verdade.
   **Não remova a placa do barramento com o nouveau carregado** (`echo 1 > remove`): derruba o kernel e só
   reiniciando conserta. O `boitata dormir` se recusa nesse caso; depois de acordada, ela dorme no reinício.
-- **Mapinguari:** qualquer coisa que encoste em `/data` (até `findmnt --fstab /data` ou um `stat`) monta o HD e
-  liga o motor. Para saber o estado use `curupira hd` ou `findmnt -no FSTYPE /data`; o motor, só como root:
-  `hdparm -C /dev/sda` (não acorda o disco).
+- **Mapinguari:** qualquer coisa que encoste em `/data` (até `findmnt --fstab /data` ou um `stat`) monta o HD, e
+  qualquer comando mandado ao disco (`hdparm -C`, `smartctl`, `dd`) liga o motor. Para observar sem acordar:
+  `curupira hd`, `cat /sys/block/sda/device/power/runtime_status` e `journalctl -k | grep 'sda\] St'`.
+  Quem para o motor é o kernel, 5 minutos depois do último acesso.
 - **Snapper** fica só para o root. A Toca lê por `curupira cuca …`; voltar no tempo é com `curupira-voltar`.
 - **Commits:** em português, com corpo explicando o porquê. Só faça commit/push quando o Pablo pedir.
 

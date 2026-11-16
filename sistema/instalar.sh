@@ -28,7 +28,8 @@ install -m644 "$AQUI"/perfis/*.perfil "$RAIZ/usr/local/share/curupira/perfis/"
 install -Dm644 "$AQUI/systemd/curupira-evento@.service" "$RAIZ/etc/systemd/system/curupira-evento@.service"
 install -Dm644 "$AQUI/systemd/curupira-bateria.timer"   "$RAIZ/etc/systemd/system/curupira-bateria.timer"
 install -Dm644 "$AQUI/udev/99-curupira-tomada.rules"    "$RAIZ/etc/udev/rules.d/99-curupira-tomada.rules"
-install -Dm755 "$AQUI/systemd/curupira-sono"              "$RAIZ/usr/lib/systemd/system-sleep/curupira"
+install -Dm644 "$AQUI/udev/61-curupira-mapinguari.rules" "$RAIZ/etc/udev/rules.d/61-curupira-mapinguari.rules"
+rm -f "$RAIZ/usr/lib/systemd/system-sleep/curupira"   # gancho de uma versão anterior, que acordava o HD
 install -Dm644 "$AQUI/polkit/io.github.pabloherzberg.curupira.policy" \
                "$RAIZ/usr/share/polkit-1/actions/io.github.pabloherzberg.curupira.policy"
 install -Dm644 "$AQUI/polkit/io.github.pabloherzberg.curupira.voltar.policy" \
@@ -213,6 +214,9 @@ cat > "$RAIZ/etc/tlp.d/10-curupira.conf" <<'TLP'
 # perfil escolhido em 20-curupira-perfil.conf. O TLP fica sempre no perfil BAL.
 TLP_AUTO_SWITCH=0
 TLP_PROFILE_DEFAULT=BAL
+# Mapinguari: o kernel para o motor do HD depois deste tempo sem leitura nem escrita. O padrão do TLP
+# (15 s) liga e desliga o disco a cada pausa de quem está usando; 5 minutos poupa o motor.
+AHCI_RUNTIME_PM_TIMEOUT=300
 TLP
 
 if [[ -z "$RAIZ" ]]; then

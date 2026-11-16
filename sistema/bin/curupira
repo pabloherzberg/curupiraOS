@@ -238,7 +238,6 @@ aplica() {
   ajusta_brilho "$p"
 
   grava_estado perfil "$p"
-  hd_temporizador    # toda troca de perfil (boot, tomada, bateria) repõe a parada automática do HD
   registra "perfil $p${motivo:+ ($motivo)}"
 }
 
@@ -556,9 +555,18 @@ rede_wifi() {
 }
 
 turbo_ligado() { [[ "$(cat "$SYS/devices/system/cpu/intel_pstate/no_turbo" 2>/dev/null)" == 0 ]]; }
+hd_montado() { findmnt -no FSTYPE /data 2>/dev/null | grep -qv '^autofs$'; }
+# Acordado = motor girando. Quem para o motor é o kernel, depois de 5 minutos sem leitura nem escrita
+# (AHCI_RUNTIME_PM_TIMEOUT, no 10-curupira.conf do TLP), mesmo com o /data montado; ler este estado não acorda o disco.
 hd_acordado() {
   if [[ -n "$TESTE" ]]; then [[ -e "$HD_SIMULADO" ]]; return; fi
-  findmnt -no FSTYPE /data 2>/dev/null | grep -qv '^autofs$'
+  local disco
+  disco="$(hd_disco)" || { hd_montado; return; }
+  case "$(cat "/sys/block/${disco#/dev/}/device/power/runtime_status" 2>/dev/null)" in
+    suspended) return 1 ;;
+    active|suspending|resuming) return 0 ;;
+    *) hd_montado ;;
+  esac
 }
 # Nada aqui pode encostar na pasta /data (nem o "findmnt --fstab /data"): isso acordaria o disco.
 hd_fonte() { awk '$1 !~ /^#/ && $2 == "/data" { print $1; exit }' /etc/fstab 2>/dev/null; }
@@ -573,18 +581,11 @@ hd_disco() {   # o disco inteiro (/dev/sda) onde mora o /data, pelo fstab
     *)       parte="$f" ;;
   esac
   [[ -b "$parte" ]] || return 1
-  pai="$(lsblk -no PKNAME "$parte" 2>/dev/null | head -n1)"
-  echo "/dev/${pai:-${parte#/dev/}}"
+  # pelo /sys, sem lsblk: abrir o disco (mesmo sem ler nada) zera a contagem do kernel para parar o motor,
+  # e o widget pergunta o estado a cada minuto
+  local no; no="$(readlink -f "/sys/class/block/${parte#/dev/}")"
+  if [[ -e "$no/partition" ]]; then pai="${no%/*}"; echo "/dev/${pai##*/}"; else echo "$parte"; fi
 }
-# O disco para sozinho depois de 10 minutos sem leitura nem escrita (120 × 5 s), montado ou não.
-# Só desmontar o /data não para o motor: sem isto, o Mapinguari "hibernava" girando.
-hd_temporizador() {
-  [[ -z "$TESTE" ]] || return 0
-  local disco; disco="$(hd_disco)" || return 0
-  [[ "$(cat "/sys/block/${disco#/dev/}/queue/rotational" 2>/dev/null)" == 1 ]] || return 0
-  hdparm -q -S 120 "$disco" >/dev/null 2>&1 || true
-}
-
 hd() {
   hd_existe || morre "Não há disco de dados em /data."
   case "$1" in
@@ -594,7 +595,7 @@ hd() {
       diz "O Mapinguari acordou: /data está à mão." ;;
     dormir|desligar|hibernar)
       if [[ -n "$TESTE" ]]; then rm -f "$HD_SIMULADO"; diz "Mapinguari hibernando: /data fechado e motor parado."; return 0; fi
-      if hd_acordado; then
+      if hd_montado; then
         sync
         if ! systemctl stop data.mount 2>/dev/null; then
           local quem
@@ -603,12 +604,18 @@ hd() {
           morre "O /data está em uso${quem:+ por: $quem}. Feche e tente de novo."
         fi
       fi
-      local disco; disco="$(hd_disco)" || true
-      hd_temporizador    # antes de parar: regular o temporizador acorda o disco
-      [[ -z "$disco" ]] || hdparm -q -y "$disco" >/dev/null 2>&1 || true
+      # para o motor já, sem esperar os 5 minutos: com a espera em zero o kernel suspende o disco na hora
+      local disco pm espera
+      disco="$(hd_disco)" || true
+      pm="/sys/block/${disco#/dev/}/device/power"
+      if [[ -n "$disco" && -w "$pm/autosuspend_delay_ms" && "$(cat "$pm/control" 2>/dev/null)" == auto ]]; then
+        espera="$(cat "$pm/autosuspend_delay_ms")"
+        echo 0 > "$pm/autosuspend_delay_ms"; sleep 2; echo "$espera" > "$pm/autosuspend_delay_ms"
+      elif [[ -n "$disco" ]]; then
+        hdparm -q -y "$disco" >/dev/null 2>&1 || true
+      fi
       registra "hd dormindo"
       diz "Mapinguari hibernando: /data fechado e motor parado. Ele acorda sozinho quando você abrir o /data." ;;
-    temporizador) hd_temporizador ;;
     *) morre "Use: curupira hd acordar | dormir" ;;
   esac
 }
@@ -772,7 +779,8 @@ case "$comando" in
   hd|mapinguari)
     case "$(normaliza "${2:-}")" in
       "") hd_existe || { echo "Sem disco de dados em /data."; exit 0; }
-          hd_acordado && echo "Mapinguari acordado: /data montado." || echo "Mapinguari hibernando." ;;
+          if hd_acordado; then echo "Mapinguari acordado: motor girando."
+          else echo "Mapinguari hibernando: motor parado$(hd_montado && echo ', /data ainda aberto' || true)."; fi ;;
       acordar|ligar) hd acordar ;;       # montar é só abrir a pasta: não precisa de root
       *)  precisa_root "$@"; trava; hd "$(normaliza "$2")" ;;
     esac ;;

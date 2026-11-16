@@ -150,12 +150,28 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   descartava o serviço ("deleted to break ordering cycle" no registro). Agora é puxado pelo `graphical.target`,
   e o `instalar.sh` usa `reenable` para apagar o atalho antigo. Falta conferir num boot.
 - Mapinguari de verdade (16/11/2026): `curupira hd acordar|dormir`, usado pela chave da Toca e pelo cartão rápido
-  (antes a chave de desligar só mostrava um aviso, e o estado voltava para "acordado"). Dormir desmonta o /data
-  (recusa dizendo quem está usando) e manda o disco parar (`hdparm -y`). Só desmontar nunca parou o motor: o
-  "hibernando" antigo era com o disco girando. Por isso o disco agora tem temporizador de parada de 10 minutos
-  (`hdparm -S 120`), reposto em toda troca de perfil e na volta da suspensão
-  (`/usr/lib/systemd/system-sleep/curupira`). Armadilhas: `findmnt --fstab /data` encosta na pasta e monta o
-  disco (o comando lê o `/etc/fstab` com awk); regular o temporizador acorda o disco (tem de vir antes do `-y`).
+  (antes a chave de desligar só mostrava um aviso, e o estado voltava para "acordado"). O que se descobriu:
+  quem para o motor é o **kernel** (suspensão em tempo de execução do disco, ligada pelo TLP), sozinho e mesmo
+  com o /data montado; o registro do kernel mostra "Stopping disk"/"Starting disk". O padrão do TLP era parar
+  depois de 15 s, o que liga e desliga o disco a cada pausa; agora são 5 minutos (`AHCI_RUNTIME_PM_TIMEOUT=300`
+  no `10-curupira.conf`). "Acordado" passou a ser motor girando (`/sys/block/<disco>/device/power/runtime_status`),
+  não mais /data montado: o /data pode ficar montado com o motor parado. Dormir desmonta (recusa dizendo quem
+  usa) e zera por um instante a espera do kernel, que para o disco na hora.
+  Armadilhas: `findmnt --fstab /data` monta o disco (o comando lê o `/etc/fstab` com awk). `hdparm -C`, `smartctl`
+  e qualquer comando mandado ao disco **acordam** o motor: os primeiros testes "provaram" que ele nunca dormia
+  porque o próprio monitor o religava a cada minuto. Para observar, só o `runtime_status` e o registro do kernel.
+  O temporizador do próprio disco (`hdparm -S`) não funciona neste HD e foi retirado (chegou a ir para a main
+  no 82afc50, junto de um gancho de suspensão que só servia para acordar o disco).
+  **Quem religava o disco era o udisks2**: ele lê o SMART de cada disco a cada 10 minutos, e num HD parado a
+  leitura liga o motor. O registro do kernel mostrava "Starting disk" de 10 em 10 minutos exatos, a noite toda
+  (o disco já contava 26.797 partidas). A regra `sistema/udev/61-curupira-mapinguari.rules` marca os discos de
+  prato como "sem SMART" para o udisks; em troca, o KDE não avisa mais sozinho se o HD começar a falhar
+  (`sudo smartctl -a /dev/sda` mostra, acordando o disco). Outro que mantinha o disco acordado: o `lsblk`, que o
+  `curupira` usava para achar o disco e o widget chama a cada 20 s; abrir o dispositivo, mesmo sem ler, zera a
+  contagem do kernel. Agora é pelo /sys. Conferido às 17:32 de 16/11: parou 5 minutos depois do último
+  acesso e ficou 18 minutos parado, com /data montado e os widgets rodando.
+  O desmonte automático de 10 minutos do /data não disparou em 13 minutos de teste, mesmo sem leitura nem
+  escrita: algo consulta a pasta. Não custa energia (o motor para do mesmo jeito), fica por investigar.
   Quem acorda o HD em todo login é o menu de aplicativos do Plasma (Kickoff), visto abrindo cada widget sozinho
   com o `plasmawindowed`; esconder a partição do udisks (`UDISKS_IGNORE`) não evita.
 - `curupira atualizar` (16/11/2026): puxa o repositório (o caminho fica em `/usr/local/share/curupira/origem`,

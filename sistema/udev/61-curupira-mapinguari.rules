@@ -1,0 +1,6 @@
+# Curupira OS: o Mapinguari dorme de verdade.
+# O udisks2 lê a saúde (SMART) de cada disco a cada 10 minutos, e num HD parado essa leitura liga o motor:
+# o disco girava 6 vezes por hora, dia e noite. Dizendo ao udisks que o HD não tem SMART, ele não pergunta.
+# Vale só para discos de prato (rotational); o SSD continua sendo acompanhado.
+# Para ver a saúde do HD à mão: sudo smartctl -a /dev/sda (isso acorda o disco).
+ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="sd?", ATTR{queue/rotational}=="1", ENV{ID_ATA_FEATURE_SET_SMART}="0", ENV{ID_ATA_FEATURE_SET_SMART_ENABLED}="0"
