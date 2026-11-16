@@ -7,5 +7,7 @@ Type=oneshot
 ExecStart=/usr/local/bin/curupira evento %i
 
 [Install]
-# só a instância "boot" é ativada; "tomada" vem do udev e "bateria" do timer
-WantedBy=multi-user.target
+# só a instância "boot" é ativada; "tomada" vem do udev e "bateria" do timer.
+# Tem de ser o graphical.target: o TLP só roda depois do multi-user.target, e pedir para rodar depois do TLP
+# sendo puxado pelo multi-user.target fecha um ciclo, que o systemd desfaz jogando este serviço fora.
+WantedBy=graphical.target

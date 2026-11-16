@@ -15,7 +15,10 @@
 #   curupira boitata acordar|dormir|rodar <programa>
 #                            Boitatá: põe a placa NVIDIA de volta no barramento e carrega o
 #                            driver; "rodar" acorda (se preciso) e abre o programa nela.
-#                            Ela volta a dormir no "dormir" ou ao reiniciar.
+#                            Depois de acordada, ela volta a dormir ao reiniciar.
+#   curupira hd acordar|dormir
+#                            Mapinguari: abre o /data; "dormir" fecha e para o motor do HD.
+#   curupira atualizar       baixa a versão nova do repositório e instala (pede a senha)
 #   curupira json            estado em JSON (para a Toca do Curupira e o widget)
 #   curupira brilho N        brilho da tela em N% (5 a 100)
 #   curupira cuca lista|mudancas A B|guardar
@@ -36,6 +39,7 @@ set -euo pipefail
 VERSAO=0.1
 EU=/usr/local/bin/curupira
 CONF=/etc/curupira.conf
+REPO_URL=https://github.com/pabloherzberg/curupiraOS
 
 TESTE="${CURUPIRA_TESTE:-}"
 if [[ -n "$TESTE" ]]; then
@@ -48,6 +52,8 @@ if [[ -n "$TESTE" ]]; then
   CAIPORA_CAMERA="$TESTE/modprobe.d/curupira-caipora.conf"
   CAIPORA_MAC="$TESTE/NetworkManager/conf.d/90-curupira-caipora.conf"
   BOITATA_ACORDADA="$TESTE/run/boitata-acordada"
+  HD_SIMULADO="$TESTE/run/hd-montado"
+  DIR_INSTALADO="$TESTE/instalado"
 else
   SYS=/sys
   DIR_ESTADO=/var/lib/curupira
@@ -57,6 +63,7 @@ else
   CAIPORA_CAMERA=/etc/modprobe.d/curupira-caipora.conf
   CAIPORA_MAC=/etc/NetworkManager/conf.d/90-curupira-caipora.conf
   BOITATA_ACORDADA=/run/curupira/boitata-acordada    # o mesmo caminho da regra 00-curupira-boitata.rules
+  DIR_INSTALADO=/usr/local/share/curupira    # "origem" e "versao", escritos pelo sistema/instalar.sh
 fi
 
 # Padrões; /etc/curupira.conf pode trocar qualquer um.
@@ -231,6 +238,7 @@ aplica() {
   ajusta_brilho "$p"
 
   grava_estado perfil "$p"
+  hd_temporizador    # toda troca de perfil (boot, tomada, bateria) repõe a parada automática do HD
   registra "perfil $p${motivo:+ ($motivo)}"
 }
 
@@ -548,7 +556,62 @@ rede_wifi() {
 }
 
 turbo_ligado() { [[ "$(cat "$SYS/devices/system/cpu/intel_pstate/no_turbo" 2>/dev/null)" == 0 ]]; }
-hd_acordado() { [[ -z "$TESTE" ]] && findmnt -no FSTYPE /data 2>/dev/null | grep -qv '^autofs$'; }
+hd_acordado() {
+  if [[ -n "$TESTE" ]]; then [[ -e "$HD_SIMULADO" ]]; return; fi
+  findmnt -no FSTYPE /data 2>/dev/null | grep -qv '^autofs$'
+}
+# Nada aqui pode encostar na pasta /data (nem o "findmnt --fstab /data"): isso acordaria o disco.
+hd_fonte() { awk '$1 !~ /^#/ && $2 == "/data" { print $1; exit }' /etc/fstab 2>/dev/null; }
+hd_existe() { [[ -n "$TESTE" || -n "$(hd_fonte)" ]]; }
+hd_disco() {   # o disco inteiro (/dev/sda) onde mora o /data, pelo fstab
+  local f parte pai
+  f="$(hd_fonte)"
+  case "$f" in
+    UUID=*)  parte="$(readlink -f "/dev/disk/by-uuid/${f#UUID=}")" ;;
+    LABEL=*) parte="$(readlink -f "/dev/disk/by-label/${f#LABEL=}")" ;;
+    PARTUUID=*) parte="$(readlink -f "/dev/disk/by-partuuid/${f#PARTUUID=}")" ;;
+    *)       parte="$f" ;;
+  esac
+  [[ -b "$parte" ]] || return 1
+  pai="$(lsblk -no PKNAME "$parte" 2>/dev/null | head -n1)"
+  echo "/dev/${pai:-${parte#/dev/}}"
+}
+# O disco para sozinho depois de 10 minutos sem leitura nem escrita (120 × 5 s), montado ou não.
+# Só desmontar o /data não para o motor: sem isto, o Mapinguari "hibernava" girando.
+hd_temporizador() {
+  [[ -z "$TESTE" ]] || return 0
+  local disco; disco="$(hd_disco)" || return 0
+  [[ "$(cat "/sys/block/${disco#/dev/}/queue/rotational" 2>/dev/null)" == 1 ]] || return 0
+  hdparm -q -S 120 "$disco" >/dev/null 2>&1 || true
+}
+
+hd() {
+  hd_existe || morre "Não há disco de dados em /data."
+  case "$1" in
+    acordar|ligar)
+      if [[ -n "$TESTE" ]]; then mkdir -p "${HD_SIMULADO%/*}"; touch "$HD_SIMULADO"
+      else ls /data >/dev/null 2>&1 || morre "Não consegui montar o /data."; fi
+      diz "O Mapinguari acordou: /data está à mão." ;;
+    dormir|desligar|hibernar)
+      if [[ -n "$TESTE" ]]; then rm -f "$HD_SIMULADO"; diz "Mapinguari hibernando: /data fechado e motor parado."; return 0; fi
+      if hd_acordado; then
+        sync
+        if ! systemctl stop data.mount 2>/dev/null; then
+          local quem
+          quem="$(fuser -m /data 2>/dev/null | tr -s ' ' '\n' | grep -E '^[0-9]+' | tr -d 'a-z' \
+                  | while read -r p; do cat "/proc/$p/comm" 2>/dev/null; done | sort -u | paste -sd, - | sed 's/,/, /g' || true)"
+          morre "O /data está em uso${quem:+ por: $quem}. Feche e tente de novo."
+        fi
+      fi
+      local disco; disco="$(hd_disco)" || true
+      hd_temporizador    # antes de parar: regular o temporizador acorda o disco
+      [[ -z "$disco" ]] || hdparm -q -y "$disco" >/dev/null 2>&1 || true
+      registra "hd dormindo"
+      diz "Mapinguari hibernando: /data fechado e motor parado. Ele acorda sozinho quando você abrir o /data." ;;
+    temporizador) hd_temporizador ;;
+    *) morre "Use: curupira hd acordar | dormir" ;;
+  esac
+}
 
 wp_volume() {   # wp_volume @DEFAULT_AUDIO_SINK@ -> "40 false" (porcentagem e mudo)
   [[ -n "$TESTE" ]] && { echo "null false"; return 0; }
@@ -637,6 +700,8 @@ curupira $VERSAO: perfis de energia da Curupira OS
   curupira mac aleatorio|fixo
   curupira boitata acordar|dormir
   curupira boitata rodar <programa>   abre o programa na placa NVIDIA
+  curupira hd acordar|dormir  o HD de dados (/data): dormir fecha e para o motor
+  curupira atualizar          baixa a versão nova e instala (pede a senha)
   curupira cuca lista|mudancas A B|guardar
   curupira brilho N           brilho da tela em N%
 
@@ -647,6 +712,43 @@ A troca automática muda de perfil quando o carregador entra ou sai e quando a
 bateria chega a $LIMITE_CRITICO%. Uma troca manual vale até o próximo desses eventos.
 Os limites e perfis automáticos podem ser trocados em /etc/curupira.conf.
 AJUDA
+}
+
+# ---------------------------------------------------------------- atualizar
+# Roda como quem usa o computador (o repositório é dele); só a instalação vira root, e pede a senha:
+# instalar a partir de uma pasta que qualquer programa do usuário pode alterar não deve ser sem senha.
+atualizar() {
+  [[ -n "$TESTE" || $EUID -ne 0 ]] || morre "Rode sem sudo: a senha só é pedida na hora de instalar."
+  command -v git >/dev/null || morre "Falta o git (sudo pacman -S git)."
+  local repo antes depois ramo instalada sujo=""
+  repo="${CURUPIRA_REPO:-$(cat "$DIR_INSTALADO/origem" 2>/dev/null || true)}"
+  [[ -n "$repo" && -d "$repo/.git" ]] || repo="$HOME/curupiraOS"
+  if [[ ! -d "$repo/.git" ]]; then
+    diz "Baixando a Curupira OS para $repo"
+    git clone --quiet "$REPO_URL" "$repo" || morre "Não consegui baixar de $REPO_URL (sem rede?)."
+  fi
+  ramo="$(git -C "$repo" symbolic-ref --short -q HEAD || true)"
+  [[ -n "$ramo" ]] || morre "O repositório em $repo não está num ramo. Veja: git -C $repo status"
+  antes="$(git -C "$repo" rev-parse HEAD)"
+  git -C "$repo" pull --ff-only --quiet \
+    || morre "Não consegui atualizar $repo (sem rede, ou há mudanças suas no caminho). Veja: git -C $repo status"
+  depois="$(git -C "$repo" rev-parse HEAD)"
+  [[ -z "$(git -C "$repo" status --porcelain 2>/dev/null)" ]] || sujo="+"
+  instalada="$(cat "$DIR_INSTALADO/versao" 2>/dev/null || true)"
+  if [[ "$depois$sujo" == "$instalada" && -z "$sujo" ]]; then
+    diz "A Curupira já está em dia ($ramo ${depois:0:7})."; return 0
+  fi
+  if [[ "$antes" != "$depois" ]]; then
+    diz "Novidades em $ramo:"
+    git -C "$repo" log --oneline "$antes..$depois" | head -n 20 | sed 's/^/    /'
+  fi
+  [[ -z "$sujo" ]] || avisa "Há mudanças não commitadas em $repo; elas entram na instalação."
+  if [[ -n "$TESTE" ]]; then mkdir -p "$DIR_INSTALADO"; echo "$depois$sujo" > "$DIR_INSTALADO/versao"
+  else
+    diz "Instalando (vai pedir a senha)"
+    pkexec bash "$repo/sistema/instalar.sh" >/dev/null || morre "A instalação falhou. Rode à mão para ver o erro: sudo bash $repo/sistema/instalar.sh"
+  fi
+  diz "Curupira atualizada ($ramo ${depois:0:7}$sujo). Para a doca e os widgets novos aparecerem: systemctl --user restart plasma-plasmashell"
 }
 
 # ---------------------------------------------------------------- principal
@@ -667,13 +769,21 @@ case "$comando" in
       rodar) shift 2; boitata_rodar "$@" ;;
       *)     precisa_root "$@"; trava; boitata "$(normaliza "$2")" ;;
     esac ;;
+  hd|mapinguari)
+    case "$(normaliza "${2:-}")" in
+      "") hd_existe || { echo "Sem disco de dados em /data."; exit 0; }
+          hd_acordado && echo "Mapinguari acordado: /data montado." || echo "Mapinguari hibernando." ;;
+      acordar|ligar) hd acordar ;;       # montar é só abrir a pasta: não precisa de root
+      *)  precisa_root "$@"; trava; hd "$(normaliza "$2")" ;;
+    esac ;;
   cuca)
     precisa_root "$@"; cuca "${2:-}" "${3:-}" "${4:-}" ;;
   mac)
     [[ -n "${2:-}" ]] || { mac_aleatorio && echo "MAC diferente em cada rede." || echo "MAC original."; exit 0; }
     precisa_root "$@"; trava; mac "$(normaliza "$2")" ;;
   ajuda|-h|--help|help) ajuda ;;
-  versao|--version)     echo "curupira $VERSAO" ;;
+  versao|--version)     v="$(cat "$DIR_INSTALADO/versao" 2>/dev/null || true)"; echo "curupira $VERSAO${v:+ (${v:0:7}${v:40})}" ;;
+  atualizar|update)     atualizar ;;
   perfil)
     [[ -n "${2:-}" ]] || morre "Qual perfil? $(lista_perfis | paste -sd' ')"
     precisa_root "$@"; trava

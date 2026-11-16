@@ -101,9 +101,9 @@ class SecaoEnergia(Secao):
     # -- ações
     def _hd(self, ligar: bool):
         if ligar:
-            self.executar.emit(["ls", "/data"], "O Mapinguari acordou: /data está à mão.", None)
+            self.executar.emit(["curupira", "hd", "acordar"], "O Mapinguari acordou: /data está à mão.", None)
         else:
-            self.avisar.emit("O Mapinguari volta a hibernar sozinho depois de 10 minutos sem uso.", False)
+            self.executar.emit(["curupira", "hd", "dormir"], "Mapinguari hibernando: motor parado.", None)
 
     def _bluetooth(self, ligar: bool):
         cmd = ["sh", "-c", "rfkill unblock bluetooth && sleep 1 && bluetoothctl power on"] if ligar \

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Curupira OS: ao voltar da suspensão o HD esquece o temporizador de parada; põe de novo.
+# (o systemd chama os arquivos de /usr/lib/systemd/system-sleep com "pre" ou "post")
+[ "$1" = post ] && /usr/local/bin/curupira hd temporizador
+exit 0

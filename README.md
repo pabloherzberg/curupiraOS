@@ -61,6 +61,16 @@ DISCO_SISTEMA=/dev/vda DISCO_DADOS=nenhum bash install.sh
 
 `CRIPTOGRAFIA=sim` (ou `nao`) responde de antemão a pergunta da criptografia.
 
+## Atualizar
+
+```
+curupira atualizar
+```
+
+Baixa a versão nova do repositório (`git pull`; se a pasta não existir, clona em `~/curupiraOS`) e instala de
+novo, pedindo a senha. Mostra o que mudou e avisa quando já está em dia. `curupira versao` diz qual commit está
+instalado.
+
 ## Perfis de energia
 
 O comando `curupira` troca o computador entre quatro perfis. Quem aplica os ajustes é o TLP.
@@ -135,7 +145,7 @@ sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
 |---|---|
 | Curupira | mascote e central de controle |
 | Boitatá | placa de vídeo NVIDIA: dorme por padrão; `curupira boitata acordar` ou `rodar <programa>`; depois de acordada, volta a dormir ao reiniciar |
-| Mapinguari | HD de 1 TB |
+| Mapinguari | HD de 1 TB em `/data`: acorda ao abrir a pasta; `curupira hd dormir` fecha e para o motor; para sozinho depois de 10 min sem uso |
 | Iara | Wi-Fi e Bluetooth |
 | Saci | turbo do processador |
 | Caipora | privacidade |

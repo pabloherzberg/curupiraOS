@@ -110,6 +110,35 @@ roda mac fixo >/dev/null
 confere "MAC fixo apaga a configuração" no "$([[ -e "$T/NetworkManager/conf.d/90-curupira-caipora.conf" ]] && echo sim || echo no)"
 confere "verbo errado falha" 1 "$(roda camera quebrar >/dev/null 2>&1; echo $?)"
 
+echo "Atualizar"
+G="$T/git"; mkdir -p "$G"
+gitq() { git -c user.name=teste -c user.email=teste@exemplo -c init.defaultBranch=main -c commit.gpgsign=false "$@" >/dev/null 2>&1; }
+gitq init "$G/origem"; echo um > "$G/origem/arquivo"; gitq -C "$G/origem" add -A; gitq -C "$G/origem" commit -m um
+gitq clone "$G/origem" "$G/copia"
+atualiza() { CURUPIRA_REPO="$G/copia" roda atualizar 2>&1; }
+atualiza >/dev/null
+confere "atualizar anota a versão instalada" "$(git -C "$G/copia" rev-parse HEAD)" "$(cat "$T/instalado/versao" 2>/dev/null)"
+confere "sem novidade, diz que está em dia" 1 "$(atualiza | grep -c 'já está em dia')"
+echo dois > "$G/origem/arquivo"; gitq -C "$G/origem" commit -am "segunda versão"
+confere "mostra as novidades" 1 "$(atualiza | grep -c 'segunda versão')"
+confere "puxou a versão nova" "$(git -C "$G/origem" rev-parse HEAD)" "$(cat "$T/instalado/versao")"
+echo local > "$G/copia/arquivo"
+confere "avisa das mudanças não commitadas" 1 "$(atualiza | grep -c 'não commitadas')"
+confere "a versão ganha a marca de modificada" "+" "$(tail -c 2 "$T/instalado/versao" | tr -d '\n')"
+echo tres > "$G/origem/arquivo"; gitq -C "$G/origem" commit -am tres
+confere "mudança local no caminho: falha sem instalar" 1 "$(atualiza >/dev/null; echo $?)"
+gitq -C "$G/copia" checkout -- arquivo
+
+echo "Mapinguari"
+jhd() { roda json | python3 -c 'import json,sys; print(str(json.load(sys.stdin)["hd_acordado"]).lower())'; }
+confere "o HD começa hibernando" false "$(jhd)"
+roda hd acordar >/dev/null
+confere "acordar o HD aparece no json" true "$(jhd)"
+roda hd dormir >/dev/null
+confere "dormir o HD aparece no json" false "$(jhd)"
+confere "dormir duas vezes não falha" 0 "$(roda hd dormir >/dev/null 2>&1; echo $?)"
+confere "verbo errado do HD falha" 1 "$(roda hd assustar >/dev/null 2>&1; echo $?)"
+
 echo "Boitatá"
 jboi() { roda json | python3 -c 'import json,sys; print(str(json.load(sys.stdin)["boitata_dormindo"]).lower())'; }
 confere "começa dormindo" true "$(jboi)"

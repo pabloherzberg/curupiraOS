@@ -15,10 +15,20 @@ echo "==> Instalando o comando curupira em ${RAIZ:-/}"
 install -Dm755 "$AQUI/bin/curupira" "$RAIZ/usr/local/bin/curupira"
 install -Dm755 "$AQUI/bin/curupira-voltar" "$RAIZ/usr/local/bin/curupira-voltar"
 install -dm755 "$RAIZ/usr/local/share/curupira/perfis"
+# de onde veio e qual versão: é o que o "curupira atualizar" consulta
+REPO="$(cd "$AQUI/.." && pwd)"
+if [[ -d "$REPO/.git" ]] && command -v git >/dev/null; then
+  g() { git -c safe.directory="$REPO" -C "$REPO" "$@"; }   # o repositório é do usuário e aqui é root
+  v="$(g rev-parse HEAD 2>/dev/null || true)"
+  [[ -z "$(g status --porcelain 2>/dev/null)" ]] || v="$v+"
+  [[ -z "$v" ]] || echo "$v" > "$RAIZ/usr/local/share/curupira/versao"
+  [[ -n "$RAIZ" ]] || echo "$REPO" > /usr/local/share/curupira/origem
+fi
 install -m644 "$AQUI"/perfis/*.perfil "$RAIZ/usr/local/share/curupira/perfis/"
 install -Dm644 "$AQUI/systemd/curupira-evento@.service" "$RAIZ/etc/systemd/system/curupira-evento@.service"
 install -Dm644 "$AQUI/systemd/curupira-bateria.timer"   "$RAIZ/etc/systemd/system/curupira-bateria.timer"
 install -Dm644 "$AQUI/udev/99-curupira-tomada.rules"    "$RAIZ/etc/udev/rules.d/99-curupira-tomada.rules"
+install -Dm755 "$AQUI/systemd/curupira-sono"              "$RAIZ/usr/lib/systemd/system-sleep/curupira"
 install -Dm644 "$AQUI/polkit/io.github.pabloherzberg.curupira.policy" \
                "$RAIZ/usr/share/polkit-1/actions/io.github.pabloherzberg.curupira.policy"
 install -Dm644 "$AQUI/polkit/io.github.pabloherzberg.curupira.voltar.policy" \
@@ -210,11 +220,13 @@ if [[ -z "$RAIZ" ]]; then
   udevadm control --reload
   # o evento de boot vem antes do timer, para o primeiro disparo não parecer uma troca de tomada
   /usr/local/bin/curupira evento boot
-  systemctl enable curupira-evento@boot.service >/dev/null 2>&1
+  # reenable: apaga também o atalho antigo (multi-user.target), de quando o serviço fechava um ciclo com o TLP
+  systemctl reenable curupira-evento@boot.service >/dev/null 2>&1
   systemctl enable --now curupira-bateria.timer >/dev/null 2>&1
   echo "==> Pronto. Perfil atual:"
   /usr/local/bin/curupira estado
 else
-  systemctl --root="$RAIZ" enable curupira-bateria.timer curupira-evento@boot.service >/dev/null 2>&1
+  systemctl --root="$RAIZ" enable curupira-bateria.timer >/dev/null 2>&1
+  systemctl --root="$RAIZ" reenable curupira-evento@boot.service >/dev/null 2>&1
   echo "==> Pronto: o perfil é escolhido no primeiro boot."
 fi

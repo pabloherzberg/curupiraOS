@@ -245,7 +245,9 @@ PlasmoidItem {
                         { nome: "Mapinguari · HD", icone: "mapinguari", cor: "#5B3A8E",
                           ligado: !!root.estado.hd_acordado, existe: true,
                           texto: root.estado.hd_acordado ? "acordado" : "hibernando",
-                          acao: root.estado.hd_acordado ? "" : "ls /data", msg: "O Mapinguari acordou: /data está à mão." }
+                          acao: root.estado.hd_acordado ? "curupira hd dormir" : "curupira hd acordar",
+                          msg: root.estado.hd_acordado ? "Mapinguari hibernando: motor parado."
+                                                       : "O Mapinguari acordou: /data está à mão." }
                     ]
                     delegate: Rectangle {
                         required property var modelData

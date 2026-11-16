@@ -145,6 +145,24 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   sozinha (visto com ela acordada). O KWin às vezes abre a placa nova e depois solta.
   Não medido: quanto ela gasta acordada e parada. Não testado: o driver da NVIDIA (a MX110 precisaria do
   nvidia-580xx, do AUR).
+- Perfil no boot (16/11/2026): o `curupira-evento@boot.service` nunca rodava. Ele pede para vir depois do TLP e
+  era puxado pelo `multi-user.target`, mas o TLP só roda depois desse alvo; o systemd achava o ciclo e
+  descartava o serviço ("deleted to break ordering cycle" no registro). Agora é puxado pelo `graphical.target`,
+  e o `instalar.sh` usa `reenable` para apagar o atalho antigo. Falta conferir num boot.
+- Mapinguari de verdade (16/11/2026): `curupira hd acordar|dormir`, usado pela chave da Toca e pelo cartão rápido
+  (antes a chave de desligar só mostrava um aviso, e o estado voltava para "acordado"). Dormir desmonta o /data
+  (recusa dizendo quem está usando) e manda o disco parar (`hdparm -y`). Só desmontar nunca parou o motor: o
+  "hibernando" antigo era com o disco girando. Por isso o disco agora tem temporizador de parada de 10 minutos
+  (`hdparm -S 120`), reposto em toda troca de perfil e na volta da suspensão
+  (`/usr/lib/systemd/system-sleep/curupira`). Armadilhas: `findmnt --fstab /data` encosta na pasta e monta o
+  disco (o comando lê o `/etc/fstab` com awk); regular o temporizador acorda o disco (tem de vir antes do `-y`).
+  Quem acorda o HD em todo login é o menu de aplicativos do Plasma (Kickoff), visto abrindo cada widget sozinho
+  com o `plasmawindowed`; esconder a partição do udisks (`UDISKS_IGNORE`) não evita.
+- `curupira atualizar` (16/11/2026): puxa o repositório (o caminho fica em `/usr/local/share/curupira/origem`,
+  gravado pelo `instalar.sh`; sem ele, `~/curupiraOS`, clonando se faltar) e roda o `instalar.sh` com `pkexec`.
+  Roda como usuário e a instalação pede senha de propósito: a pasta é do usuário, então instalar dela sem senha
+  seria root de graça para qualquer programa. A versão instalada fica em `.../curupira/versao` (commit, com `+`
+  se havia mudança não commitada). Só avança com `--ff-only`; mudança local no caminho faz parar sem instalar.
 - Criptografia de disco (16/11/2026): o `install.sh` pergunta (ou `CRIPTOGRAFIA=sim|nao`) e põe o Btrfs dentro
   de um LUKS2 em `/dev/mapper/curupira`; hook `sd-encrypt` (ou `encrypt`, se o initramfs for o antigo com udev) e
   `rd.luks.name=` nas duas entradas de boot. `/boot` e `/data` ficam abertos. **Nunca rodou de verdade**: só a
