@@ -15,7 +15,9 @@ import os
 import sys
 from pathlib import Path
 
-CENA = Path(__file__).resolve().parent.parent / "tema/papel-vivo/io.github.pabloherzberg.mataviva/contents/ui/Cena.qml"
+UI = Path(__file__).resolve().parent.parent / "tema/papel-vivo/io.github.pabloherzberg.mataviva/contents/ui"
+CENA = UI / "Cena.qml"
+ENCANTE = UI / "Encante.qml"      # a cena do Encante é outro arquivo: o movimento dela é todo na placa de vídeo
 TODOS = {"perfil": "pororoca", "bateria": 100, "carga": 60, "boitata_dormindo": False, "hd_acordado": True, "turbo": True,
          "wifi": True, "bluetooth": True, "lab": True, "camera_cortada": True, "microfone_mudo": True}
 
@@ -25,7 +27,8 @@ def main() -> int:
     args.add_argument("--estado", default="{}", help="JSON com os campos de 'curupira json'")
     args.add_argument("--todos", action="store_true", help="acorda todos os seres")
     args.add_argument("--parado", action="store_true", help="sem movimento")
-    args.add_argument("--arte", default="brasa", choices=["brasa", "iara"], help="a cena")
+    args.add_argument("--arte", default="brasa", choices=["brasa", "iara", "encante"], help="a cena")
+    args.add_argument("--segundos", type=float, default=0, help="fecha a janela sozinha depois desse tempo")
     args.add_argument("--hora", type=float, help="hora do dia (0 a 24) para a lua da Cuca")
     args.add_argument("--captura", metavar="PNG")
     args.add_argument("--quadros", type=int, default=1)
@@ -34,7 +37,10 @@ def main() -> int:
     op = args.parse_args()
     if op.captura:
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-        os.environ.setdefault("QT_QUICK_BACKEND", "software")
+        if op.arte != "encante":      # o Encante precisa da placa de vídeo: a captura dele abre uma janela de verdade
+            os.environ.setdefault("QT_QUICK_BACKEND", "software")
+        else:
+            os.environ.pop("QT_QPA_PLATFORM", None)
 
     from PySide6.QtCore import QTimer, QUrl
     from PySide6.QtGui import QGuiApplication
@@ -48,7 +54,7 @@ def main() -> int:
     vista.setResizeMode(QQuickView.ResizeMode.SizeRootObjectToView)
     vista.setTitle("Mata Viva")
     vista.resize(w, h)
-    vista.setSource(QUrl.fromLocalFile(str(CENA)))
+    vista.setSource(QUrl.fromLocalFile(str(ENCANTE if op.arte == "encante" else CENA)))
     if vista.status() != QQuickView.Status.Ready:
         for erro in vista.errors():
             print(erro.toString(), file=sys.stderr)
@@ -60,6 +66,8 @@ def main() -> int:
     if op.hora is not None:
         raiz.setProperty("hora", op.hora)
     vista.show()
+    if op.segundos:
+        QTimer.singleShot(int(op.segundos * 1000), app.quit)
     if not op.captura:
         return app.exec()
 

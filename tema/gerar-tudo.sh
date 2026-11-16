@@ -11,6 +11,7 @@ python3 gerar-papeis.py     # arte/brasa-fundo.svg, arte/propostas/papel-de-pare
 python3 gerar-boot.py       # arte/01-brasa.svg -> tela de boot (Plymouth) e de abertura (KSplash)
 python3 gerar-icones.py     # arte/cordel-busto.svg -> ícone do menu + avatar do login; arte/icones/ -> tema de ícones "Curupira"
 python3 gerar-papel-vivo.py # arte/brasa-fundo.svg + arte/papel-vivo/ -> camadas do papel de parede animado "Mata Viva"
+python3 gerar-encante.py    # o desenho do Encante (é o próprio programa) -> arte/encante-fundo.svg, camadas, miniatura e programas de vídeo
 # as miniaturas dos papéis de parede animados na Toca
 python3 ../ferramentas/ver-papel-vivo.py --todos --hora 23 --tamanho 400x225 --espera 6 \
   --captura papel-vivo/io.github.pabloherzberg.mataviva/contents/screenshot.png

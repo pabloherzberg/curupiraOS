@@ -39,6 +39,7 @@ O `README.md` é a documentação para quem usa.
 | `sistema/plasmoide/` | widget **Curupira** (QML): quadrado do perfil + cartão rápido do mockup |
 | `tema/` | tema: cores, Konsole, papéis de parede, login (SDDM), boot (Plymouth), tema global do Plasma (`plasma/`), estilo do Plasma da doca (`plasma-estilo/`), ícone do menu |
 | `tema/gerar-*.py`, `tema/gerar-tudo.sh` | geram as imagens a partir de `arte/` e da paleta |
+| `tema/gerar-encante.py`, `tema/papel-vivo/encante/` | o papel de parede animado **Encante**: o desenho é o próprio programa, e o movimento são os shaders dessa pasta |
 | `arte/` | artes originais em SVG (`propostas/` = alternativas guardadas) |
 | `ferramentas/` | testes (`testar-curupira.sh`, `testar-cuca.sh`), o preparo do instalador sem pendrive e a ISO (`iso/montar-iso.sh`, rodado pelo `.github/workflows/iso.yml`) |
 
@@ -92,6 +93,14 @@ maximizada por cima (animação contínua gasta energia). Todas as camadas segue
 Quem usa escolhe o papel de parede na Toca (Aparência), que chama `curupira-papel-vivo`; a miniatura é o
 `contents/screenshot.png`, tirado pelo `gerar-tudo.sh` com o `ver-papel-vivo.py`.
 
+**Encante (terceira cena do Mata Viva):** não há SVG feito à mão: o desenho é o `tema/gerar-encante.py` (o
+`arte/encante-fundo.svg` é gerado). `camada("nome")` no programa diz a que peça da animação pertence o que vem
+depois. Todo movimento novo entra nos shaders de `tema/papel-vivo/encante/` (`camada.vert/frag` para camadas com
+imagem, `boto.vert` para os botos, `rua.frag` e `raios.frag` para o que é só luz), nunca em contas de QML por
+item: isso triplicou o consumo no primeiro teste. Depois de mexer: `python3 tema/gerar-encante.py` (precisa do
+`qsb`, pacote qt6-shadertools) e `python3 ferramentas/ver-papel-vivo.py --arte encante` (abre janela; sem tela os
+botos não aparecem).
+
 **As três artes da Toca**, cada uma com um papel (não misture os papéis ao criar arte nova):
 a **paisagem** no pé da barra lateral mostra o perfil de energia (`Paisagem`, desenhada em código, cores em
 `PAISAGENS`); a **faixa** cor da noite abre a seção (`Faixa`); o **ser no canto** de baixo é quem está acordado
@@ -101,6 +110,7 @@ agora e some quando ninguém está ou quando os cartões chegam até ali (`SerNo
 
 - `bash ferramentas/testar-curupira.sh`: testes do `curupira` sem root (simula `/sys`). Rode sempre que mexer nele.
 - `python3 sistema/toca/toca.py --captura-todas /tmp/telas/`: um PNG de cada seção da Toca, sem abrir janela.
+  Com `TOCA_TEMA=noite` (ou `dia`) na frente, sai na paleta noturna: confira as duas ao mexer em cores.
 - Ícone novo aparece? `kiconfinder6 system-file-manager` deve apontar para `/usr/local/share/icons/Curupira/`.
 - Widget avulso: `plasmawindowed io.github.pabloherzberg.doca` (ou `.curupira`).
 - Papel de parede animado fora do Plasma: `python3 ferramentas/ver-papel-vivo.py --todos` (janela) ou com

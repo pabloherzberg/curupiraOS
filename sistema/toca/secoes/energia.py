@@ -7,7 +7,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QVBoxLayout
 
 import sistema
-from visual import (AREIA, BRASA, NOITE, ORDEM_PERFIS, VERDE_ESCURO, Avatar, CartaoPerfil, LadrilhoSer,
+from visual import (AREIA, BRASA, CARTAO_NOITE, ORDEM_PERFIS, VERDE_ESCURO, Avatar, CartaoPerfil, LadrilhoSer,
                     Medidor, Secao, Segmentado, linha_ser, rotulo)
 
 
@@ -27,7 +27,7 @@ class SecaoEnergia(Secao):
 
         # cartão de consumo
         self.cartao = QFrame(); self.cartao.setObjectName("consumo")
-        self.cartao.setStyleSheet(f"#consumo {{ background: {NOITE}; border-radius: 20px; }}")
+        self.cartao.setStyleSheet(f"#consumo {{ background: {CARTAO_NOITE}; border-radius: 20px; }}")
         self.cartao.setFixedHeight(112)
         c = QHBoxLayout(self.cartao); c.setContentsMargins(22, 0, 12, 0); c.setSpacing(20)
         esq = QVBoxLayout(); esq.setSpacing(2); esq.addStretch()

@@ -31,7 +31,7 @@ from secoes.energia import SecaoEnergia  # noqa: E402
 from secoes.privacidade import SecaoPrivacidade  # noqa: E402
 from secoes.rede import SecaoRede  # noqa: E402
 from secoes.seres import SecaoSeres  # noqa: E402
-from visual import (AREIA, BRASA, ICONES, SECOES, TINTA_SUAVE, VERDE_ESCURO, Avatar, Paisagem, Tarefa,  # noqa: E402
+from visual import (AREIA, AREIA_FORTE, BORDA_FORTE, BRASA, CARTAO, FUNDO, ICONES, TINTA_APAGADA, TINTA_MEDIA, SECOES, TINTA_SUAVE, VERDE_ESCURO, Avatar, Paisagem, Tarefa,  # noqa: E402
                     arte, icone, rotulo)
 
 VERSAO = "0.3"
@@ -65,9 +65,9 @@ class Toca(QWidget):
         self.setMinimumSize(900, 600)
         self.setObjectName("toca")
         self.setStyleSheet(
-            "#toca { background: #FFFFFF; } QToolTip { font-size: 12px; }"
+            f"#toca {{ background: {FUNDO}; }} QToolTip {{ font-size: 12px; }}"
             "QScrollBar:vertical { width: 8px; background: transparent; margin: 0; }"
-            "QScrollBar::handle:vertical { background: #E2D7C3; border-radius: 4px; min-height: 30px; }"
+            f"QScrollBar::handle:vertical {{ background: {BORDA_FORTE}; border-radius: 4px; min-height: 30px; }}"
             "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }"
             "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }")
         self.pool = QThreadPool.globalInstance()
@@ -108,9 +108,9 @@ class Toca(QWidget):
             b.setFocusPolicy(Qt.FocusPolicy.TabFocus)
             b.setStyleSheet(
                 "QPushButton { text-align: left; padding: 0 12px; border: 0; border-radius: 12px;"
-                " background: transparent; color: #3E4C44; }"
-                "QPushButton:hover { background: #F4EADB; }"
-                f"QPushButton:checked {{ background: #FFFFFF; color: {VERDE_ESCURO}; }}")
+                f" background: transparent; color: {TINTA_MEDIA}; }}"
+                f"QPushButton:hover {{ background: {AREIA_FORTE}; }}"
+                f"QPushButton:checked {{ background: {CARTAO}; color: {VERDE_ESCURO}; }}")
             b.toggled.connect(lambda marcado, i=ident: marcado and self.abre(i))
             n.addWidget(b)
             self.botoes_nav[ident] = b
@@ -122,7 +122,7 @@ class Toca(QWidget):
             self.secoes[ident] = secao
             self.pilha.addWidget(secao if ident in COM_ROLAGEM_PROPRIA else com_rolagem(secao))
         n.addStretch()
-        n.addWidget(rotulo(f"Curupira OS · Toca {VERSAO}", 11, cor="#8A968F"))
+        n.addWidget(rotulo(f"Curupira OS · Toca {VERSAO}", 11, cor=TINTA_APAGADA))
         n.addSpacing(Paisagem.ALTURA - 20)
         # a mata no pé da barra lateral, na cor do perfil de energia em uso
         self.nav = nav
@@ -168,7 +168,7 @@ class Toca(QWidget):
         self.atual = ident
         self.pilha.setCurrentIndex([s[0] for s in SECOES].index(ident))
         for i, b in self.botoes_nav.items():
-            b.setIcon(QIcon(icone(ICONES[i], VERDE_ESCURO if i == ident else "#3E4C44")))
+            b.setIcon(QIcon(icone(ICONES[i], VERDE_ESCURO if i == ident else TINTA_MEDIA)))
         self.avisa("")
         if hasattr(self, "relogio"):
             self.relogio.start(self.secoes[ident].intervalo)
@@ -216,9 +216,16 @@ class Toca(QWidget):
             else:
                 texto, erro = res
                 self.avisa(texto, erro)
+                # trocou entre dia e noite: as cores da Toca são escolhidas ao abrir, então ela reabre no mesmo lugar
+                if not erro and cmd and cmd[0] == "plasma-apply-colorscheme" and visual._tema_escuro() != visual.ESCURO:
+                    QTimer.singleShot(500, self.reabre)
+                    return
             self.atualiza()
 
         self.pool.start(Tarefa(trabalho, fim))
+
+    def reabre(self):
+        os.execv(sys.executable, [sys.executable, str(Path(__file__).resolve()), "--secao", self.atual or "energia"])
 
 
 def captura(app: QApplication, janela: Toca, ident: str, arquivo: str):

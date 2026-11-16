@@ -195,6 +195,8 @@ class SecaoAparencia(Secao):
                  "Boitatá, Mapinguari, Saci, Iara, Boto e Caipora aparecem quando acordam, e a lua da Cuca marca as horas.",
         "iara": "A Iara penteia o cabelo e balança a cauda conforme o perfil e o uso do processador; os anéis na água são o Wi-Fi e os "
                 "vaga-lumes, a bateria. No Sereno ela fecha os olhos.",
+        "encante": "A cidade dos botos, suspensa na mata alagada. O Boto dá a volta nela; o perfil de energia diz o quanto "
+                   "as casas estão acesas, e com o laboratório de rede ligado mais botos rondam as torres.",
     }
 
     def _papel_vivo(self, cena: str | None = None, movimento: str | None = None, nome: str = ""):

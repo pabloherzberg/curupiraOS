@@ -179,6 +179,26 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   Roda como usuário e a instalação pede senha de propósito: a pasta é do usuário, então instalar dela sem senha
   seria root de graça para qualquer programa. A versão instalada fica em `.../curupira/versao` (commit, com `+`
   se havia mudança não commitada). Só avança com `--ff-only`; mudança local no caminho faz parar sem instalar.
+- Toca à noite (16/11/2026): a Toca tinha as cores fixas do mockup e ficava branca com o Curupira Noite. Agora
+  o `visual.py` escolhe a paleta ao abrir (`ESCURO`, lido do `ColorScheme` do `kdeglobals`; `TOCA_TEMA=noite|dia`
+  força, para as capturas). Os tons da noite são os do esquema Curupira Noite do `gerar-cores.py`; cor nova na
+  Toca entra com `_c(dia, noite)`, nunca solta. Ao trocar o tema pela Aparência, a Toca reabre na mesma seção.
+  O cartão rápido já seguia o tema (Kirigami.Theme). Não conferido: a troca ao vivo pelo botão.
+- Encante (16/11/2026): terceira cena do Mata Viva, a cidade dos botos suspensa na mata alagada (casas de cabaça e
+  de búzio presas aos troncos, sem chão, rua nem porta; água turva e alaranjada ao longe, como a do Amazonas). O
+  Boto dá a volta na cidade em 56 s: passa perto, sai pela direita e volta ao longe, entre as casas de trás e as
+  da frente. O desenho é um programa (`tema/gerar-encante.py`), que também recorta as camadas, apara cada uma
+  até o que tem desenho e compila os programas da placa de vídeo (`tema/papel-vivo/encante/`, com o `qsb`).
+  A cena é o `Encante.qml`, carregado pelo `main.qml` quando `Cena=2`. Decisões que custaram medir:
+  o movimento todo é calculado na placa de vídeo, a partir de um relógio só. Com as posições calculadas em
+  QML, item por item, a cena gastava 57% de um núcleo a 60 quadros por segundo; com tudo nos shaders, 16% na
+  janela de teste e 18% dentro do Plasma (0% com janela maximizada por cima). Aparar as camadas não mudou o
+  consumo: o gargalo era a conta no processador, não o desenho. O corpo do Boto ondula num vertex shader
+  (uma imagem só, sem cortar em pedaços). A cena só desenha com a placa de vídeo: a captura sem tela
+  (`offscreen`) não mostra os botos, então a miniatura da Toca é o desenho parado.
+  O perfil de energia diz o quanto a cidade acende; o laboratório de rede traz mais botos. Falta: o Boto piscar,
+  remar e soltar bolhas; o tema de cores Encante (estudo em `arte/propostas/encante/`); conferir em outra
+  resolução de tela.
 - Criptografia de disco (16/11/2026): o `install.sh` pergunta (ou `CRIPTOGRAFIA=sim|nao`) e põe o Btrfs dentro
   de um LUKS2 em `/dev/mapper/curupira`; hook `sd-encrypt` (ou `encrypt`, se o initramfs for o antigo com udev) e
   `rd.luks.name=` nas duas entradas de boot. `/boot` e `/data` ficam abertos. **Nunca rodou de verdade**: só a

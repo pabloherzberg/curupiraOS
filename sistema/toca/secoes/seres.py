@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor, QFont, QPainter
 from PySide6.QtWidgets import QAbstractButton, QGridLayout, QHBoxLayout, QSizePolicy, QVBoxLayout
 
 import sistema
-from visual import (BORDA, BRASA, TINTA, TINTA_SUAVE, VERDE, VERDE_ESCURO, LadrilhoSer, Secao,
+from visual import (BORDA, BRASA, CARTAO, CARTAO_SOBRE, TINTA, TINTA_SUAVE, VERDE, VERDE_ESCURO, LadrilhoSer, Secao,
                     Faixa, rotulo, tempo_relativo)
 
 # (chave, nome, papel, descrição, seção onde se controla) - textos do mockup Main.dc.html
@@ -54,7 +54,7 @@ class CartaoSer(QAbstractButton):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         r = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
         p.setPen(QColor(VERDE if self.hasFocus() else BORDA))
-        p.setBrush(QColor("#FFFDF9" if self.underMouse() else "#FFFFFF"))
+        p.setBrush(QColor(CARTAO_SOBRE if self.underMouse() else CARTAO))
         p.drawRoundedRect(r, 16, 16)
         x = 76
         w = r.width() - x - 14

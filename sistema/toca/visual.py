@@ -17,20 +17,62 @@ from PySide6.QtWidgets import (QAbstractButton, QApplication, QFrame, QHBoxLayou
 AQUI = Path(__file__).resolve().parent
 
 # ------------------------------------------------------------------ cores e fontes (NOTAS.md / mockup)
-TINTA = "#1E2A24"
-TINTA_SUAVE = "#5B6A61"
-AREIA = "#FBF4E8"
-BORDA = "#EFE6D6"
-NOITE = "#241A4A"
-VERDE = "#12935F"
-VERDE_ESCURO = "#0F7A54"
-BRASA = "#B4380B"
+def _tema_escuro() -> bool:
+    """A Toca acompanha o esquema de cores do Plasma: Curupira Noite (ou outro escuro) escurece a janela toda.
+    TOCA_TEMA=noite|dia força um dos dois (para as capturas)."""
+    forcado = os.environ.get("TOCA_TEMA", "").lower()
+    if forcado:
+        return forcado in ("noite", "escuro")
+    try:
+        texto = (Path.home() / ".config" / "kdeglobals").read_text(errors="ignore")
+    except OSError:
+        return False
+    achado = re.search(r"^ColorScheme=(.+)$", texto, re.MULTILINE)
+    nome = achado.group(1).strip().lower() if achado else ""
+    return "noite" in nome or "dark" in nome or "escuro" in nome
 
+
+ESCURO = _tema_escuro()
+
+
+def _c(dia: str, noite: str) -> str:
+    return noite if ESCURO else dia
+
+
+# Os tons da noite são os do esquema Curupira Noite (tema/gerar-cores.py).
+TINTA = _c("#1E2A24", "#F3EEE4")
+TINTA_SUAVE = _c("#5B6A61", "#B9AED6")
+TINTA_MEDIA = _c("#3E4C44", "#D5CCEB")       # texto de botão que não está escolhido
+TINTA_APAGADA = _c("#8A968F", "#8A7FB3")     # desabilitado, rodapé
+FUNDO = _c("#FFFFFF", "#1E1640")             # o fundo da janela
+CARTAO = _c("#FFFFFF", "#251B4D")            # cartões e botões claros
+CARTAO_SOBRE = _c("#FFFDF9", "#2B2057")      # cartão com o mouse em cima
+AREIA = _c("#FBF4E8", "#191236")             # barra lateral e painéis rebaixados
+AREIA_FORTE = _c("#F4EADB", "#2E2360")       # mouse em cima, na barra lateral
+SEGMENTO = _c("#EDE4D4", "#140E2C")          # trilho do seletor de segmentos
+BORDA = _c("#EFE6D6", "#3A2D6B")
+BORDA_FORTE = _c("#E2D7C3", "#4A3D7D")
+TRILHO = _c("#D9CFBE", "#4A3D7D")            # chave desligada
+NOITE = "#241A4A"
+CARTAO_NOITE = _c("#241A4A", "#140E2C")      # o cartão de consumo: sempre o mais escuro da tela
+VERDE = "#12935F"
+VERDE_ESCURO = _c("#0F7A54", "#7FE3B0")      # verde de texto
+BRASA = _c("#B4380B", "#FF8A5C")             # alerta, em texto
+
+
+def _mistura(cor: str, fundo: str, quanto: float) -> str:
+    a, b = QColor(cor), QColor(fundo)
+    return QColor(round(a.red() * quanto + b.red() * (1 - quanto)),
+                  round(a.green() * quanto + b.green() * (1 - quanto)),
+                  round(a.blue() * quanto + b.blue() * (1 - quanto))).name()
+
+
+# cor do perfil e o fundo suave do cartão escolhido (à noite, a cor do perfil diluída no cartão)
 PERFIS_VISUAL = {
-    "pororoca":   ("#FF7A45", "#FFF1E8"),
-    "correnteza": ("#2BB37A", "#E8F7EF"),
-    "remanso":    ("#2468B8", "#EAF1FB"),
-    "sereno":     ("#5B3A8E", "#F1EBF8"),
+    "pororoca":   ("#FF7A45", _c("#FFF1E8", _mistura("#FF7A45", "#251B4D", 0.28))),
+    "correnteza": ("#2BB37A", _c("#E8F7EF", _mistura("#2BB37A", "#251B4D", 0.28))),
+    "remanso":    ("#2468B8", _c("#EAF1FB", _mistura("#2468B8", "#251B4D", 0.38))),
+    "sereno":     ("#5B3A8E", _c("#F1EBF8", _mistura("#8E73C2", "#251B4D", 0.38))),
 }
 ORDEM_PERFIS = ["pororoca", "correnteza", "remanso", "sereno"]
 
@@ -171,7 +213,7 @@ class Chave(QAbstractButton):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         ligado = self.isChecked()
-        trilho = QColor(VERDE if ligado else "#D9CFBE")
+        trilho = QColor(VERDE if ligado else TRILHO)
         if not self.isEnabled():
             trilho.setAlpha(110)
         p.setPen(Qt.PenStyle.NoPen)
@@ -212,7 +254,7 @@ class CartaoPerfil(QAbstractButton):
         r = QRectF(self.rect()).adjusted(1, 1, -1, -1)
         p.setPen(QColor(self.cor if sel else BORDA).toRgb())
         pen = p.pen(); pen.setWidthF(2); p.setPen(pen)
-        p.setBrush(QColor(self.suave if sel else "#FFFFFF"))
+        p.setBrush(QColor(self.suave if sel else CARTAO))
         p.drawRoundedRect(r, 16, 16)
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QColor(self.cor))
@@ -635,7 +677,7 @@ class LinhaSer(QFrame):
     def __init__(self, nome: str, chave: str):
         super().__init__()
         self.setObjectName("linhaSer")
-        self.setStyleSheet(f"#linhaSer {{ border: 1px solid {BORDA}; border-radius: 16px; background: #FFFFFF; }}")
+        self.setStyleSheet(f"#linhaSer {{ border: 1px solid {BORDA}; border-radius: 16px; background: {CARTAO}; }}")
         self.setMinimumHeight(60)
         lay = QHBoxLayout(self)
         lay.setContentsMargins(12, 8, 12, 8)
@@ -665,7 +707,7 @@ class Segmentado(QFrame):
     def __init__(self, opcoes: list[tuple[str, str]]):
         super().__init__()
         self.setObjectName("segmentado")
-        self.setStyleSheet("#segmentado { background: #EDE4D4; border-radius: 12px; }")
+        self.setStyleSheet(f"#segmentado {{ background: {SEGMENTO}; border-radius: 12px; }}")
         lay = QHBoxLayout(self)
         lay.setContentsMargins(3, 3, 3, 3); lay.setSpacing(2)
         self.botoes: dict[str, QPushButton] = {}
@@ -676,10 +718,10 @@ class Segmentado(QFrame):
             b.setFont(fonte(13, QFont.Weight.Bold))
             b.setCursor(Qt.CursorShape.PointingHandCursor)
             b.setStyleSheet(
-                "QPushButton { border: 0; border-radius: 10px; padding: 0 12px; background: transparent; color: #4E5C54; }"
-                f"QPushButton:checked {{ background: #FFFFFF; color: {BRASA}; }}"
-                "QPushButton:disabled { color: #A59C8C; }"
-                "QPushButton:checked:disabled { color: #B4380B; }")
+                f"QPushButton {{ border: 0; border-radius: 10px; padding: 0 12px; background: transparent; color: {TINTA_MEDIA if ESCURO else '#4E5C54'}; }}"
+                f"QPushButton:checked {{ background: {_c('#FFFFFF', '#2E2360')}; color: {BRASA}; }}"
+                f"QPushButton:disabled {{ color: {_c('#A59C8C', TINTA_APAGADA)}; }}"
+                f"QPushButton:checked:disabled {{ color: {BRASA}; }}")
             lay.addWidget(b)
             self.botoes[ident] = b
 
@@ -769,7 +811,7 @@ class Cartao(QFrame):
         super().__init__()
         Cartao._n += 1
         self.setObjectName(f"cartao{Cartao._n}")
-        fundo = AREIA if areia else "#FFFFFF"
+        fundo = AREIA if areia else CARTAO
         borda = "none" if areia else f"1px solid {BORDA}"
         self.setStyleSheet(f"#{self.objectName()} {{ background: {fundo}; border: {borda}; border-radius: {raio}px; }}")
 
@@ -781,13 +823,13 @@ def botao(texto: str, primario: bool = False, icone_svg: str | None = None) -> Q
     b.setMinimumHeight(38)
     if primario:
         b.setStyleSheet(f"QPushButton {{ background: {VERDE}; color: #FFFFFF; border: 0; border-radius: 12px; padding: 0 16px; }}"
-                        f"QPushButton:hover {{ background: {VERDE_ESCURO}; }}"
-                        "QPushButton:disabled { background: #A9CDBD; }")
+                        "QPushButton:hover { background: #0F7A54; }"
+                        f"QPushButton:disabled {{ background: {_c('#A9CDBD', '#1E6E4D')}; color: {_c('#FFFFFF', '#8FBFA8')}; }}")
         cor_icone = "#FFFFFF"
     else:
-        b.setStyleSheet(f"QPushButton {{ background: #FFFFFF; color: {TINTA}; border: 1px solid #E2D7C3; border-radius: 12px; padding: 0 14px; }}"
-                        "QPushButton:hover { background: #FBF4E8; }"
-                        "QPushButton:disabled { color: #A59C8C; }")
+        b.setStyleSheet(f"QPushButton {{ background: {CARTAO}; color: {TINTA}; border: 1px solid {BORDA_FORTE}; border-radius: 12px; padding: 0 14px; }}"
+                        f"QPushButton:hover {{ background: {_c('#FBF4E8', '#2E2360')}; }}"
+                        f"QPushButton:disabled {{ color: {_c('#A59C8C', TINTA_APAGADA)}; }}")
         cor_icone = TINTA
     if icone_svg:
         from PySide6.QtGui import QIcon

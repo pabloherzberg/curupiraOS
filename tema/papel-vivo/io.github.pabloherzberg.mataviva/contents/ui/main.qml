@@ -1,4 +1,5 @@
-// Mata Viva: papel de parede animado da Curupira OS. A cena fica em Cena.qml; aqui só se lê o estado
+// Mata Viva: papel de parede animado da Curupira OS. As cenas ficam em Cena.qml (Brasa e Iara) e em
+// Encante.qml (a cidade dos botos, com o movimento todo na placa de vídeo); aqui só se lê o estado
 // do sistema com "curupira json" (o mesmo que alimenta a Toca e o widget) e se decide se a mata se mexe.
 
 import QtQuick
@@ -13,7 +14,7 @@ WallpaperItem {
     property var estado: ({})
     // 0: só na tomada; 1: sempre; 2: nunca
     readonly property int movimento: raiz.configuration.Movimento || 0
-    readonly property string arte: ["brasa", "iara"][raiz.configuration.Cena || 0] || "brasa"
+    readonly property string arte: ["brasa", "iara", "encante"][raiz.configuration.Cena || 0] || "brasa"
     // animação contínua mantém a placa de vídeo acordada: na bateria, e nos perfis de economia, a mata fica parada
     readonly property bool economia: estado.perfil === "remanso" || estado.perfil === "sereno"
     // com uma janela maximizada ou em tela cheia por cima ninguém vê a mata: ela para até a janela sair
@@ -79,15 +80,18 @@ WallpaperItem {
         interval: 300000
         running: true
         repeat: true
-        onTriggered: { const d = new Date(); cena.hora = d.getHours() + d.getMinutes() / 60 }
+        onTriggered: { const d = new Date(); raiz.hora = d.getHours() + d.getMinutes() / 60 }
     }
 
     Rectangle { anchors.fill: parent; color: "#0B0717" }
-    Cena {
+    property real hora: new Date().getHours() + new Date().getMinutes() / 60
+    Loader {
         id: cena
         anchors.fill: parent
-        estado: raiz.estado
-        arte: raiz.arte
-        mover: raiz.mover
+        source: raiz.arte === "encante" ? "Encante.qml" : "Cena.qml"
     }
+    Binding { target: cena.item; property: "estado"; value: raiz.estado; when: cena.status === Loader.Ready }
+    Binding { target: cena.item; property: "arte"; value: raiz.arte; when: cena.status === Loader.Ready }
+    Binding { target: cena.item; property: "mover"; value: raiz.mover; when: cena.status === Loader.Ready }
+    Binding { target: cena.item; property: "hora"; value: raiz.hora; when: cena.status === Loader.Ready }
 }

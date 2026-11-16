@@ -383,7 +383,8 @@ DIR_PAPEIS = Path("/usr/local/share/wallpapers")
 PAPEL_VIVO = "io.github.pabloherzberg.mataviva"
 MOVIMENTOS_DO_PAPEL = ["tomada", "sempre", "parado"]    # na ordem do ajuste "Movimento" do plugin (0, 1, 2)
 # cenas do papel de parede animado, na ordem do ajuste "Cena": (chave, nome na Toca, miniatura)
-CENAS_DO_PAPEL = [("brasa", "Mata Viva", "screenshot.png"), ("iara", "Iara Viva", "screenshot-iara.png")]
+CENAS_DO_PAPEL = [("brasa", "Mata Viva", "screenshot.png"), ("iara", "Iara Viva", "screenshot-iara.png"),
+                  ("encante", "Encante", "screenshot-encante.png")]
 
 
 def previa_papel_vivo(arquivo: str = "screenshot.png") -> Path | None:

@@ -14,7 +14,7 @@ Kirigami.FormLayout {
     QQC2.ComboBox {
         id: cenaEscolhida
         Kirigami.FormData.label: "Cena:"
-        model: ["Brasa: o Curupira e os seres da mata", "Iara na lagoa"]
+        model: ["Brasa: o Curupira e os seres da mata", "Iara na lagoa", "Encante: a cidade dos botos"]
     }
     QQC2.ComboBox {
         id: movimento

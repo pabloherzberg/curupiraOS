@@ -5,6 +5,7 @@
 #   curupira-papel-vivo                        aplica         (no repositório: bash tema/aplicar-papel-vivo.sh)
 #   curupira-papel-vivo --cena brasa           o Curupira e os seres da mata (padrão)
 #   curupira-papel-vivo --cena iara            a Iara na lagoa
+#   curupira-papel-vivo --cena encante         a cidade dos botos no fundo do rio
 #   curupira-papel-vivo --movimento tomada     a mata só se mexe na tomada (padrão)
 #   curupira-papel-vivo --movimento sempre     se mexe também na bateria
 #   curupira-papel-vivo --movimento parado     os seres aparecem e somem, mas sem movimento
@@ -31,7 +32,8 @@ while (( $# )); do
       case "${2:-}" in
         brasa) cena=0 ;;
         iara) cena=1 ;;
-        *) echo "Use: curupira-papel-vivo --cena brasa|iara" >&2; exit 1 ;;
+        encante) cena=2 ;;
+        *) echo "Use: curupira-papel-vivo --cena brasa|iara|encante" >&2; exit 1 ;;
       esac
       shift 2 ;;
     *) echo "Opção desconhecida: $1" >&2; exit 1 ;;
