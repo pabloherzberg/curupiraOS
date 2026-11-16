@@ -1,0 +1,7 @@
+# Curupira OS: a Boitatá (placa NVIDIA) dorme por padrão. A placa e seus dispositivos auxiliares são
+# removidos do barramento assim que aparecem, a não ser que "curupira boitata acordar" tenha deixado
+# o aviso em /run (que some ao reiniciar: todo boot começa com ela dormindo).
+# Para deixá-la sempre acordada, apague este arquivo.
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", TEST!="/run/curupira/boitata-acordada", ATTR{power/control}="auto", ATTR{remove}="1"
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", TEST!="/run/curupira/boitata-acordada", ATTR{power/control}="auto", ATTR{remove}="1"
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330", TEST!="/run/curupira/boitata-acordada", ATTR{power/control}="auto", ATTR{remove}="1"

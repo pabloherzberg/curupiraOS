@@ -40,7 +40,7 @@ O `README.md` é a documentação para quem usa.
 | `tema/` | tema: cores, Konsole, papéis de parede, login (SDDM), boot (Plymouth), tema global do Plasma (`plasma/`), estilo do Plasma da doca (`plasma-estilo/`), ícone do menu |
 | `tema/gerar-*.py`, `tema/gerar-tudo.sh` | geram as imagens a partir de `arte/` e da paleta |
 | `arte/` | artes originais em SVG (`propostas/` = alternativas guardadas) |
-| `ferramentas/` | testes (`testar-curupira.sh`, `testar-cuca.sh`) e o preparo do instalador sem pendrive |
+| `ferramentas/` | testes (`testar-curupira.sh`, `testar-cuca.sh`), o preparo do instalador sem pendrive e a ISO (`iso/montar-iso.sh`, rodado pelo `.github/workflows/iso.yml`) |
 
 ## Artes: de onde vem cada imagem
 
@@ -125,6 +125,11 @@ agora e some quando ninguém está ou quando os cartões chegam até ali (`SerNo
   O painel original do KDE está guardado em `~/.config/curupira-painel-anterior` (`curupira-doca --desfazer`).
 - **Boot:** a entrada "modo de recuperação" inicia sem Plymouth (`plymouth.enable=0`). O mkinitcpio do Arch
   não gera mais a imagem fallback. A tela de login volta ao padrão apagando `/etc/sddm.conf.d/10-curupira.conf`.
+- **Boitatá:** a placa NVIDIA dorme fora do barramento PCI. Para trazê-la de volta não basta o rescan: é preciso
+  ligar a porta e reativar o enlace (está no `boitata acordar` do `curupira`; a história está no `NOTAS.md`).
+  O `curupira` de teste (`CURUPIRA_TESTE`) não exercita esse caminho: mudanças nele pedem teste de verdade.
+  **Não remova a placa do barramento com o nouveau carregado** (`echo 1 > remove`): derruba o kernel e só
+  reiniciando conserta. O `boitata dormir` se recusa nesse caso; depois de acordada, ela dorme no reinício.
 - **Snapper** fica só para o root. A Toca lê por `curupira cuca …`; voltar no tempo é com `curupira-voltar`.
 - **Commits:** em português, com corpo explicando o porquê. Só faça commit/push quando o Pablo pedir.
 

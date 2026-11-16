@@ -129,16 +129,41 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   Brasa (conferido com `/usr/lib/kscreenlocker_greet --testing`).
   Ainda sem ver, porque exigem clique: cartão rápido, popup da bandeja, menus da doca, a tela de ajustes do
   papel de parede e a animação de entrada da doca.
+- Boitatá sob demanda (16/11/2026): `curupira boitata acordar|dormir|rodar <programa>` e os botões "Dormindo" e
+  "Acordado" da Toca. A placa continua dormindo por padrão (a regra do udev a remove do barramento, e agora vem
+  de `sistema/udev/`); acordar deixa o aviso `/run/curupira/boitata-acordada`, que a regra respeita e que some
+  ao reiniciar. O que foi preciso descobrir no notebook: sem a placa, a porta PCI (00:1c.0) vai para D3cold e
+  fica com o enlace desativado (LnkDisable), então `echo 1 > /sys/bus/pci/rescan` não acha nada; só ligar a
+  porta ou dar reset no barramento também não. Funciona ligar a porta, tirar o Link Disable e renegociar o
+  enlace com o `setpci` (pciutils) e só então procurar. Driver: o da NVIDIA se existir; senão o `nouveau`
+  (fora do carregamento automático). Com o nouveau: OpenGL 4.3 "NV118" pelo `rodar` (`DRI_PRIME=1`), a placa
+  suspende sozinha quando parada, e o KWin não a segura. **Dormir a quente não funciona:**
+  com ninguém usando a placa, `echo 1 > remove` fez o nouveau derrubar o kernel (Oops em `nouveau_drm_remove` →
+  `nouveau_fence_emit`, kernel 7.3.4); a placa ficou presa pela metade no barramento e só reiniciando voltou ao
+  normal (a sessão seguiu de pé). Por isso o `dormir` agora se recusa enquanto houver driver preso à placa: ela
+  volta a dormir no reinício. Não faz falta: parada, a placa é suspensa pelo kernel e a porta volta a D3cold
+  sozinha (visto com ela acordada). O KWin às vezes abre a placa nova e depois solta.
+  Não medido: quanto ela gasta acordada e parada. Não testado: o driver da NVIDIA (a MX110 precisaria do
+  nvidia-580xx, do AUR).
+- Criptografia de disco (16/11/2026): o `install.sh` pergunta (ou `CRIPTOGRAFIA=sim|nao`) e põe o Btrfs dentro
+  de um LUKS2 em `/dev/mapper/curupira`; hook `sd-encrypt` (ou `encrypt`, se o initramfs for o antigo com udev) e
+  `rd.luks.name=` nas duas entradas de boot. `/boot` e `/data` ficam abertos. **Nunca rodou de verdade**: só a
+  sintaxe, o `luksFormat` num arquivo e a edição dos HOOKS foram conferidos. Testar numa máquina virtual antes de
+  confiar (inclusive o teclado na hora da senha, com e sem Plymouth).
+- ISO própria (16/11/2026): `ferramentas/iso/montar-iso.sh` copia o perfil releng do archiso, põe o repositório em
+  `/root/curupiraOS` e o comando `instalar-curupira`; `.github/workflows/iso.yml` roda isso num contêiner Arch
+  privilegiado, à mão ou a cada etiqueta `v*` (anexa ao lançamento). **Ainda não rodou nenhuma vez.**
 
 ## A fazer
 1. Cuca: boot direto num snapshot (exige um subvolume
    @snapshots fora do @).
 2. Conferir tela de boot, login e abertura num boot de verdade.
-3. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
-   `/etc/udev/rules.d/00-curupira-boitata.rules` e `/etc/modprobe.d/curupira-boitata.conf` a religa).
-   O módulo nouveau ainda carrega apesar da blacklist (provavelmente pelo hook kms do initramfs).
-4. Criptografia de disco (LUKS) como opção do instalador.
-5. Gerar uma ISO própria pelo GitHub Actions.
+3. Boitatá: dormir sem reiniciar (hoje o nouveau derruba o kernel ao sair; tentar desligar o driver com
+   `unbind` antes, ou o driver da NVIDIA); medir o consumo acordada; "Sob demanda" na Toca (marcar apps para abrir sempre nela e dormir
+   sozinha depois de um tempo sem uso); decidir se vale instalar o driver da NVIDIA (nvidia-580xx, AUR).
+4. Criptografia de disco: testar a instalação com LUKS numa máquina virtual; depois, criptografar também o /data
+   (chave guardada no sistema, abrindo sob demanda para o Mapinguari continuar dormindo).
+5. ISO: rodar o fluxo do GitHub Actions pela primeira vez e iniciar a ISO numa máquina virtual.
 6. Ícones: conferir no notebook (doca, bandeja, menus, cartão rápido); depois, menu de apps próprio no lugar do
    Kickoff (widget QML como a doca: busca, apps em ladrilhos, Cordel, botões de sessão). Mais arte na Toca:
    ícones das seções, o Cordel reagindo ao perfil, transição entre seções.

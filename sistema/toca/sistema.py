@@ -107,7 +107,14 @@ def bluetooth() -> bool | None:
 
 
 def boitata_dormindo() -> bool:
-    return Path("/etc/udev/rules.d/00-curupira-boitata.rules").exists()
+    """Dormindo = a placa NVIDIA não está no barramento PCI (a regra do udev a remove até alguém acordá-la)."""
+    for vendedor in Path("/sys/bus/pci/devices").glob("*/vendor"):
+        try:
+            if vendedor.read_text().strip() == "0x10de":
+                return False
+        except OSError:
+            pass
+    return True
 
 
 def microfone_mudo() -> bool | None:

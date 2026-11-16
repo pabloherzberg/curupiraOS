@@ -110,6 +110,21 @@ roda mac fixo >/dev/null
 confere "MAC fixo apaga a configuração" no "$([[ -e "$T/NetworkManager/conf.d/90-curupira-caipora.conf" ]] && echo sim || echo no)"
 confere "verbo errado falha" 1 "$(roda camera quebrar >/dev/null 2>&1; echo $?)"
 
+echo "Boitatá"
+jboi() { roda json | python3 -c 'import json,sys; print(str(json.load(sys.stdin)["boitata_dormindo"]).lower())'; }
+confere "começa dormindo" true "$(jboi)"
+roda boitata acordar >/dev/null
+confere "acordar deixa o aviso para a regra do udev" sim "$([[ -e "$T/run/boitata-acordada" ]] && echo sim || echo no)"
+confere "json mostra a Boitatá acordada" false "$(jboi)"
+confere "acordar duas vezes não falha" 0 "$(roda boitata acordar >/dev/null 2>&1; echo $?)"
+roda boitata dormir >/dev/null
+confere "dormir tira a placa do barramento" true "$(jboi)"
+confere "dormir apaga o aviso" no "$([[ -e "$T/run/boitata-acordada" ]] && echo sim || echo no)"
+confere "rodar acorda e usa a placa" "1 false" "$(roda boitata rodar sh -c 'echo $DRI_PRIME') $(jboi)"
+roda boitata dormir >/dev/null
+confere "verbo errado da Boitatá falha" 1 "$(roda boitata assustar >/dev/null 2>&1; echo $?)"
+confere "a regra do udev olha o mesmo aviso que o comando" 3 "$(grep -c 'TEST!="/run/curupira/boitata-acordada"' "$RAIZ_REPO/sistema/udev/00-curupira-boitata.rules")"
+
 echo "Widget (json e brilho)"
 campo() { roda json | python3 -c "import json,sys; v=json.load(sys.stdin)$1; print(str(v).lower() if isinstance(v,bool) else v)"; }
 brilho 1500

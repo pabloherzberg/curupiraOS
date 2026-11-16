@@ -12,6 +12,10 @@
 #                            impede de voltar, inclusive depois de reiniciar
 #   curupira mac aleatorio|fixo
 #                            Caipora: o Wi-Fi e o cabo usam um MAC diferente em cada rede
+#   curupira boitata acordar|dormir|rodar <programa>
+#                            Boitatá: põe a placa NVIDIA de volta no barramento e carrega o
+#                            driver; "rodar" acorda (se preciso) e abre o programa nela.
+#                            Ela volta a dormir no "dormir" ou ao reiniciar.
 #   curupira json            estado em JSON (para a Toca do Curupira e o widget)
 #   curupira brilho N        brilho da tela em N% (5 a 100)
 #   curupira cuca lista|mudancas A B|guardar
@@ -43,6 +47,7 @@ if [[ -n "$TESTE" ]]; then
   CONF="$TESTE/curupira.conf"
   CAIPORA_CAMERA="$TESTE/modprobe.d/curupira-caipora.conf"
   CAIPORA_MAC="$TESTE/NetworkManager/conf.d/90-curupira-caipora.conf"
+  BOITATA_ACORDADA="$TESTE/run/boitata-acordada"
 else
   SYS=/sys
   DIR_ESTADO=/var/lib/curupira
@@ -51,6 +56,7 @@ else
   DIR_PERFIS=/usr/local/share/curupira/perfis
   CAIPORA_CAMERA=/etc/modprobe.d/curupira-caipora.conf
   CAIPORA_MAC=/etc/NetworkManager/conf.d/90-curupira-caipora.conf
+  BOITATA_ACORDADA=/run/curupira/boitata-acordada    # o mesmo caminho da regra 00-curupira-boitata.rules
 fi
 
 # Padrões; /etc/curupira.conf pode trocar qualquer um.
@@ -353,6 +359,110 @@ NM
 }
 
 # ---------------------------------------------------------------- Cuca (só leitura e guardar)
+# ---------------------------------------------------------------- Boitatá (placa NVIDIA)
+# A placa dorme removida do barramento PCI (regra do udev). Acordar é deixar um aviso em /run, para a
+# regra não removê-la de novo, pedir ao kernel que procure a placa e carregar o driver. Dormir é o caminho
+# de volta. O driver é o da NVIDIA se estiver instalado; senão o nouveau, que já vem no kernel.
+boitata_pci() {   # as pastas dos dispositivos NVIDIA presentes no barramento
+  local d
+  for d in "$SYS"/bus/pci/devices/*; do
+    [[ -r "$d/vendor" && "$(<"$d/vendor")" == 0x10de ]] && echo "$d"
+  done
+  return 0
+}
+boitata_dormindo() { [[ -z "$(boitata_pci)" ]]; }
+boitata_driver() { if [[ -z "$TESTE" ]] && modinfo nvidia >/dev/null 2>&1; then echo nvidia; else echo nouveau; fi; }
+
+boitata() {
+  local d m n
+  case "$1" in
+    acordar)
+      boitata_dormindo || { diz "A Boitatá já está acordada."; return 0; }
+      mkdir -p "$(dirname "$BOITATA_ACORDADA")"; : > "$BOITATA_ACORDADA"
+      if [[ -n "$TESTE" ]]; then    # no teste não há kernel para achar a placa
+        mkdir -p "$SYS/bus/pci/devices/0000:01:00.0"; echo 0x10de > "$SYS/bus/pci/devices/0000:01:00.0/vendor"
+      else
+        # Sem a placa, a porta PCI dela desliga de vez (D3cold), corta a energia do encaixe e fica com o
+        # enlace desativado (LnkDisable): procurar no barramento não acha nada. Primeiro as portas vazias
+        # são ligadas e o enlace é reativado e renegociado; depois o kernel procura. (Visto no Samsung
+        # Notebook 3 em 16/11/2026: só ligar a porta, ou dar reset no barramento, não bastou.)
+        local pontes=() ponte
+        for d in "$SYS"/bus/pci/devices/*; do
+          [[ "$(cat "$d/class" 2>/dev/null)" == 0x0604* ]] || continue
+          compgen -G "$d/[0-9a-f][0-9a-f][0-9a-f][0-9a-f]:*" >/dev/null && continue
+          [[ "$(cat "$d/power/control" 2>/dev/null)" == auto ]] || continue
+          echo on > "$d/power/control" 2>/dev/null && pontes+=("$d")
+        done
+        sleep 1
+        if command -v setpci >/dev/null; then
+          for ponte in "${pontes[@]}"; do
+            setpci -s "${ponte##*/}" CAP_EXP+10.w=0000:0010 2>/dev/null || true    # tira o Link Disable
+            sleep 0.3
+            setpci -s "${ponte##*/}" CAP_EXP+10.w=0020:0020 2>/dev/null || true    # renegocia o enlace
+          done
+          sleep 1
+        else
+          avisa "Sem o setpci (pacote pciutils) não dá para reativar o enlace da placa."
+        fi
+        echo 1 > "$SYS/bus/pci/rescan"
+        for n in 1 2 3 4 5 6; do boitata_dormindo || break; sleep 0.5; done
+        # de volta ao automático, para a porta e a placa economizarem energia quando paradas
+        for ponte in "${pontes[@]}"; do echo auto > "$ponte/power/control" 2>/dev/null || true; done
+      fi
+      if boitata_dormindo; then
+        rm -f "$BOITATA_ACORDADA"
+        morre "A placa NVIDIA não apareceu no barramento. Pode estar desligada na BIOS."
+      fi
+      if [[ -z "$TESTE" ]]; then
+        if [[ "$(boitata_driver)" == nvidia ]]; then
+          modprobe -a nvidia nvidia_modeset nvidia_uvm nvidia_drm 2>/dev/null \
+            || avisa "A placa voltou, mas o driver da NVIDIA não carregou (veja: journalctl -k)."
+        else
+          modprobe nouveau 2>/dev/null || avisa "A placa voltou, mas o driver nouveau não carregou (veja: journalctl -k)."
+        fi
+      fi
+      registra "boitata acordada"
+      diz "Boitatá acordada (driver $(boitata_driver)). Para abrir um programa nela: curupira boitata rodar <programa>" ;;
+    dormir)
+      if boitata_dormindo; then rm -f "$BOITATA_ACORDADA"; diz "A Boitatá já está dormindo."; return 0; fi
+      # Com o driver preso à placa, ela fica até reiniciar: tirá-la do barramento a quente fez o nouveau
+      # derrubar o kernel (Oops em nouveau_drm_remove, kernel 7.3) e deixou a placa presa pela metade.
+      # Não custa bateria: parada, ela é suspensa pelo kernel e a porta volta para D3cold sozinha.
+      if [[ -z "$TESTE" ]]; then
+        while read -r d; do
+          [[ -e "$d/driver" ]] && morre "A Boitatá fica acordada até reiniciar (tirá-la com o driver carregado trava o kernel). Parada, ela se desliga sozinha e não gasta bateria."
+        done <<<"$(boitata_pci)"
+      fi
+      rm -f "$BOITATA_ACORDADA"
+      while read -r d; do
+        [[ -n "$d" ]] || continue
+        if [[ -n "$TESTE" ]]; then rm -rf "$d"; else echo 1 > "$d/remove" 2>/dev/null || true; fi
+      done <<<"$(boitata_pci)"
+      if [[ -z "$TESTE" ]]; then    # sem a placa, o driver sai da memória (se não sair, não atrapalha)
+        for m in nvidia_drm nvidia_uvm nvidia_modeset nvidia nouveau; do
+          [[ -d "/sys/module/$m" ]] && { modprobe -r "$m" 2>/dev/null || true; }
+        done
+      fi
+      registra "boitata dormindo"
+      diz "Boitatá dormindo: fora do barramento, sem gastar energia." ;;
+    *) morre "Use: curupira boitata acordar | dormir | rodar <programa>" ;;
+  esac
+}
+
+# Abre um programa na placa NVIDIA (como a própria pessoa, não como root). Acorda a Boitatá antes, se preciso.
+boitata_rodar() {
+  [[ $# -gt 0 ]] || morre "Qual programa? Ex.: curupira boitata rodar glxinfo -B"
+  if boitata_dormindo; then
+    if [[ -n "$TESTE" ]]; then "$0" boitata acordar >/dev/null
+    elif [[ $EUID -eq 0 ]]; then "$EU" boitata acordar
+    else pkexec "$EU" boitata acordar; fi
+  fi
+  if [[ "$(boitata_driver)" == nvidia ]]; then
+    exec env __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __VK_LAYER_NV_optimus=NVIDIA_only "$@"
+  fi
+  exec env DRI_PRIME=1 "$@"
+}
+
 eh_numero() { [[ "$1" =~ ^[0-9]+$ ]]; }
 
 cuca() {
@@ -439,7 +549,6 @@ rede_wifi() {
 
 turbo_ligado() { [[ "$(cat "$SYS/devices/system/cpu/intel_pstate/no_turbo" 2>/dev/null)" == 0 ]]; }
 hd_acordado() { [[ -z "$TESTE" ]] && findmnt -no FSTYPE /data 2>/dev/null | grep -qv '^autofs$'; }
-boitata_dormindo() { [[ -e "${TESTE:+$TESTE}/etc/udev/rules.d/00-curupira-boitata.rules" ]]; }
 
 wp_volume() {   # wp_volume @DEFAULT_AUDIO_SINK@ -> "40 false" (porcentagem e mudo)
   [[ -n "$TESTE" ]] && { echo "null false"; return 0; }
@@ -526,6 +635,8 @@ curupira $VERSAO: perfis de energia da Curupira OS
   curupira auto ligar|desligar
   curupira camera cortar|liberar
   curupira mac aleatorio|fixo
+  curupira boitata acordar|dormir
+  curupira boitata rodar <programa>   abre o programa na placa NVIDIA
   curupira cuca lista|mudancas A B|guardar
   curupira brilho N           brilho da tela em N%
 
@@ -550,6 +661,12 @@ case "$comando" in
   camera|câmera)
     [[ -n "${2:-}" ]] || { camera_cortada && echo "Câmera cortada." || echo "Câmera liberada."; exit 0; }
     precisa_root "$@"; trava; camera "$(normaliza "$2")" ;;
+  boitata|boitatá)
+    case "$(normaliza "${2:-}")" in
+      "")    boitata_dormindo && echo "Boitatá dormindo." || echo "Boitatá acordada (driver $(boitata_driver))." ;;
+      rodar) shift 2; boitata_rodar "$@" ;;
+      *)     precisa_root "$@"; trava; boitata "$(normaliza "$2")" ;;
+    esac ;;
   cuca)
     precisa_root "$@"; cuca "${2:-}" "${3:-}" "${4:-}" ;;
   mac)

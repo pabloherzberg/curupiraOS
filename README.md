@@ -14,6 +14,8 @@ baseada em Arch Linux com KDE Plasma. O Curupira, guardião da mata, cuida da ba
 - Configura economia de energia: TLP, thermald, zram e a placa NVIDIA desligada por padrão.
 - Ativa snapshots automáticos do sistema (snapper + snap-pac).
 - Sistema em português do Brasil, teclado ABNT2, fuso de São Paulo.
+- Se você quiser, criptografa o disco do sistema (LUKS2): o instalador pergunta. A senha do disco passa a ser
+  pedida em todo boot; o `/boot` e o `/data` ficam abertos. (Ainda não testado numa instalação de verdade.)
 
 ## Como instalar
 
@@ -39,6 +41,13 @@ baseada em Arch Linux com KDE Plasma. O Curupira, guardião da mata, cuida da ba
 
 O script pede usuário e senha e só apaga os discos depois que você digitar `APAGAR`.
 
+### Pela ISO da Curupira
+
+O repositório também gera uma ISO própria: a do Arch com o instalador dentro. No GitHub, em Actions →
+"ISO da Curupira OS" → Run workflow, a ISO sai nos artefatos da execução; a cada etiqueta `v*` ela é anexada
+ao lançamento. Iniciando por ela, basta conectar a internet e rodar `instalar-curupira` (aceita `--simular`).
+Para montar num Arch: `sudo bash ferramentas/iso/montar-iso.sh`.
+
 ### Sem pendrive
 
 Se a ISO foi copiada para uma partição do próprio HD, o instalador percebe isso sozinho: ele mantém essa
@@ -49,6 +58,8 @@ partição como "Curupira Resgate" e usa o restante do HD como `/data`.
 ```bash
 DISCO_SISTEMA=/dev/vda DISCO_DADOS=nenhum bash install.sh
 ```
+
+`CRIPTOGRAFIA=sim` (ou `nao`) responde de antemão a pergunta da criptografia.
 
 ## Perfis de energia
 
@@ -123,7 +134,7 @@ sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
 | Ser | Papel |
 |---|---|
 | Curupira | mascote e central de controle |
-| Boitatá | placa de vídeo NVIDIA |
+| Boitatá | placa de vídeo NVIDIA: dorme por padrão; `curupira boitata acordar` ou `rodar <programa>`; depois de acordada, volta a dormir ao reiniciar |
 | Mapinguari | HD de 1 TB |
 | Iara | Wi-Fi e Bluetooth |
 | Saci | turbo do processador |

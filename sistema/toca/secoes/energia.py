@@ -64,10 +64,13 @@ class SecaoEnergia(Secao):
         bt.addWidget(self.boi_nota)
         b.addLayout(bt, 1)
         self.boi_seg = Segmentado([("off", "Dormindo"), ("demanda", "Sob demanda"), ("on", "Acordado")])
-        for k in ("off", "demanda", "on"):
-            self.boi_seg.botoes[k].setEnabled(False)
-        for k in ("demanda", "on"):
-            self.boi_seg.botoes[k].setToolTip("Acordar a Boitatá chega numa próxima versão.")
+        self.boi_seg.botoes["demanda"].setEnabled(False)
+        self.boi_seg.botoes["demanda"].setToolTip("Por enquanto: curupira boitata rodar <programa> acorda a placa e abre o programa nela.")
+        self.boi_seg.botoes["off"].setToolTip("Depois de acordada, ela só volta a dormir ao reiniciar. Parada, se desliga sozinha.")
+        self.boi_seg.botoes["off"].clicked.connect(lambda: self.executar.emit(
+            ["curupira", "boitata", "dormir"], "Boitatá dormindo.", None))
+        self.boi_seg.botoes["on"].clicked.connect(lambda: self.executar.emit(
+            ["curupira", "boitata", "acordar"], "Boitatá acordada.", None))
         b.addWidget(self.boi_seg)
         lay.addWidget(boi)
 
@@ -177,7 +180,7 @@ class SecaoEnergia(Secao):
         self.boi_seg.seleciona("off" if dormindo else "on")
         self.boi_ladrilho.acorda(not dormindo)
         self.ser_no_canto("saci" if d.get("turbo") else "boitata" if not dormindo else "mapinguari" if d.get("hd") else None)
-        self.boi_nota.setText("desligada de vez: máxima economia" if dormindo else "acordada: gasta energia mesmo parada")
+        self.boi_nota.setText("dormindo, fora do barramento: máxima economia" if dormindo else "acordada: gasta energia; volta a dormir ao reiniciar")
         self.boi_nota.setStyleSheet(f"color: {VERDE_ESCURO if dormindo else BRASA}; background: transparent;")
 
         t = d.get("turbo")

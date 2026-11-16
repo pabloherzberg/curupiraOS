@@ -1,0 +1,39 @@
+# Gera a ISO da Curupira OS (ferramentas/iso/montar-iso.sh).
+# Roda à mão (Actions → "ISO da Curupira OS" → Run workflow) e a cada etiqueta v*, quando a ISO
+# também é anexada ao lançamento. Sem etiqueta, a ISO fica 14 dias nos artefatos da execução.
+name: ISO da Curupira OS
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  iso:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged    # o mkarchiso monta sistemas de arquivos
+    steps:
+      - name: Instalar o archiso
+        run: pacman -Syu --noconfirm archiso git github-cli
+      - uses: actions/checkout@v4
+      - name: Montar a ISO
+        run: bash ferramentas/iso/montar-iso.sh saida
+      - name: Guardar a ISO nos artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: curupira-iso
+          path: saida/*.iso
+          retention-days: 14
+          compression-level: 0
+      - name: Anexar a ISO ao lançamento
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          gh release create "$GITHUB_REF_NAME" saida/*.iso --title "Curupira OS $GITHUB_REF_NAME" --generate-notes

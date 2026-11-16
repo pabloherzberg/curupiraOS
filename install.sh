@@ -9,6 +9,8 @@
 #   DISCO_SISTEMA=/dev/vda   disco que recebe o sistema (padrão: o NVMe)
 #   DISCO_DADOS=/dev/vdb     disco de dados montado em /data (padrão: o HD; "nenhum" para pular)
 #   NOME_MAQUINA=curupira    TECLADO=br-abnt2    FUSO=America/Sao_Paulo
+#   CRIPTOGRAFIA=sim|nao     criptografa o disco do sistema com LUKS2 (sem a variável, o instalador pergunta).
+#                            A senha do disco é pedida em todo boot. O disco de dados (/data) não é criptografado.
 
 set -euo pipefail
 
@@ -18,6 +20,8 @@ SIMULAR=0
 NOME_MAQUINA="${NOME_MAQUINA:-curupira}"
 TECLADO="${TECLADO:-br-abnt2}"
 FUSO="${FUSO:-America/Sao_Paulo}"
+CRIPTOGRAFIA="${CRIPTOGRAFIA:-perguntar}"
+[[ "$CRIPTOGRAFIA" =~ ^(sim|nao|perguntar)$ ]] || { echo "CRIPTOGRAFIA deve ser sim ou nao." >&2; exit 1; }
 
 setfont ter-v16n 2>/dev/null || true   # fonte do terminal com acentos
 verde=$'\e[32m'; laranja=$'\e[33m'; vermelho=$'\e[31m'; neutro=$'\e[0m'
@@ -82,6 +86,11 @@ case "$MODO_DADOS" in
                      echo "  Resgate : $MIDIA_PART  -> mantida (instalador / resgate)";;
   nenhum)            echo "  Dados   : nenhum disco de dados";;
 esac
+case "$CRIPTOGRAFIA" in
+  sim)       echo "  Cripto  : $RAIZ com LUKS2 (senha em todo boot); /boot e /data ficam abertos";;
+  nao)       echo "  Cripto  : sem criptografia de disco";;
+  perguntar) echo "  Cripto  : o instalador pergunta antes de apagar";;
+esac
 echo "  Máquina : $NOME_MAQUINA   teclado: $TECLADO   fuso: $FUSO"
 echo
 
@@ -98,6 +107,28 @@ while true; do
 done
 unset SENHA2
 
+# Criptografia de disco (LUKS2) no sistema: quem pegar o notebook desligado não lê nada sem a senha.
+if [[ "$CRIPTOGRAFIA" == perguntar ]]; then
+  echo
+  echo "Criptografar o disco do sistema? Protege os arquivos se o notebook for perdido ou roubado;"
+  echo "em troca, uma senha é pedida em todo boot, e sem ela não há como recuperar nada."
+  read -rp "Criptografar? [s/N]: " RESP
+  [[ "${RESP,,}" =~ ^s(im)?$ ]] && CRIPTOGRAFIA=sim || CRIPTOGRAFIA=nao
+fi
+SENHA_DISCO=""
+if [[ "$CRIPTOGRAFIA" == sim ]]; then
+  command -v cryptsetup >/dev/null || morre "Falta o cryptsetup neste ambiente live."
+  avisa "Na tela de boot o teclado pode estar em outro layout: prefira letras sem acento e números na senha do disco."
+  while true; do
+    read -rsp "Senha do disco (Enter = a mesma de $USUARIO): " SENHA_DISCO; echo
+    [[ -z "$SENHA_DISCO" ]] && { SENHA_DISCO="$SENHA"; break; }
+    read -rsp "Repita a senha do disco: " SENHA2; echo
+    [[ "$SENHA_DISCO" == "$SENHA2" ]] && break
+    avisa "As senhas do disco não conferem. Tente de novo."
+  done
+  unset SENHA2
+fi
+
 avisa "ÚLTIMO AVISO: os discos listados acima serão apagados. Não há como desfazer."
 read -rp "Digite APAGAR para continuar: " CONFIRMA
 [[ "$CONFIRMA" == "APAGAR" ]] || morre "Cancelado. Nada foi alterado."
@@ -106,23 +137,33 @@ read -rp "Digite APAGAR para continuar: " CONFIRMA
 diz "Particionando $DISCO_SISTEMA"
 timedatectl set-ntp true || true
 umount -R /mnt 2>/dev/null || true
+cryptsetup close curupira 2>/dev/null || true    # sobra de uma tentativa anterior
 swapoff -a 2>/dev/null || true
 wipefs -af "$DISCO_SISTEMA" >/dev/null || true
 sgdisk --zap-all "$DISCO_SISTEMA" >/dev/null 2>&1 || true
 sgdisk -n1:0:+1G -t1:ef00 -c1:CURUPIRA-BOOT -n2:0:0 -t2:8300 -c2:CURUPIRA "$DISCO_SISTEMA" >/dev/null
 partprobe "$DISCO_SISTEMA"; udevadm settle
 mkfs.fat -F32 -n CURUPBOOT "$ESP" >/dev/null
-mkfs.btrfs -f -L curupira "$RAIZ" >/dev/null
+# Com criptografia, o Btrfs fica dentro do volume LUKS aberto em /dev/mapper/curupira.
+DEV_RAIZ="$RAIZ"
+if [[ "$CRIPTOGRAFIA" == sim ]]; then
+  diz "Criptografando $RAIZ (LUKS2)"
+  printf '%s' "$SENHA_DISCO" | cryptsetup luksFormat --type luks2 --batch-mode --key-file - "$RAIZ"
+  printf '%s' "$SENHA_DISCO" | cryptsetup open --allow-discards --key-file - "$RAIZ" curupira
+  unset SENHA_DISCO
+  DEV_RAIZ=/dev/mapper/curupira
+fi
+mkfs.btrfs -f -L curupira "$DEV_RAIZ" >/dev/null
 
 diz "Criando subvolumes Btrfs"
-mount "$RAIZ" /mnt
+mount "$DEV_RAIZ" /mnt
 for sv in @ @home @log @pkg; do btrfs subvolume create "/mnt/$sv" >/dev/null; done
 umount /mnt
 OPC="noatime,compress=zstd:3,ssd,discard=async"
-mount -o "$OPC,subvol=@" "$RAIZ" /mnt
-mount --mkdir -o "$OPC,subvol=@home" "$RAIZ" /mnt/home
-mount --mkdir -o "$OPC,subvol=@log"  "$RAIZ" /mnt/var/log
-mount --mkdir -o "$OPC,subvol=@pkg"  "$RAIZ" /mnt/var/cache/pacman/pkg
+mount -o "$OPC,subvol=@" "$DEV_RAIZ" /mnt
+mount --mkdir -o "$OPC,subvol=@home" "$DEV_RAIZ" /mnt/home
+mount --mkdir -o "$OPC,subvol=@log"  "$DEV_RAIZ" /mnt/var/log
+mount --mkdir -o "$OPC,subvol=@pkg"  "$DEV_RAIZ" /mnt/var/cache/pacman/pkg
 mount --mkdir -o umask=0077 "$ESP" /mnt/boot
 
 if [[ "$MODO_DADOS" == "disco-inteiro" ]]; then
@@ -140,7 +181,7 @@ fi
 
 # ---------------------------------------------------------------- pacotes
 BASE=(base base-devel linux linux-firmware intel-ucode btrfs-progs e2fsprogs dosfstools
-      networkmanager sudo nano vim git man-db openssh reflector efibootmgr)
+      networkmanager sudo nano vim git man-db openssh reflector efibootmgr pciutils)
 DESKTOP=(plasma-desktop plasma-workspace kwin xorg-server sof-firmware terminus-font sddm sddm-kcm konsole dolphin kate ark spectacle gwenview okular
          plasma-nm plasma-pa powerdevil bluedevil kscreen kde-gtk-config breeze-gtk
          xdg-desktop-portal-kde pipewire pipewire-pulse wireplumber firefox
@@ -171,7 +212,23 @@ fi
 
 # ---------------------------------------------------------------- configuração
 diz "Configurando o sistema"
-UUID_RAIZ="$(blkid -s UUID -o value "$RAIZ")"
+UUID_RAIZ="$(blkid -s UUID -o value "$DEV_RAIZ")"
+# Criptografia: o initramfs precisa do hook que abre o volume, e o kernel precisa saber qual é.
+# (initramfs com systemd usa sd-encrypt e rd.luks.*; o antigo, com udev, usa encrypt e cryptdevice=)
+OPCOES_CRIPTO=""; CRIPTO=0
+if [[ "$CRIPTOGRAFIA" == sim ]]; then
+  CRIPTO=1
+  UUID_LUKS="$(blkid -s UUID -o value "$RAIZ")"
+  if grep -qE '^HOOKS=\(.*\bsystemd\b' /mnt/etc/mkinitcpio.conf; then
+    sed -i -E '/^HOOKS=\(/ s/\bblock\b/block sd-encrypt/' /mnt/etc/mkinitcpio.conf
+    OPCOES_CRIPTO="rd.luks.name=$UUID_LUKS=curupira rd.luks.options=discard "
+  else
+    sed -i -E '/^HOOKS=\(/ s/\bblock\b/block encrypt/' /mnt/etc/mkinitcpio.conf
+    OPCOES_CRIPTO="cryptdevice=UUID=$UUID_LUKS:curupira:allow-discards "
+  fi
+  grep -qE '^HOOKS=\(.*encrypt' /mnt/etc/mkinitcpio.conf \
+    || morre "Não consegui pôr o hook de criptografia em /etc/mkinitcpio.conf: o sistema não iniciaria."
+fi
 
 cat > /mnt/root/configura.sh <<CHROOT
 #!/usr/bin/env bash
@@ -198,14 +255,7 @@ chmod 440 /etc/sudoers.d/10-wheel
 # zram: troca comprimida na memória (8 GB de RAM agradecem)
 printf '[zram0]\nzram-size = ram / 2\ncompression-algorithm = zstd\n' > /etc/systemd/zram-generator.conf
 
-# Boitatá (NVIDIA MX110) dormindo por padrão: sem driver e removida do barramento
-printf 'blacklist nouveau\noptions nouveau modeset=0\n' > /etc/modprobe.d/curupira-boitata.conf
-cat > /etc/udev/rules.d/00-curupira-boitata.rules <<'UDEV'
-# Remove a placa NVIDIA e seus dispositivos auxiliares; apague este arquivo para acordá-la.
-ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"
-ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", ATTR{power/control}="auto", ATTR{remove}="1"
-ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330", ATTR{power/control}="auto", ATTR{remove}="1"
-UDEV
+# Boitatá (NVIDIA MX110) dormindo por padrão: a regra do udev e o bloqueio do nouveau vêm do sistema/instalar.sh
 
 # Mapinguari (HD de 5400 rpm): desacelera depois de 5 minutos parado
 cat > /etc/udev/rules.d/69-curupira-mapinguari.rules <<'UDEV'
@@ -218,10 +268,11 @@ UDEV
 snapper --no-dbus -c root create-config / || echo 'aviso: snapper será configurado no primeiro uso'
 
 # boot
+if [[ $CRIPTO == 1 ]]; then mkinitcpio -P >/dev/null; fi    # o initramfs do pacstrap ainda não abre o disco
 bootctl install >/dev/null
 printf 'default curupira.conf\ntimeout 2\nconsole-mode max\neditor no\n' > /boot/loader/loader.conf
-printf 'title   Curupira OS\nlinux   /vmlinuz-linux\ninitrd  /intel-ucode.img\ninitrd  /initramfs-linux.img\noptions root=UUID=$UUID_RAIZ rootflags=subvol=@ rw quiet loglevel=3 nowatchdog\n' > /boot/loader/entries/curupira.conf
-printf 'title   Curupira OS (modo de recuperação)\nlinux   /vmlinuz-linux\ninitrd  /intel-ucode.img\ninitrd  /initramfs-linux.img\noptions root=UUID=$UUID_RAIZ rootflags=subvol=@ rw plymouth.enable=0\n' > /boot/loader/entries/curupira-recuperacao.conf
+printf 'title   Curupira OS\nlinux   /vmlinuz-linux\ninitrd  /intel-ucode.img\ninitrd  /initramfs-linux.img\noptions ${OPCOES_CRIPTO}root=UUID=$UUID_RAIZ rootflags=subvol=@ rw quiet loglevel=3 nowatchdog\n' > /boot/loader/entries/curupira.conf
+printf 'title   Curupira OS (modo de recuperação)\nlinux   /vmlinuz-linux\ninitrd  /intel-ucode.img\ninitrd  /initramfs-linux.img\noptions ${OPCOES_CRIPTO}root=UUID=$UUID_RAIZ rootflags=subvol=@ rw plymouth.enable=0\n' > /boot/loader/entries/curupira-recuperacao.conf
 
 for u in NetworkManager sddm tlp thermald bluetooth fstrim.timer systemd-timesyncd snapper-timeline.timer snapper-cleanup.timer; do
   systemctl enable "\$u" >/dev/null 2>&1 || echo "aviso: não consegui ativar \$u"
@@ -266,6 +317,7 @@ fi
 
 sync
 umount -R /mnt
+[[ "$CRIPTOGRAFIA" == sim ]] && cryptsetup close curupira || true
 echo
 diz "Curupira OS instalado."
 echo "    Reinicie com: reboot   (se usou pendrive, retire-o antes)"

@@ -25,6 +25,15 @@ install -Dm644 "$AQUI/polkit/io.github.pabloherzberg.curupira.voltar.policy" \
                "$RAIZ/usr/share/polkit-1/actions/io.github.pabloherzberg.curupira.voltar.policy"
 install -Dm644 "$AQUI/polkit/50-curupira.rules" "$RAIZ/etc/polkit-1/rules.d/50-curupira.rules"
 install -dm755 "$RAIZ/var/lib/curupira"
+# Boitatá: a regra que mantém a placa NVIDIA dormindo. Numa instalação nova ela sempre entra; num sistema
+# em uso, só se ainda existir (quem a apagou quis a placa sempre acordada). O nouveau fica só fora do
+# carregamento automático: "curupira boitata acordar" o carrega quando não há o driver da NVIDIA.
+if [[ -n "$RAIZ" || -e /etc/udev/rules.d/00-curupira-boitata.rules ]]; then
+  install -Dm644 "$AQUI/udev/00-curupira-boitata.rules" "$RAIZ/etc/udev/rules.d/00-curupira-boitata.rules"
+  install -dm755 "$RAIZ/etc/modprobe.d"
+  printf '%s\n' "# Curupira OS: a Boitatá dorme por padrão; quem carrega o driver é \"curupira boitata acordar\"." \
+    "blacklist nouveau" > "$RAIZ/etc/modprobe.d/curupira-boitata.conf"
+fi
 
 echo "==> Instalando a Toca do Curupira e o widget do painel"
 ARTE="$AQUI/../arte"
