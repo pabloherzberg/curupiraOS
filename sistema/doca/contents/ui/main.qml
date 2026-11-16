@@ -260,6 +260,9 @@ PlasmoidItem {
                     Kirigami.Icon {
                         anchors.centerIn: parent
                         source: delegado.dados.decoration
+                        // sem isto o Kirigami desenha no tamanho padrão logo abaixo (32 numa caixa de 52)
+                        // e o ícone com ladrilho próprio fica menor que os ladrilhos vizinhos
+                        roundToIconSize: false
                         width: parent.width * (delegado.proprio ? 1 : 0.62)
                         height: width
                     }

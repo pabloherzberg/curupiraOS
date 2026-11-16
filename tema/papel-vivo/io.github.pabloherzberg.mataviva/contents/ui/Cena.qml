@@ -27,7 +27,24 @@ Item {
     readonly property var camadas: Camadas.cenas[arte].camadas
     readonly property var quadros: Camadas.cenas[arte].quadros
     readonly property bool naMata: arte === "brasa"
-    property bool mover: true       // falso: tudo parado (bateria, ou movimento desligado)
+    property bool mover: true       // falso: tudo parado (bateria, movimento desligado ou janela por cima)
+    // Um relógio só para todas as camadas, em vez de uma animação por camada a 60 quadros por segundo:
+    // no notebook (Intel UHD 620) a mata a 60 q/s ocupava meio núcleo do processador. O movimento é lento,
+    // então menos quadros dão o mesmo efeito por bem menos.
+    property int quadrosPorSegundo: 24
+    property real relogio: 0        // segundos de mata em movimento
+    Timer {
+        property real ultimo: 0
+        interval: Math.round(1000 / cena.quadrosPorSegundo)
+        repeat: true
+        running: cena.mover
+        onRunningChanged: ultimo = Date.now()
+        onTriggered: {
+            const agora = Date.now()
+            cena.relogio += Math.min(0.25, (agora - ultimo) / 1000)
+            ultimo = agora
+        }
+    }
     property real hora: new Date().getHours() + new Date().getMinutes() / 60
 
     clip: true
@@ -110,7 +127,7 @@ Item {
                 readonly property real duracao: modelData.duracao || 4
                 readonly property real fase0: (((-(modelData.atraso || 0) / duracao) % 1) + 1) % 1
                 readonly property bool animada: tipo !== "parada" && tipo !== "vaga"
-                property real fase: 0
+                readonly property real fase: animada ? (cena.relogio / duracao) % 1 : 0
                 readonly property real t: (fase + fase0) % 1
                 readonly property var q: tipo === "f" ? cena.quadro(modelData.quadros, t)
                                        : tipo === "breath" ? cena.quadro("breath", t) : null
@@ -164,12 +181,6 @@ Item {
                         angle: peca.tipo === "f" ? peca.q[0] * cena.vigor : 0
                     }
                 ]
-                NumberAnimation on fase {
-                    from: 0; to: 1
-                    duration: peca.duracao * 1000
-                    loops: Animation.Infinite
-                    running: cena.mover && peca.animada
-                }
             }
         }
 

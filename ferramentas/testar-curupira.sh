@@ -38,7 +38,10 @@ echo "Cabeçalho"
 # solta fez cada execução chamar a si mesma e esgotou a memória do notebook.
 soltas="$(awk '/^set -euo pipefail/{exit} NR>1 && !/^#/ && !/^[[:space:]]*$/' "$CURUPIRA" "$RAIZ_REPO/sistema/bin/curupira-voltar")"
 confere "nenhum comando solto no cabeçalho" "" "$soltas"
-confere "não chama a si mesmo ao iniciar" "curupira" "$(ulimit -u 400; timeout 5 "$CURUPIRA" versao 2>&1 | cut -d' ' -f1)"
+# o limite é de processos e threads do usuário inteiro: numa sessão gráfica já há centenas, por isso a folga
+# é contada a partir do que está rodando agora (com 400 fixos o teste falhava dentro do Plasma)
+agora="$(ps -u "$(id -u)" -L --no-headers 2>/dev/null | wc -l)"
+confere "não chama a si mesmo ao iniciar" "curupira" "$(ulimit -u $((agora + 300)); timeout 5 "$CURUPIRA" versao 2>&1 | cut -d' ' -f1)"
 
 echo "Boot na tomada"
 tomada 1; bateria 100 Full; brilho 1500

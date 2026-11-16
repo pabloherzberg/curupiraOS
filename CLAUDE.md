@@ -86,8 +86,9 @@ Boto e a Iara da lagoa, em `arte/papel-vivo/`) primitivos perto disso: ao redese
 `breath`, e `vai` para o que vai e volta devagar: o que boia e a correnteza, com `--dx`/`--dy`). O Plasma não roda esse
 CSS, então o gerador recorta cada parte e o `Cena.qml` refaz o movimento. Ao editar a arte, mantenha essas
 classes e os estilos `transform-origin`/`animation-*` nelas. Os seres entram em três vagas entre as camadas:
-`ceu`, `longe` e `perto`. O que cada ser mostra está no cabeçalho do `Cena.qml`. `main.qml` só lê o
-`curupira json`; na bateria e no Remanso/Sereno a mata fica parada (animação contínua gasta energia).
+`ceu`, `longe` e `perto`. O que cada ser mostra está no cabeçalho do `Cena.qml`. `main.qml` lê o
+`curupira json` e decide se a mata se mexe: fica parada na bateria, no Remanso/Sereno e com uma janela
+maximizada por cima (animação contínua gasta energia). Todas as camadas seguem um relógio só (`relogio`, 24 q/s).
 Quem usa escolhe o papel de parede na Toca (Aparência), que chama `curupira-papel-vivo`; a miniatura é o
 `contents/screenshot.png`, tirado pelo `gerar-tudo.sh` com o `ver-papel-vivo.py`.
 
@@ -105,6 +106,7 @@ agora e some quando ninguém está ou quando os cartões chegam até ali (`SerNo
 - Papel de parede animado fora do Plasma: `python3 ferramentas/ver-papel-vivo.py --todos` (janela) ou com
   `--captura tela.png` (sem tela); `--estado '{"turbo": true}'` usa os campos do `curupira json`.
 - Login sem sair da sessão: `sddm-greeter-qt6 --test-mode --theme tema/sddm/curupira`.
+- Tela de bloqueio sem bloquear: `/usr/lib/kscreenlocker_greet --testing` (fundo em `/etc/xdg/kscreenlockerrc`).
 - Abertura: `ksplashqml --test --window <pasta do tema global com splash/images preenchida>`.
 - Captura de tela: `spectacle -b -n -a -o arquivo.png` (janela ativa) ou `-f` (tela toda).
 - Depois de instalar widgets ou ícones novos: `systemctl --user restart plasma-plasmashell`. Para ícones,
@@ -128,6 +130,5 @@ agora e some quando ninguém está ou quando os cartões chegam até ali (`SerNo
 
 ## Onde paramos
 
-Veja "A fazer" no `NOTAS.md`. Estado em 15/11/2026: perfis, Toca (6 seções), Cuca com volta no tempo
-(falta rodar `sudo bash ferramentas/testar-cuca.sh`), tema completo (cores, Konsole, papéis, login, boot,
+Veja "A fazer" no `NOTAS.md`. Estado em 15/11/2026: perfis, Toca (6 seções), Cuca com volta no tempo (testada), tema completo (cores, Konsole, papéis, login, boot,
 abertura), doca com ladrilhos, animações e cartão rápido. Ainda não testado num boot completo: boot → login → abertura.

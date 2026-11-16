@@ -132,6 +132,11 @@ if [[ -n "$RAIZ" ]]; then
 fi
 printf '%s\n' "# Curupira OS: tela de abertura do Plasma" "[KSplash]" "Engine=KSplashQML" "Theme=$LNF_ID" \
   > "$RAIZ/etc/xdg/ksplashrc"
+# Tela de bloqueio: o Curupira (papel de parede Brasa) no lugar do fundo padrão do Plasma. É o padrão do
+# sistema; quem escolher outro em Configurações → Bloqueio de tela grava o seu em ~/.config/kscreenlockerrc.
+printf '%s\n' "# Curupira OS: tela de bloqueio com o Curupira (Brasa)" "[Greeter]" "WallpaperPlugin=org.kde.image" "" \
+  "[Greeter][Wallpaper][org.kde.image][General]" "Image=/usr/local/share/wallpapers/Curupira-Brasa" \
+  "PreviewImage=/usr/local/share/wallpapers/Curupira-Brasa" > "$RAIZ/etc/xdg/kscreenlockerrc"
 
 # Modo de recuperação: o mkinitcpio do Arch deixou de gerar a imagem "fallback" por padrão,
 # e a entrada da v0.1 apontava para ela. Sem a imagem, a recuperação usa a padrão.

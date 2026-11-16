@@ -55,6 +55,9 @@ relogio.writeConfig("dateDisplayFormat", 2);          // data embaixo da hora
 // tamanho fixo, como no mockup (hora ~15 px em negrito, data menor), em vez de encher a altura da doca
 relogio.writeConfig("autoFontAndSize", false);
 relogio.writeConfig("fontSize", 11);
+// o negrito é pelo peso: o relógio do Plasma 6 não olha mais para o boldText (que ficava fino e apagado)
+relogio.writeConfig("fontWeight", 700);
+relogio.writeConfig("fontStyleName", "Bold");
 relogio.writeConfig("boldText", true);
 relogio.writeConfig("dateFormat", "custom");
 relogio.writeConfig("customDateFormat", "ddd, d MMM");

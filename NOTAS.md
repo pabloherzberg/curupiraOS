@@ -45,8 +45,8 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   senha toda vez (polkit próprio, auth_admin), snapshot de segurança antes e recusa se /usr/lib/modules
   mudou (o /boot fica fora dos snapshots). O snapper voltou a ser só do root: a Toca lê por
   `curupira cuca lista|mudancas|guardar`. Conferido: o snapper não entra em /home, /var/log, cache do pacman,
-  /data nem /boot. **Falta rodar `sudo bash ferramentas/testar-cuca.sh`** (interrompido) e apagar snapshots
-  "teste da Cuca" que tenham sobrado.
+  /data nem /boot. `ferramentas/testar-cuca.sh` rodou inteiro em 16/11/2026: os dez testes passaram e não
+  sobrou snapshot de teste.
 - Tema (`tema/`): esquemas Curupira (claro, barra de título noite) e Curupira Noite, gerados por
   `gerar-cores.py`; perfil do Konsole; papéis de parede Brasa e Entardecer em PNG (1366×768, 1920×1080,
   2560×1440) por `gerar-papeis.py`; tela de login SDDM em QML puro seguindo `mockup/Boot.dc.html`
@@ -119,9 +119,19 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   Sereno). O Pablo achou os seres pequenos da cena Brasa primitivos: redesenhar no padrão dos retratos.
   Conferido fora do Plasma com `ferramentas/ver-papel-vivo.py`; **falta ver como papel de parede de verdade**
   (`main.qml`, a tela de ajustes e o consumo de energia não foram testados).
+- Primeiro teste no Plasma de verdade (16/11/2026, Plasma 6.8.2) dos ícones, da Toca e do Mata Viva/Iara Viva.
+  Corrigido: os ícones com ladrilho próprio saíam pequenos na doca (o `Kirigami.Icon` arredonda para o tamanho
+  padrão de baixo; `roundToIconSize: false`); o relógio saía fino e apagado (o Plasma 6 usa `fontWeight`, não
+  `boldText`); o Mata Viva ocupava ~48% de um núcleo: agora um relógio só move todas as camadas a 24 quadros por
+  segundo (~26%) e a mata para com uma janela maximizada, em tela cheia ou cobrindo 90% da tela (0%); brilho e
+  área de transferência ganharam símbolo na bandeja; o teste "não chama a si mesmo" falhava dentro da sessão
+  gráfica (limite fixo de 400 processos). Tela de bloqueio: `/etc/xdg/kscreenlockerrc` põe o papel de parede
+  Brasa (conferido com `/usr/lib/kscreenlocker_greet --testing`).
+  Ainda sem ver, porque exigem clique: cartão rápido, popup da bandeja, menus da doca, a tela de ajustes do
+  papel de parede e a animação de entrada da doca.
 
 ## A fazer
-1. Cuca: terminar o teste do curupira-voltar; depois, boot direto num snapshot (exige um subvolume
+1. Cuca: boot direto num snapshot (exige um subvolume
    @snapshots fora do @).
 2. Conferir tela de boot, login e abertura num boot de verdade.
 3. Acordar a Boitatá sob demanda (hoje ela fica sempre desligada; apagar
@@ -132,4 +142,4 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
 6. Ícones: conferir no notebook (doca, bandeja, menus, cartão rápido); depois, menu de apps próprio no lugar do
    Kickoff (widget QML como a doca: busca, apps em ladrilhos, Cordel, botões de sessão). Mais arte na Toca:
    ícones das seções, o Cordel reagindo ao perfil, transição entre seções.
-7. Mata Viva: redesenhar Saci, Boitatá, Mapinguari, Boto e a Iara da lagoa no padrão dos retratos (Brasa e Iara).
+7. Mata Viva: baixar mais o consumo com a mata à vista (~26% de um núcleo a 24 q/s); redesenhar Saci, Boitatá, Mapinguari, Boto e a Iara da lagoa no padrão dos retratos (Brasa e Iara).
