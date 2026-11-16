@@ -6,7 +6,7 @@ Cada arte já descreve, em CSS, como cada parte se mexe (as mechas do cabelo de 
 as pálpebras, o halo, as faíscas e os vaga-lumes). O Plasma não roda CSS dentro de SVG, então este
 gerador desmonta a arte na ordem em que ela é pintada:
 
-  - cada parte animada (classes f, breath, lid, halo, sp, ff) vira um recorte PNG próprio, com a
+  - cada parte animada (classes f, breath, lid, halo, sp, ff, vai) vira um recorte PNG próprio, com a
     animação anotada (origem, quadros, duração, atraso);
   - o que fica parado entre duas partes animadas vira uma camada PNG;
   - em três pontos abre uma vaga para os seres entrarem na mata: "ceu" (atrás de todas as árvores),
@@ -40,7 +40,7 @@ LARGURA, ALTURA = 1366, 768          # tamanho da arte
 ESCALA = 1920 / LARGURA              # os PNG saem em 1920×1080
 MARGEM = 90                          # a arte passa da borda (o cabelo); os recortes levam essa sobra para poder balançar
 SVG = "http://www.w3.org/2000/svg"
-ANIMADAS = {"f", "breath", "lid", "halo", "sp", "ff"}
+ANIMADAS = {"f", "breath", "lid", "halo", "sp", "ff", "vai"}
 # cada cena do papel de parede animado sai de uma arte
 CENAS = {"brasa": ARTE / "brasa-fundo.svg", "iara": ARTE / "iara-fundo.svg"}
 ET.register_namespace("", SVG)
@@ -201,11 +201,13 @@ def desmonta_arte(nome_cena: str, arquivo: Path) -> dict:
         if classe == "f":       # mecha do cabelo: balança em torno da raiz
             ox, oy = (float(v.rstrip("%")) / 100 for v in estilo["transform-origin"].split())
             dado.update(ox=ox, oy=oy, quadros=estilo["animation-name"])
+        if classe == "vai":     # vai e volta devagar (o que boia, a correnteza)
+            dado.update(dx=float(estilo["--dx"].rstrip("px")), dy=float(estilo["--dy"].rstrip("px")))
         if classe == "sp":      # faísca: sobe e some
             dado.update(dx=float(estilo["--dx"].rstrip("px")), dy=float(estilo["--dy"].rstrip("px")))
         if classe == "halo":
             dado["opacidade"] = float(el.get("opacity", "1"))
-        dado["duracao"] = segundos(estilo.get("animation-duration"), {"breath": 2.6667, "lid": 8, "halo": 4, "sp": 4, "ff": 8}.get(classe, 4))
+        dado["duracao"] = segundos(estilo.get("animation-duration"), {"breath": 2.6667, "lid": 8, "halo": 4, "sp": 4, "ff": 8, "vai": 6}.get(classe, 4))
         dado["atraso"] = segundos(estilo.get("animation-delay"), 0)
         camadas.append(dado)
     tipos = {}

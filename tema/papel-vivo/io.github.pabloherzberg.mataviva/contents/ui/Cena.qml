@@ -61,13 +61,15 @@ Item {
     }
     function ordem(indice, tipo) {     // este é o enésimo recorte do seu tipo
         let n = 0
-        for (let i = 0; i < indice; i++) if (cena.camadas[i].tipo === tipo) n++
+        // ao trocar de cena, por um instante as peças antigas ainda perguntam pela lista nova
+        for (let i = 0; i < indice && i < cena.camadas.length; i++) if (cena.camadas[i].tipo === tipo) n++
         return n
     }
     function suave(u) { return u * u * (3 - 2 * u) }
     // quadros de animação tirados do CSS da arte: [fração, giro, escala x, escala y, opacidade]
     function quadro(nome, t) {
         const q = cena.quadros[nome]
+        if (!q) return [0, 1, 1, 1]
         for (let i = 1; i < q.length; i++) {
             if (t <= q[i][0]) {
                 const a = q[i - 1], b = q[i], u = suave((t - a[0]) / (b[0] - a[0]))
@@ -113,13 +115,14 @@ Item {
                 readonly property var q: tipo === "f" ? cena.quadro(modelData.quadros, t)
                                        : tipo === "breath" ? cena.quadro("breath", t) : null
                 readonly property var voo: tipo === "ff" ? cena.entre(cena.vooDoVagaLume, t) : null
+                readonly property real vaivem: tipo === "vai" ? 0.5 - 0.5 * Math.cos(2 * Math.PI * t) : 0     // o que boia e a correnteza
 
                 z: index
                 source: tipo === "vaga" ? "" : "../images/" + modelData.img
                 asynchronous: false
                 smooth: true
-                x: (modelData.x || 0) + (tipo === "sp" ? modelData.dx * t : voo ? voo[2] : 0)
-                y: (modelData.y || 0) + (tipo === "sp" ? modelData.dy * t : voo ? voo[3] : 0)
+                x: (modelData.x || 0) + (tipo === "sp" ? modelData.dx * t : tipo === "vai" ? modelData.dx * vaivem : voo ? voo[2] : 0)
+                y: (modelData.y || 0) + (tipo === "sp" ? modelData.dy * t : tipo === "vai" ? modelData.dy * vaivem : voo ? voo[3] : 0)
                 width: modelData.w || 0
                 height: modelData.h || 0
                 visible: tipo === "sp" ? n < cena.faiscas && cena.mover

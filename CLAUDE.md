@@ -82,7 +82,8 @@ mechas com degradê e fios de brilho. O Pablo achou os seres pequenos do Mata Vi
 Boto e a Iara da lagoa, em `arte/papel-vivo/`) primitivos perto disso: ao redesenhá-los, siga este padrão.
 
 **Mata Viva (papel de parede animado):** `brasa-fundo.svg` e `iara-fundo.svg` já descrevem em CSS como cada parte se mexe (classes
-`f` mechas do cabelo, `lid` pálpebras, `halo`, `sp` faíscas, `ff` vaga-lumes, `breath`). O Plasma não roda esse
+`f` mechas do cabelo e tudo que gira em torno de um ponto, `lid` pálpebras, `halo`, `sp` faíscas, `ff` vaga-lumes,
+`breath`, e `vai` para o que vai e volta devagar: o que boia e a correnteza, com `--dx`/`--dy`). O Plasma não roda esse
 CSS, então o gerador recorta cada parte e o `Cena.qml` refaz o movimento. Ao editar a arte, mantenha essas
 classes e os estilos `transform-origin`/`animation-*` nelas. Os seres entram em três vagas entre as camadas:
 `ceu`, `longe` e `perto`. O que cada ser mostra está no cabeçalho do `Cena.qml`. `main.qml` só lê o
