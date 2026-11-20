@@ -52,6 +52,23 @@ NOITE = {
 }
 
 
+# Encante: o fundo do rio. Verde-petróleo, com o rosa do boto no destaque, a luz viva (ciano) nos links e a
+# luz das casas (âmbar) no título das janelas. É o tema do papel de parede animado Encante.
+ENCANTE = {
+    "nome": "Encante", "id": "Encante",
+    "texto": "#E9F7F3", "texto_suave": "#9CC8C6",
+    "janela": "#062A38", "janela_alt": "#052230",
+    "vista": "#0B3A48", "vista_alt": "#0E4250",
+    "botao": "#125565", "botao_alt": "#186472",
+    "cabecalho": "#052230", "cabecalho_alt": "#062A38",
+    "destaque": "#F08FB5", "destaque_claro": "#B8457A", "link": "#5FE3D9",
+    "selecao_texto": "#062A38",
+    "dica": "#E9F7F3", "dica_texto": "#062A38",
+    "complementar": "#031822", "complementar_alt": "#021119", "complementar_texto": "#E9F7F3",
+    "titulo": "#031822", "titulo_texto": "#FFC46B", "titulo_inativo": "#062A38", "titulo_inativo_texto": "#6E9C9C",
+}
+
+
 def grupo(nome: str, fundo: str, fundo_alt: str, texto: str, p: dict, texto_ativo: str | None = None) -> str:
     d = p["destaque"]
     return f"""[{nome}]
@@ -122,6 +139,7 @@ inactiveForeground={rgb(p['titulo_inativo_texto'])}
 
 # Konsole: fundo noite, texto areia, cores ANSI tiradas da paleta
 KONSOLE = {
+    "nome": "Curupira",
     "Background": "#1E1640", "Foreground": "#F3EEE4",
     "Color0": "#2E2360", "Color1": "#E2531F", "Color2": "#2BB37A", "Color3": "#F2D27A",
     "Color4": "#6FB6F2", "Color5": "#D2507A", "Color6": "#7FE3B0", "Color7": "#F3EEE4",
@@ -130,9 +148,21 @@ KONSOLE = {
 }
 
 
-def esquema_konsole() -> str:
+KONSOLE_ENCANTE = {
+    "nome": "Encante",
+    "Background": "#041C28", "Foreground": "#E9F7F3",
+    "Color0": "#0B3A48", "Color1": "#FF8A70", "Color2": "#7FE3B0", "Color3": "#FFC46B",
+    "Color4": "#6FB6F2", "Color5": "#F08FB5", "Color6": "#5FE3D9", "Color7": "#E9F7F3",
+    "Color0Intense": "#1C7C84", "Color1Intense": "#FFA994", "Color2Intense": "#A8F2CE", "Color3Intense": "#FFD896",
+    "Color4Intense": "#9CCBF7", "Color5Intense": "#FFB3CF", "Color6Intense": "#9FF0E8", "Color7Intense": "#FFFFFF",
+}
+
+
+def esquema_konsole(k: dict = KONSOLE) -> str:
+    nome = k["nome"]
+    KONSOLE = {c: v for c, v in k.items() if c != "nome"}
     linhas = ["# Curupira OS: cores do Konsole. Gerado por tema/gerar-cores.py; não edite à mão.",
-              "[General]", "Description=Curupira", "Opacity=1", "Wallpaper=", ""]
+              "[General]", f"Description={nome}", "Opacity=1", "Wallpaper=", ""]
     for chave, cor in KONSOLE.items():
         linhas += [f"[{chave}]", f"Color={rgb(cor)}", ""]
         if chave in ("Background", "Foreground"):
@@ -146,9 +176,20 @@ def esquema_konsole() -> str:
 def main():
     (AQUI / "cores").mkdir(exist_ok=True)
     (AQUI / "konsole").mkdir(exist_ok=True)
-    for p in (CLARO, NOITE):
+    for p in (CLARO, NOITE, ENCANTE):
         (AQUI / "cores" / f"{p['id']}.colors").write_text(esquema_plasma(p))
     (AQUI / "konsole" / "Curupira.colorscheme").write_text(esquema_konsole())
+    (AQUI / "konsole" / "Encante.colorscheme").write_text(esquema_konsole(KONSOLE_ENCANTE))
+    # o perfil do Encante é o do Curupira com as outras cores
+    perfil = (AQUI / "konsole" / "Curupira.profile").read_text()
+    perfil = perfil.replace("ColorScheme=Curupira", "ColorScheme=Encante").replace("Name=Curupira", "Name=Encante")
+    # o rosa do boto onde se olha: cursor (com a letra embaixo na cor do fundo) e a marca da aba;
+    # o bash abre com o encante.bashrc, que pinta prompt, grep e man nas cores do rio
+    rosa, fundo = rgb(ENCANTE["destaque"]), rgb(ENCANTE["janela"])
+    perfil = perfil.replace("[Appearance]\n", f"[Appearance]\nTabColor={rosa}\n", 1)
+    perfil = perfil.replace("[General]\n", "[General]\nCommand=/bin/bash --rcfile /usr/local/share/curupira/encante.bashrc\n", 1)
+    perfil += f"\n[Cursor Options]\nCursorShape=1\nUseCustomCursorColor=true\nCustomCursorColor={rosa}\nCustomCursorTextColor={fundo}\n"
+    (AQUI / "konsole" / "Encante.profile").write_text(perfil)
     print("Esquemas gerados em tema/cores e tema/konsole.")
 
 

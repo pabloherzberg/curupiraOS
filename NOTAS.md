@@ -197,8 +197,22 @@ Gatilhos planejados: saiu da tomada = Remanso; voltou = Correnteza; bateria em 1
   (uma imagem só, sem cortar em pedaços). A cena só desenha com a placa de vídeo: a captura sem tela
   (`offscreen`) não mostra os botos, então a miniatura da Toca é o desenho parado.
   O perfil de energia diz o quanto a cidade acende; o laboratório de rede traz mais botos. Falta: o Boto piscar,
-  remar e soltar bolhas; o tema de cores Encante (estudo em `arte/propostas/encante/`); conferir em outra
-  resolução de tela.
+  remar e soltar bolhas; conferir em outra resolução de tela.
+- Tema de cores Encante (16/11/2026): terceiro esquema do `gerar-cores.py` (verde-petróleo, rosa do boto no
+  destaque, ciano nos links, âmbar no título das janelas), com esquema e perfil do Konsole. A Toca tem a terceira
+  paleta (`TEMA` no `visual.py`: "dia", "noite" ou "encante"): é a da noite com os roxos trocados pelos verdes
+  (`_NOITE_PARA_ENCANTE`), e a cor de ação vira rosa. A Aparência ganhou o terceiro botão. O estudo da paleta
+  está em `arte/propostas/encante/`. Não conferido: a troca pelo botão e o perfil Encante do Konsole.
+- Perfil do Konsole que não ficava (19/11/2026): o "Trocar perfil" do menu do Konsole muda só a aba aberta e não
+  é guardado; o `konsolerc` não tinha `DefaultProfile`, então cada janela nova abria no perfil embutido. Agora o
+  `instalar.sh` grava `/etc/xdg/konsolerc` com `Curupira.profile` e a Aparência da Toca grava o perfil no
+  `~/.config/konsolerc` junto com o tema (Encante → `Encante.profile`, os outros → `Curupira.profile`).
+- Rosa do boto no Konsole Encante (19/11/2026): o `gerar-cores.py` põe no perfil o cursor de barra rosa (letra
+  embaixo na cor do fundo), a marca rosa da aba e `Command=bash --rcfile /usr/local/share/curupira/encante.bashrc`.
+  Esse arquivo (`tema/konsole/encante.bashrc`) carrega o `/etc/bash.bashrc` e o `~/.bashrc` e depois pinta: prompt
+  com usuário e `$` em rosa, pasta em luz viva, `$` cor de alerta com o código quando o último comando falha;
+  achados do grep em rosa; títulos do man em rosa e busca do less em rosa. Prompt conferido numa janela de teste;
+  cursor, aba e man não foram conferidos a olho.
 - Criptografia de disco (16/11/2026): o `install.sh` pergunta (ou `CRIPTOGRAFIA=sim|nao`) e põe o Btrfs dentro
   de um LUKS2 em `/dev/mapper/curupira`; hook `sd-encrypt` (ou `encrypt`, se o initramfs for o antigo com udev) e
   `rd.luks.name=` nas duas entradas de boot. `/boot` e `/data` ficam abertos. **Nunca rodou de verdade**: só a

@@ -19,6 +19,9 @@ O `README.md` é a documentação para quem usa.
   boot. **Cordel** é o mascote da interface (xilogravura): avatares, menu da doca, Toca.
 - **Seres:** Curupira (central), Boitatá (NVIDIA), Mapinguari (HD), Iara (Wi-Fi/Bluetooth), Saci (turbo),
   Caipora (privacidade), Boto (laboratório de rede), Cuca (snapshots).
+- **Tema Encante** (o fundo do rio, par do papel de parede animado Encante): fundo `#062A38`, listas `#0B3A48`,
+  botões `#125565`, rosa do boto `#F08FB5` (destaque), luz viva `#5FE3D9` (links), luz das casas `#FFC46B`
+  (título das janelas), texto `#E9F7F3`. Fica em `ENCANTE`, no `tema/gerar-cores.py`.
 - **Perfis de energia:** Pororoca (desempenho) `#FF7A45`, Correnteza (equilibrado) `#2BB37A`,
   Remanso (bateria) `#2468B8`, Sereno (extremo) `#5B3A8E`.
 - **Mockups** (a fonte da verdade do visual): `mockup/*.dc.html`. `Desktop` = doca e cartão rápido,

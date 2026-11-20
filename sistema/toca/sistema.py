@@ -398,7 +398,7 @@ def previa_papel_vivo(arquivo: str = "screenshot.png") -> Path | None:
 
 def papel_vivo_instalado() -> bool:
     return (Path("/usr/share/plasma/wallpapers") / PAPEL_VIVO / "metadata.json").exists()
-ESQUEMAS = [("Curupira", "Curupira"), ("CurupiraNoite", "Curupira Noite")]
+ESQUEMAS = [("Curupira", "Curupira"), ("CurupiraNoite", "Curupira Noite"), ("Encante", "Encante")]
 
 
 def esquemas_curupira() -> bool:
@@ -444,7 +444,7 @@ def aparencia() -> dict:
                 cena = int(linha.split("=", 1)[1]) if linha.split("=", 1)[1].strip().isdigit() else 0
     except OSError:
         pass
-    return {"esquema": esquema, "escuro": any(x in esquema.lower() for x in ("dark", "noite")),
+    return {"esquema": esquema, "escuro": any(x in esquema.lower() for x in ("dark", "noite", "encante")),
             "destaque": cor, "papel": papel, "curupira": esquemas_curupira(),
             "papel_vivo": plugin == PAPEL_VIVO, "papel_vivo_instalado": papel_vivo_instalado(),
             "movimento": MOVIMENTOS_DO_PAPEL[movimento] if 0 <= movimento < 3 else "tomada",

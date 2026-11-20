@@ -217,7 +217,7 @@ class Toca(QWidget):
                 texto, erro = res
                 self.avisa(texto, erro)
                 # trocou entre dia e noite: as cores da Toca são escolhidas ao abrir, então ela reabre no mesmo lugar
-                if not erro and cmd and cmd[0] == "plasma-apply-colorscheme" and visual._tema_escuro() != visual.ESCURO:
+                if not erro and cmd and cmd[0] == "plasma-apply-colorscheme" and visual._tema() != visual.TEMA:
                     QTimer.singleShot(500, self.reabre)
                     return
             self.atualiza()

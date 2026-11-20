@@ -13,6 +13,14 @@ from visual import (BORDA, ICONES, TINTA, TINTA_SUAVE, VERDE, Cartao, Secao, Seg
                     fonte, pixmap_svg, rotulo)
 
 
+def perfil_konsole(nome: str):
+    """Fixa o perfil padrão do Konsole (vale para as janelas novas). O "Trocar perfil" do menu do Konsole
+    muda só a aba aberta e não é guardado: o padrão fica no konsolerc."""
+    if Path(f"/usr/local/share/konsole/{nome}.profile").exists():
+        sistema.roda("kwriteconfig6", "--file", "konsolerc", "--group", "Desktop Entry",
+                     "--key", "DefaultProfile", f"{nome}.profile")
+
+
 class Amostra(QAbstractButton):
     """Bolinha de cor de destaque."""
 
@@ -91,12 +99,13 @@ class SecaoAparencia(Secao):
         tl = QHBoxLayout(tema); tl.setContentsMargins(16, 12, 14, 12)
         tt = QVBoxLayout(); tt.setSpacing(0)
         tt.addWidget(rotulo("Tema", 15, QFont.Weight.ExtraBold))
-        self.nota_tema = rotulo("Curupira para o dia, Curupira Noite para a noite na mata.", 12, cor=TINTA_SUAVE)
+        self.nota_tema = rotulo("O dia, a noite na mata ou o fundo do rio.", 12, cor=TINTA_SUAVE)
         tt.addWidget(self.nota_tema)
         tl.addLayout(tt, 1)
-        self.seg_tema = Segmentado([("claro", "Curupira"), ("escuro", "Curupira Noite")])
+        self.seg_tema = Segmentado([("claro", "Curupira"), ("escuro", "Curupira Noite"), ("encante", "Encante")])
         self.seg_tema.botoes["claro"].clicked.connect(lambda: self._tema(escuro=False))
         self.seg_tema.botoes["escuro"].clicked.connect(lambda: self._tema(escuro=True))
+        self.seg_tema.botoes["encante"].clicked.connect(self._tema_encante)
         self.tem_curupira = True
         tl.addWidget(self.seg_tema)
         lay.addWidget(tema)
@@ -182,7 +191,13 @@ class SecaoAparencia(Secao):
             nome, msg = ("CurupiraNoite", "Tema Curupira Noite aplicado.") if escuro else ("Curupira", "Tema Curupira aplicado.")
         else:   # esquemas ainda não instalados: usa o Breeze
             nome, msg = ("BreezeDark", "Tema escuro aplicado.") if escuro else ("BreezeLight", "Tema claro aplicado.")
+        if self.tem_curupira:
+            perfil_konsole("Curupira")
         self.executar.emit(["plasma-apply-colorscheme", nome], msg, None)
+
+    def _tema_encante(self):
+        perfil_konsole("Encante")
+        self.executar.emit(["plasma-apply-colorscheme", "Encante"], "Tema Encante aplicado.", None)
 
     def _destaque(self, hexa: str, nome: str):
         self.executar.emit(["plasma-apply-colorscheme", "--accent-color", hexa], f"Cor de destaque: {nome}.", None)
@@ -217,9 +232,10 @@ class SecaoAparencia(Secao):
             self.seg_tema.botoes["claro"].setText("Curupira"); self.seg_tema.botoes["escuro"].setText("Curupira Noite")
         else:
             self.seg_tema.botoes["claro"].setText("Claro"); self.seg_tema.botoes["escuro"].setText("Escuro")
+        self.seg_tema.botoes["encante"].setVisible(self.tem_curupira)
         e = d.get("esquema", "")
         if self.tem_curupira:   # só marca quando o esquema atual é mesmo um dos da Curupira
-            self.seg_tema.seleciona("escuro" if e == "CurupiraNoite" else "claro" if e == "Curupira" else "")
+            self.seg_tema.seleciona({"CurupiraNoite": "escuro", "Curupira": "claro", "Encante": "encante"}.get(e, ""))
         else:
             self.seg_tema.seleciona("escuro" if d.get("escuro") else "claro")
         atual = (d.get("destaque") or "").upper()

@@ -17,26 +17,39 @@ from PySide6.QtWidgets import (QAbstractButton, QApplication, QFrame, QHBoxLayou
 AQUI = Path(__file__).resolve().parent
 
 # ------------------------------------------------------------------ cores e fontes (NOTAS.md / mockup)
-def _tema_escuro() -> bool:
-    """A Toca acompanha o esquema de cores do Plasma: Curupira Noite (ou outro escuro) escurece a janela toda.
-    TOCA_TEMA=noite|dia força um dos dois (para as capturas)."""
+def _tema() -> str:
+    """A Toca acompanha o esquema de cores do Plasma: "dia", "noite" (Curupira Noite ou outro escuro) ou "encante".
+    TOCA_TEMA=dia|noite|encante força um deles (para as capturas)."""
     forcado = os.environ.get("TOCA_TEMA", "").lower()
     if forcado:
-        return forcado in ("noite", "escuro")
+        return forcado if forcado in ("dia", "noite", "encante") else "noite" if forcado == "escuro" else "dia"
     try:
         texto = (Path.home() / ".config" / "kdeglobals").read_text(errors="ignore")
     except OSError:
-        return False
+        return "dia"
     achado = re.search(r"^ColorScheme=(.+)$", texto, re.MULTILINE)
     nome = achado.group(1).strip().lower() if achado else ""
-    return "noite" in nome or "dark" in nome or "escuro" in nome
+    if "encante" in nome:
+        return "encante"
+    return "noite" if ("noite" in nome or "dark" in nome or "escuro" in nome) else "dia"
 
 
-ESCURO = _tema_escuro()
+TEMA = _tema()
+ESCURO = TEMA != "dia"
+
+# O Encante é a paleta da noite com os roxos trocados pelos verdes do fundo do rio (tema/gerar-cores.py, ENCANTE).
+_NOITE_PARA_ENCANTE = {
+    "#F3EEE4": "#E9F7F3", "#B9AED6": "#9CC8C6", "#D5CCEB": "#CFE6E3", "#8A7FB3": "#6E9C9C",
+    "#1E1640": "#062A38", "#251B4D": "#0B3A48", "#2B2057": "#0E4250", "#191236": "#052230",
+    "#2E2360": "#125565", "#140E2C": "#031822", "#3A2D6B": "#17606C", "#4A3D7D": "#1C7C84",
+    "#7FE3B0": "#5FE3D9", "#1E6E4D": "#7A3558", "#8FBFA8": "#E6B8CB",
+}
 
 
 def _c(dia: str, noite: str) -> str:
-    return noite if ESCURO else dia
+    if TEMA == "dia":
+        return dia
+    return _NOITE_PARA_ENCANTE.get(noite, noite) if TEMA == "encante" else noite
 
 
 # Os tons da noite são os do esquema Curupira Noite (tema/gerar-cores.py).
@@ -55,8 +68,9 @@ BORDA_FORTE = _c("#E2D7C3", "#4A3D7D")
 TRILHO = _c("#D9CFBE", "#4A3D7D")            # chave desligada
 NOITE = "#241A4A"
 CARTAO_NOITE = _c("#241A4A", "#140E2C")      # o cartão de consumo: sempre o mais escuro da tela
-VERDE = "#12935F"
-VERDE_ESCURO = _c("#0F7A54", "#7FE3B0")      # verde de texto
+VERDE = "#D9578F" if TEMA == "encante" else "#12935F"             # a cor de ação: no Encante é o rosa do boto
+VERDE_SOBRE = "#B8457A" if TEMA == "encante" else "#0F7A54"       # a mesma, com o mouse em cima
+VERDE_ESCURO = _c("#0F7A54", "#7FE3B0")      # a cor de ação em texto
 BRASA = _c("#B4380B", "#FF8A5C")             # alerta, em texto
 
 
@@ -69,10 +83,10 @@ def _mistura(cor: str, fundo: str, quanto: float) -> str:
 
 # cor do perfil e o fundo suave do cartão escolhido (à noite, a cor do perfil diluída no cartão)
 PERFIS_VISUAL = {
-    "pororoca":   ("#FF7A45", _c("#FFF1E8", _mistura("#FF7A45", "#251B4D", 0.28))),
-    "correnteza": ("#2BB37A", _c("#E8F7EF", _mistura("#2BB37A", "#251B4D", 0.28))),
-    "remanso":    ("#2468B8", _c("#EAF1FB", _mistura("#2468B8", "#251B4D", 0.38))),
-    "sereno":     ("#5B3A8E", _c("#F1EBF8", _mistura("#8E73C2", "#251B4D", 0.38))),
+    "pororoca":   ("#FF7A45", _c("#FFF1E8", _mistura("#FF7A45", CARTAO, 0.28))),
+    "correnteza": ("#2BB37A", _c("#E8F7EF", _mistura("#2BB37A", CARTAO, 0.28))),
+    "remanso":    ("#2468B8", _c("#EAF1FB", _mistura("#2468B8", CARTAO, 0.38))),
+    "sereno":     ("#5B3A8E", _c("#F1EBF8", _mistura("#8E73C2", CARTAO, 0.38))),
 }
 ORDEM_PERFIS = ["pororoca", "correnteza", "remanso", "sereno"]
 
@@ -823,7 +837,7 @@ def botao(texto: str, primario: bool = False, icone_svg: str | None = None) -> Q
     b.setMinimumHeight(38)
     if primario:
         b.setStyleSheet(f"QPushButton {{ background: {VERDE}; color: #FFFFFF; border: 0; border-radius: 12px; padding: 0 16px; }}"
-                        "QPushButton:hover { background: #0F7A54; }"
+                        f"QPushButton:hover {{ background: {VERDE_SOBRE}; }}"
                         f"QPushButton:disabled {{ background: {_c('#A9CDBD', '#1E6E4D')}; color: {_c('#FFFFFF', '#8FBFA8')}; }}")
         cor_icone = "#FFFFFF"
     else:

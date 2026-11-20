@@ -99,7 +99,11 @@ echo "==> Instalando o tema (cores, Konsole, papéis de parede e tela de login)"
 TEMA="$AQUI/../tema"
 install -dm755 "$RAIZ/usr/local/share/color-schemes" "$RAIZ/usr/local/share/konsole" "$RAIZ/usr/local/share/wallpapers"
 install -m644 "$TEMA"/cores/*.colors "$RAIZ/usr/local/share/color-schemes/"
-install -m644 "$TEMA"/konsole/Curupira.colorscheme "$TEMA"/konsole/Curupira.profile "$RAIZ/usr/local/share/konsole/"
+install -m644 "$TEMA"/konsole/*.colorscheme "$TEMA"/konsole/*.profile "$RAIZ/usr/local/share/konsole/"
+install -Dm644 "$TEMA"/konsole/encante.bashrc "$RAIZ/usr/local/share/curupira/encante.bashrc"   # bash do perfil Encante
+# perfil padrão das janelas novas do Konsole; o ~/.config/konsolerc de cada um (a Toca grava lá) tem a palavra final
+install -dm755 "$RAIZ/etc/xdg"
+printf '%s\n' "[Desktop Entry]" "DefaultProfile=Curupira.profile" > "$RAIZ/etc/xdg/konsolerc"
 for papel in "$TEMA"/papeis/*/; do
   nome="$(basename "$papel")"
   rm -rf "$RAIZ/usr/local/share/wallpapers/$nome"

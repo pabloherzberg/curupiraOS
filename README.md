@@ -117,8 +117,8 @@ de perfil com um clique.
 
 | Peça | Onde fica | Como usar |
 |---|---|---|
-| Esquemas de cores Curupira e Curupira Noite | `tema/cores/` → `/usr/local/share/color-schemes` | Toca → Aparência, ou Configurações do sistema → Cores |
-| Perfil do Konsole (JetBrains Mono, cores da paleta) | `tema/konsole/` → `/usr/local/share/konsole` | Konsole → Configurações → perfil Curupira |
+| Esquemas de cores Curupira, Curupira Noite e Encante | `tema/cores/` → `/usr/local/share/color-schemes` | Toca → Aparência, ou Configurações do sistema → Cores |
+| Perfis do Konsole (JetBrains Mono, cores da paleta) | `tema/konsole/` → `/usr/local/share/konsole` | Konsole → Configurações → perfil Curupira ou Encante |
 | Papéis de parede Brasa e Entardecer | `tema/papeis/` → `/usr/local/share/wallpapers` | Toca → Aparência, ou clique direito na área de trabalho |
 | Papel de parede animado Mata Viva, com três cenas: Brasa, Iara e Encante (a cidade dos botos no fundo do rio) | `tema/papel-vivo/` → `/usr/share/plasma/wallpapers` | Toca → Aparência, ou `curupira-papel-vivo --cena brasa\|iara\|encante` |
 | Tela de login | `tema/sddm/curupira/` → `/usr/share/sddm/themes/curupira` | ativa pelo instalador (`/etc/sddm.conf.d/10-curupira.conf`) |
